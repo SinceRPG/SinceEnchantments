@@ -25,6 +25,8 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
     // Sử dụng 5 dấu cách làm marker tàng hình cực kỳ an toàn, không bao giờ lỗi font ô vuông
     private static final String MARKER = "     ";
+    // Marker dành riêng cho dòng trống để lúc quét xóa không bị dư thừa
+    private static final String EMPTY_MARKER = "      "; // 6 dấu cách
 
     @Override
     public void onPacketSend(PacketSendEvent event) {
@@ -68,16 +70,16 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         for (int i = lore.size() - 1; i >= 0; i--) {
             String plainLore = ColorUtils.toPlainText(lore.get(i));
 
-            // Nếu dòng này là #enchants# HOẶC là dòng enchant cũ của plugin (nhận diện qua 5 dấu cách ở cuối)
-            if (plainLore.contains(placeholderStr) || plainLore.endsWith(MARKER)) {
-                targetIndex = i; // Lưu lại vị trí để tí nữa chèn vào đúng chỗ này
-                lore.remove(i);  // Xóa đi để không bị nhân bản
+            // Nếu dòng này là #enchants# HOẶC là dòng enchant cũ của plugin HOẶC là dòng trống cũ của plugin
+            if (plainLore.contains(placeholderStr) || plainLore.endsWith(MARKER) || plainLore.equals(EMPTY_MARKER)) {
+                targetIndex = i; // Do duyệt ngược, targetIndex cuối cùng sẽ là vị trí cao nhất (dòng đầu tiên) của block bị xóa
+                lore.remove(i);
             }
         }
 
         Map<Enchantment, Integer> enchants = meta.getEnchants();
 
-        // 1. Không có enchant: Trả về luôn vì đã tự động dọn dẹp placeholder ở vòng lặp trên
+        // 1. Không có enchant: Trả về luôn
         if (enchants.isEmpty()) {
             meta.lore(lore);
             item.setItemMeta(meta);
@@ -93,6 +95,8 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         int maxPerLine = config.getInt("settings.enchants-per-line", 3);
         String separator = config.getString("settings.separator", "&8, ");
         String defaultColor = config.getString("settings.default-color", "&9");
+        boolean addEmptyLineAbove = config.getBoolean("settings.add-empty-line-above", true);
+        boolean addEmptyLineBelow = config.getBoolean("settings.add-empty-line-below", true);
 
         for (Map.Entry<Enchantment, Integer> entry : enchants.entrySet()) {
             Enchantment ench = entry.getKey();
@@ -136,12 +140,41 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             );
         }
 
-        // Chèn vào đúng vị trí MMOItems đã cấu hình
+        // Xử lý chèn vào lore (Kiểm tra xem dòng trên/dưới có trống hay không)
         if (targetIndex != -1) {
+            // Kiểm tra dòng ở trên
+            if (addEmptyLineAbove && targetIndex > 0) {
+                String abovePlain = ColorUtils.toPlainText(lore.get(targetIndex - 1)).trim();
+                if (!abovePlain.isEmpty()) { // Chỉ chèn nếu dòng trên có nội dung (không phải dòng trống)
+                    enchantComponents.add(0, Component.text(EMPTY_MARKER));
+                }
+            }
+
+            // Kiểm tra dòng ở dưới
+            if (addEmptyLineBelow && targetIndex < lore.size()) {
+                String belowPlain = ColorUtils.toPlainText(lore.get(targetIndex)).trim();
+                if (!belowPlain.isEmpty()) { // Chỉ chèn nếu dòng dưới có nội dung (không phải dòng trống)
+                    enchantComponents.add(Component.text(EMPTY_MARKER));
+                }
+            }
+
             lore.addAll(targetIndex, enchantComponents);
         } else {
-            // Nếu không phải đồ MMOItems thì chèn vào dưới dòng 1
+            // Nếu không có placeholder (đồ vanilla), mặc định chèn vào sau dòng 1 (nếu có)
             if (lore.size() >= 1) {
+                if (addEmptyLineAbove) {
+                    String abovePlain = ColorUtils.toPlainText(lore.get(0)).trim();
+                    if (!abovePlain.isEmpty()) {
+                        enchantComponents.add(0, Component.text(EMPTY_MARKER));
+                    }
+                }
+
+                if (addEmptyLineBelow && lore.size() > 1) {
+                    String belowPlain = ColorUtils.toPlainText(lore.get(1)).trim();
+                    if (!belowPlain.isEmpty()) {
+                        enchantComponents.add(Component.text(EMPTY_MARKER));
+                    }
+                }
                 lore.addAll(1, enchantComponents);
             } else {
                 lore.addAll(enchantComponents);
