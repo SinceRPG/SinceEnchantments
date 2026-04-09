@@ -7,7 +7,7 @@ settings:
   add-empty-line-below: true
   level-format: "ROMAN"
   max-custom-enchants-per-item: 5
-  divider: "&7&m----------------------"
+  divider: "&8&m                         &8&m"
   anvil-xp-combine-books: 5
   anvil-xp-apply-book: 3
 
