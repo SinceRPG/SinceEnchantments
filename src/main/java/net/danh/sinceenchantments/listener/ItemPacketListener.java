@@ -35,7 +35,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             if (event.getPacketType() == PacketType.Play.Server.SET_SLOT) {
                 WrapperPlayServerSetSlot wrapper = new WrapperPlayServerSetSlot(event);
                 ItemStack peItem = wrapper.getItem();
-                if (!peItem.isEmpty()) {
+                if (peItem != null && !peItem.isEmpty()) {
                     org.bukkit.inventory.ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
                     bukkitItem = formatSkyblockItem(bukkitItem);
                     wrapper.setItem(SpigotConversionUtil.fromBukkitItemStack(bukkitItem));
@@ -63,9 +63,9 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             if (event.getPacketType() == PacketType.Play.Client.CREATIVE_INVENTORY_ACTION) {
                 WrapperPlayClientCreativeInventoryAction wrapper = new WrapperPlayClientCreativeInventoryAction(event);
                 ItemStack peItem = wrapper.getItemStack();
-                if (!peItem.isEmpty()) {
+                if (peItem != null && !peItem.isEmpty()) {
                     org.bukkit.inventory.ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
-                    bukkitItem = cleanCreativeItem(bukkitItem); // Rửa sạch item giả
+                    bukkitItem = cleanCreativeItem(bukkitItem);
                     wrapper.setItemStack(SpigotConversionUtil.fromBukkitItemStack(bukkitItem));
                 }
             }
@@ -115,8 +115,10 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             }
         }
 
-        Map<Enchantment, Integer> enchants = meta.getEnchants();
-        if (enchants.isEmpty()) {
+        Map<Enchantment, Integer> vanillaEnchants = meta.getEnchants();
+        Map<String, Integer> customEnchants = SinceEnchantments.getInstance().getEnchantManager().getCustomEnchants(item);
+
+        if (vanillaEnchants.isEmpty() && customEnchants.isEmpty()) {
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;
@@ -125,29 +127,53 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
         List<Component> enchantComponents = new ArrayList<>();
-        StringBuilder currentLine = new StringBuilder();
         int count = 0;
-        int maxPerLine = config.getInt("settings.enchants-per-line", 3);
-        String separator = config.getString("settings.separator", "&8, ");
-        String defaultColor = config.getString("settings.default-color", "&9");
-        boolean addEmptyLineAbove = config.getBoolean("settings.add-empty-line-above", true);
-        boolean addEmptyLineBelow = config.getBoolean("settings.add-empty-line-below", true);
+        int maxPerLine = config.getInt("settings.enchants-per-line", 2);
+        String separator = config.getString("settings.separator", "&8 | ");
+        StringBuilder currentLine = new StringBuilder();
+        boolean useRoman = config.getString("settings.level-format", "ROMAN").equalsIgnoreCase("ROMAN");
 
-        for (Map.Entry<Enchantment, Integer> entry : enchants.entrySet()) {
-            Enchantment ench = entry.getKey();
-            int level = entry.getValue();
-            String enchantKey = ench.getKey().toString();
-            String rawKeyName = ench.getKey().getKey();
-            String pathName = "custom-enchants." + enchantKey + ".name";
-            String pathColor = "custom-enchants." + enchantKey + ".color";
-            String customName = config.getString(pathName, formatDefaultName(rawKeyName));
-            String customColor = config.getString(pathColor, defaultColor);
-            String levelStr = toRoman(level);
+        // 1. VANILLA ENCHANTS
+        for (Map.Entry<Enchantment, Integer> entry : vanillaEnchants.entrySet()) {
+            String keyName = entry.getKey().getKey().getKey();
+            String cName = config.getString("vanilla-enchants.minecraft:" + keyName + ".name", formatDefaultName(keyName));
+            String cColor = config.getString("vanilla-enchants.minecraft:" + keyName + ".color", config.getString("settings.default-color", "&9"));
 
-            String formattedEnchant = customColor + customName + " " + levelStr;
-
+            String formatted = cColor + cName + " " + (useRoman ? toRoman(entry.getValue()) : entry.getValue());
             if (count > 0) currentLine.append(separator);
-            currentLine.append(formattedEnchant);
+            currentLine.append(formatted);
+            count++;
+
+            if (count == maxPerLine) {
+                enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                currentLine = new StringBuilder();
+                count = 0;
+            }
+        }
+
+        // 2. VẠCH NGĂN CÁCH
+        if (!vanillaEnchants.isEmpty() && !customEnchants.isEmpty()) {
+            if (count > 0) {
+                enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                currentLine = new StringBuilder();
+                count = 0;
+            }
+            String divider = config.getString("settings.divider", "&7&m----------------------");
+            enchantComponents.add(ColorUtils.parse(divider).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+        }
+
+        // 3. CUSTOM ENCHANTS
+        for (Map.Entry<String, Integer> entry : customEnchants.entrySet()) {
+            String eId = entry.getKey();
+            int eLvl = entry.getValue();
+
+            String eName = config.getString("custom-enchants." + eId + ".name", eId);
+            String rarityKey = config.getString("custom-enchants." + eId + ".rarity", "COMMON");
+            String rarityColor = config.getString("rarities." + rarityKey, "&f");
+
+            String formatted = rarityColor + eName + " " + (useRoman ? toRoman(eLvl) : eLvl);
+            if (count > 0) currentLine.append(separator);
+            currentLine.append(formatted);
             count++;
 
             if (count == maxPerLine) {
@@ -161,10 +187,14 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
         }
 
+        // 4. CHÈN VÀO LORE VỚI LOGIC DÒNG TRỐNG
+        boolean addEmptyLineAbove = config.getBoolean("settings.add-empty-line-above", true);
+        boolean addEmptyLineBelow = config.getBoolean("settings.add-empty-line-below", true);
+
         if (targetIndex != -1) {
             if (addEmptyLineAbove && targetIndex > 0) {
                 String abovePlain = ColorUtils.toPlainText(lore.get(targetIndex - 1)).trim();
-                if (!abovePlain.isEmpty()) enchantComponents.addFirst(Component.text(EMPTY_MARKER));
+                if (!abovePlain.isEmpty()) enchantComponents.add(0, Component.text(EMPTY_MARKER));
             }
             if (addEmptyLineBelow && targetIndex < lore.size()) {
                 String belowPlain = ColorUtils.toPlainText(lore.get(targetIndex)).trim();
@@ -174,8 +204,8 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         } else {
             if (!lore.isEmpty()) {
                 if (addEmptyLineAbove) {
-                    String abovePlain = ColorUtils.toPlainText(lore.getFirst()).trim();
-                    if (!abovePlain.isEmpty()) enchantComponents.addFirst(Component.text(EMPTY_MARKER));
+                    String abovePlain = ColorUtils.toPlainText(lore.get(0)).trim();
+                    if (!abovePlain.isEmpty()) enchantComponents.add(0, Component.text(EMPTY_MARKER));
                 }
                 if (addEmptyLineBelow && lore.size() > 1) {
                     String belowPlain = ColorUtils.toPlainText(lore.get(1)).trim();

@@ -1,0 +1,11 @@
+enchant-book:
+  material: "ENCHANTED_BOOK"
+  name: "<gradient:light_purple:dark_purple><bold>Sách Phù Phép: %enchant_name%"
+  lore:
+    - "&7Độ hiếm: %rarity_color%%rarity_name%"
+    - "&7Cấp độ: &e%level%"
+    - ""
+    - "&7Tỉ lệ thành công: &a%success%%"
+    - "&7Tỉ lệ phá hủy: &c%destroy%%"
+    - ""
+    - "&eKéo thả sách này vào trang bị để phù phép!"

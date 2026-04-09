@@ -21,12 +21,60 @@ settings:
   # Thêm một dòng trống ngay dưới danh sách enchant (chỉ khi có lore khác ở dưới nó)
   add-empty-line-below: true
 
+  # Hiển thị cấp độ: ROMAN (I, II, V) hoặc NUMBER (1, 2, 5)
+  level-format: "ROMAN"
+
+  # Giới hạn số lượng Custom Enchant tối đa trên 1 trang bị
+  max-custom-enchants-per-item: 5
+
+  # Dòng phân cách giữa Vanilla và Custom Enchant
+  divider: "&7&m----------------------"
+
+# Hệ thống Rarity (Độ hiếm)
+rarities:
+  COMMON: "&f"
+  UNCOMMON: "&a"
+  RARE: "&9"
+  EPIC: "&5"
+  LEGENDARY: "&6&l"
+
+
+  # ----------------------------------------
+  # VÍ DỤ PLUGIN BÊN THỨ 3 (Custom Enchant)
+  # ----------------------------------------
+custom-enchants:
+  "since:lifesteal":
+    name: "Hút Máu"
+    rarity: "EPIC"
+    max-level: 5
+    # WEAPON (Kiếm, Rìu, Đinh ba, Chùy), ARMOR (Giáp), BOW (Cung/Nỏ), TOOL (Cúp, Xẻng...), SWORD (Chỉ Kiếm), ALL
+    target: "WEAPON"
+    # Danh sách các enchant tương khắc (không thể ép chung) - Hỗ trợ cả Vanilla và Custom
+    conflicts:
+      - "minecraft:smite"
+      - "minecraft:bane_of_arthropods"
+
+  "since:fireball":
+    name: "Cầu Lửa"
+    rarity: "LEGENDARY"
+    max-level: 3
+    target: "SWORD"
+    conflicts: []
+
+  "since:miner":
+    name: "Đào 3x3"
+    rarity: "RARE"
+    max-level: 1
+    target: "TOOL"
+    conflicts:
+      - "minecraft:fortune" # Ví dụ không cho ép Đào 3x3 chung với Gia Tài
+
 # ==========================================
 # CUSTOM ENCHANTS
 # Hỗ trợ cả mã màu cũ (&c, &#ff0000) và MiniMessage (<red>, <gradient>)
 # Định dạng Key: "namespace:enchant_name"
 # ==========================================
-custom-enchants:
+vanilla-enchants:
   # ----------------------------------------
   # VŨ KHÍ CẬN CHIẾN (Kiếm / Rìu)
   # ----------------------------------------
@@ -221,10 +269,3 @@ custom-enchants:
   "minecraft:binding_curse":
     name: "Lời Nguyền Ràng Buộc"
     color: "&c"
-
-  # ----------------------------------------
-  # VÍ DỤ PLUGIN BÊN THỨ 3 (Custom Enchant)
-  # ----------------------------------------
-  "ecoenchants:lifesteal":
-    name: "Hút Máu"
-    color: "&d&l"
