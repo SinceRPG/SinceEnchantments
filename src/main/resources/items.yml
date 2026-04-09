@@ -8,7 +8,7 @@ enchant-book:
     - "%description%"
     - ""
     - "&7Success Rate: &a%success%%"
-    - "&7Destroy Rate: &c%destroy%%"
+    - "&7Failure Rate: &c%destroy%%"
     - ""
     - "&eDrag and drop onto an item to apply!"
 

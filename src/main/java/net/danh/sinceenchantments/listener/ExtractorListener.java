@@ -78,7 +78,6 @@ public class ExtractorListener implements Listener {
 
             manager.removeEnchant(current, removedId);
 
-            // Pass 0 for destroy rate on extracted books
             ItemStack book = manager.createEnchantBook(removedId, removedLevel, 100, 0);
             if (!p.getInventory().addItem(book).isEmpty()) {
                 p.getWorld().dropItem(p.getLocation(), book);
@@ -88,7 +87,7 @@ public class ExtractorListener implements Listener {
             sendMsg(p, "extract-success", "%enchant%", manager.getEnchantName(removedId), "%level%", String.valueOf(removedLevel));
 
         } else if (extractorType.equals("SPECIFIC")) {
-            ExtractorGUI gui = new ExtractorGUI(plugin, current);
+            ExtractorGUI gui = new ExtractorGUI(plugin, current, 0); // Start at Page 0
             Bukkit.getScheduler().runTask(plugin, () -> p.openInventory(gui.getInventory()));
         }
     }
@@ -107,7 +106,6 @@ public class ExtractorListener implements Listener {
         event.setCancelled(true);
 
         if (!(event.getWhoClicked() instanceof Player p)) return;
-
         if (event.getClickedInventory() == null || !event.getClickedInventory().equals(gui.getInventory())) return;
 
         ItemStack clicked = event.getCurrentItem();
@@ -115,6 +113,23 @@ public class ExtractorListener implements Listener {
         if (!clicked.hasItemMeta()) return;
 
         ItemMeta meta = clicked.getItemMeta();
+
+        // Handle Pagination & Borders
+        if (meta.getPersistentDataContainer().has(manager.GUI_ACTION_KEY, PersistentDataType.STRING)) {
+            String action = meta.getPersistentDataContainer().get(manager.GUI_ACTION_KEY, PersistentDataType.STRING);
+            if ("PREV_PAGE".equals(action)) {
+                gui.setCompleted(true); // Prevent refund
+                ExtractorGUI newGui = new ExtractorGUI(plugin, gui.getWeapon(), gui.getPage() - 1);
+                p.openInventory(newGui.getInventory());
+            } else if ("NEXT_PAGE".equals(action)) {
+                gui.setCompleted(true); // Prevent refund
+                ExtractorGUI newGui = new ExtractorGUI(plugin, gui.getWeapon(), gui.getPage() + 1);
+                p.openInventory(newGui.getInventory());
+            }
+            return;
+        }
+
+        // Handle Enchant Extraction
         if (!meta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) return;
 
         String enchantId = meta.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
@@ -137,7 +152,6 @@ public class ExtractorListener implements Listener {
         }
 
         gui.setCompleted(true);
-
         p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
         sendMsg(p, "extract-success", "%enchant%", manager.getEnchantName(enchantId), "%level%", String.valueOf(level));
 

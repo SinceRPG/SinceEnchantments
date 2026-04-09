@@ -30,6 +30,7 @@ public class EnchantManager {
     public final NamespacedKey BOOK_DESTROY_KEY;
     public final NamespacedKey EXTRACTOR_TYPE_KEY;
     public final NamespacedKey CHARM_BONUS_KEY;
+    public final NamespacedKey GUI_ACTION_KEY;
 
     private final SinceEnchantments plugin;
     private final Map<String, Integer> maxLevels = new HashMap<>();
@@ -48,6 +49,7 @@ public class EnchantManager {
         this.BOOK_DESTROY_KEY = new NamespacedKey(plugin, "book_destroy_rate");
         this.EXTRACTOR_TYPE_KEY = new NamespacedKey(plugin, "extractor_type");
         this.CHARM_BONUS_KEY = new NamespacedKey(plugin, "charm_bonus");
+        this.GUI_ACTION_KEY = new NamespacedKey(plugin, "gui_action");
         loadEnchantsFromConfig();
     }
 
@@ -255,9 +257,6 @@ public class EnchantManager {
         return getCustomEnchants(item).getOrDefault(enchantId, 0);
     }
 
-    /**
-     * Creates a standardized enchantment book item.
-     */
     public ItemStack createEnchantBook(String enchantId, int level, int successRate, int destroyRate) {
         String matStr = plugin.getItemsFile().getString("enchant-book.material", "ENCHANTED_BOOK");
         Material mat = Material.matchMaterial(matStr);
@@ -307,12 +306,6 @@ public class EnchantManager {
         return book;
     }
 
-    /**
-     * Creates an Extractor item (Random or Specific).
-     *
-     * @param type   "random" or "specific"
-     * @param amount The amount to give.
-     */
     public ItemStack createExtractor(String type, int amount) {
         String path = type.toLowerCase() + "-extractor";
         String matStr = plugin.getItemsFile().getString(path + ".material", "PAPER");
@@ -337,9 +330,6 @@ public class EnchantManager {
         return extractor;
     }
 
-    /**
-     * Creates a Success Charm item.
-     */
     public ItemStack createSuccessCharm(int bonus, int amount) {
         String matStr = plugin.getItemsFile().getString("success-charm.material", "GLOWSTONE_DUST");
         Material mat = Material.matchMaterial(matStr);

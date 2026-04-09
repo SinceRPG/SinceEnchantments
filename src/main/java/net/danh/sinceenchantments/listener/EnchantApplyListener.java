@@ -72,15 +72,19 @@ public class EnchantApplyListener implements Listener {
             int bonus = cursorMeta.getPersistentDataContainer().getOrDefault(manager.CHARM_BONUS_KEY, PersistentDataType.INTEGER, 1);
             int newSuccess = Math.min(100, currentSuccess + bonus);
 
+            // Calculate new destroy/fail rate (decreases proportionally to success increase)
+            int currentDestroy = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
+            int newDestroy = Math.max(0, currentDestroy - bonus);
 
+            // Consume 1 Charm
             cursor.setAmount(cursor.getAmount() - 1);
             player.setItemOnCursor(cursor);
 
             String enchantId = currentMeta.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
             int level = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
-            int destroyRate = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
 
-            ItemStack newBook = manager.createEnchantBook(enchantId, level, newSuccess, destroyRate);
+            // Update book
+            ItemStack newBook = manager.createEnchantBook(enchantId, level, newSuccess, newDestroy);
             event.setCurrentItem(newBook);
 
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
@@ -119,7 +123,6 @@ public class EnchantApplyListener implements Listener {
             }
         }
 
-
         int currentLevel = manager.getEnchantLevel(current, enchantId);
         int newLevel;
 
@@ -143,6 +146,7 @@ public class EnchantApplyListener implements Listener {
             newLevel = manager.getMaxLevel(enchantId);
         }
 
+        // Consume the book
         cursor.setAmount(cursor.getAmount() - 1);
         player.setItemOnCursor(cursor);
 
@@ -152,6 +156,7 @@ public class EnchantApplyListener implements Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
             sendMsg(player, "enchant-success");
         } else {
+            // Failure: Book is burned, but item remains absolutely safe.
             player.playSound(player.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, 1f, 1f);
             sendMsg(player, "enchant-fail");
         }

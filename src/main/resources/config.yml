@@ -13,8 +13,19 @@ settings:
 
 gui:
   extractor:
-    title: "&8Select Enchant to Extract"
-    size: 27 # Must be a multiple of 9 (9, 18, 27, 36, 45, 54)
+    title: "&8Select Enchant (Page %page%)"
+    size: 54 # Must be 27, 36, 45, or 54
+    border:
+      material: "BLACK_STAINED_GLASS_PANE"
+      name: " "
+    next-page:
+      material: "ARROW"
+      name: "&aNext Page"
+      slot: 53
+    prev-page:
+      material: "ARROW"
+      name: "&cPrevious Page"
+      slot: 45
     display-item:
       material: "ENCHANTED_BOOK"
       name: "%rarity_color%%enchant_name% %level%"
