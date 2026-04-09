@@ -4,7 +4,7 @@
 
 settings:
   # Placeholder để MMOItems (hoặc plugin khác) nhận diện vị trí chèn enchant
-  placeholder: "<enchants>"
+  placeholder: "{enchants}"
 
   # Số lượng enchant hiển thị trên 1 dòng
   enchants-per-line: 3
