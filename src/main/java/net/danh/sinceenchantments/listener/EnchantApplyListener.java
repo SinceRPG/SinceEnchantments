@@ -72,13 +72,16 @@ public class EnchantApplyListener implements Listener {
             int bonus = cursorMeta.getPersistentDataContainer().getOrDefault(manager.CHARM_BONUS_KEY, PersistentDataType.INTEGER, 1);
             int newSuccess = Math.min(100, currentSuccess + bonus);
 
+            // Consume 1 Charm
             cursor.setAmount(cursor.getAmount() - 1);
             player.setItemOnCursor(cursor);
 
             String enchantId = currentMeta.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
             int level = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
+            int destroyRate = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
 
-            ItemStack newBook = manager.createEnchantBook(enchantId, level, newSuccess);
+            // Create updated book with new success rate
+            ItemStack newBook = manager.createEnchantBook(enchantId, level, newSuccess, destroyRate);
             event.setCurrentItem(newBook);
 
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
@@ -123,6 +126,7 @@ public class EnchantApplyListener implements Listener {
             return;
         }
 
+        // Always consume the book first
         cursor.setAmount(cursor.getAmount() - 1);
         player.setItemOnCursor(cursor);
 
@@ -132,6 +136,7 @@ public class EnchantApplyListener implements Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
             sendMsg(player, "enchant-success");
         } else {
+            // Failed: Book is already consumed. Target item is untouched.
             player.playSound(player.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, 1f, 1f);
             sendMsg(player, "enchant-fail");
         }

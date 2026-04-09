@@ -27,6 +27,7 @@ public class EnchantManager {
     public final NamespacedKey BOOK_ID_KEY;
     public final NamespacedKey BOOK_LEVEL_KEY;
     public final NamespacedKey BOOK_SUCCESS_KEY;
+    public final NamespacedKey BOOK_DESTROY_KEY;
     public final NamespacedKey EXTRACTOR_TYPE_KEY;
     public final NamespacedKey CHARM_BONUS_KEY;
 
@@ -44,6 +45,7 @@ public class EnchantManager {
         this.BOOK_ID_KEY = new NamespacedKey(plugin, "book_enchant_id");
         this.BOOK_LEVEL_KEY = new NamespacedKey(plugin, "book_enchant_level");
         this.BOOK_SUCCESS_KEY = new NamespacedKey(plugin, "book_success_rate");
+        this.BOOK_DESTROY_KEY = new NamespacedKey(plugin, "book_destroy_rate");
         this.EXTRACTOR_TYPE_KEY = new NamespacedKey(plugin, "extractor_type");
         this.CHARM_BONUS_KEY = new NamespacedKey(plugin, "charm_bonus");
         loadEnchantsFromConfig();
@@ -227,9 +229,6 @@ public class EnchantManager {
         return true;
     }
 
-    /**
-     * Safely removes an enchantment from the item (Vanilla or Custom).
-     */
     public void removeEnchant(ItemStack item, String enchantId) {
         if (isBukkitEnchant(enchantId)) {
             Enchantment bukkitEnc = getBukkitRegistry().get(NamespacedKey.fromString(enchantId.toLowerCase()));
@@ -256,7 +255,10 @@ public class EnchantManager {
         return getCustomEnchants(item).getOrDefault(enchantId, 0);
     }
 
-    public ItemStack createEnchantBook(String enchantId, int level, int successRate) {
+    /**
+     * Creates a standardized enchantment book item.
+     */
+    public ItemStack createEnchantBook(String enchantId, int level, int successRate, int destroyRate) {
         String matStr = plugin.getItemsFile().getString("enchant-book.material", "ENCHANTED_BOOK");
         Material mat = Material.matchMaterial(matStr);
         if (mat == null) mat = Material.ENCHANTED_BOOK;
@@ -289,6 +291,7 @@ public class EnchantManager {
             String parsedLine = line.replace("%enchant_name%", eName)
                     .replace("%level%", String.valueOf(level))
                     .replace("%success%", String.valueOf(successRate))
+                    .replace("%destroy%", String.valueOf(destroyRate))
                     .replace("%rarity_name%", rName)
                     .replace("%rarity_color%", rColor);
             finalLore.add(ColorUtils.parse(parsedLine).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
@@ -298,6 +301,7 @@ public class EnchantManager {
         meta.getPersistentDataContainer().set(BOOK_ID_KEY, PersistentDataType.STRING, enchantId);
         meta.getPersistentDataContainer().set(BOOK_LEVEL_KEY, PersistentDataType.INTEGER, level);
         meta.getPersistentDataContainer().set(BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, successRate);
+        meta.getPersistentDataContainer().set(BOOK_DESTROY_KEY, PersistentDataType.INTEGER, destroyRate);
 
         book.setItemMeta(meta);
         return book;

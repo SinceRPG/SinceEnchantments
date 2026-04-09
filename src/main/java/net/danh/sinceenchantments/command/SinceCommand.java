@@ -16,7 +16,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-@SuppressWarnings({"UnstableApiUsage", "SpellCheckingInspection"})
+@SuppressWarnings("SpellCheckingInspection")
 public class SinceCommand {
 
     private final SinceEnchantments plugin;
@@ -37,6 +37,10 @@ public class SinceCommand {
     public LiteralCommandNode<CommandSourceStack> buildCommand() {
         return Commands.literal("sinceenchantments")
                 .requires(source -> source.getSender().hasPermission("sinceenchantments.admin"))
+                .executes(this::executeHelp) // Show help by default
+                .then(Commands.literal("help")
+                        .executes(this::executeHelp)
+                )
                 .then(Commands.literal("reload")
                         .executes(context -> {
                             plugin.getConfigFile().reload();
@@ -47,7 +51,6 @@ public class SinceCommand {
                             return Command.SINGLE_SUCCESS;
                         })
                 )
-                // COMMAND: /se givebook <target> <enchant> <level> [success]
                 .then(Commands.literal("givebook")
                         .then(Commands.argument("target", ArgumentTypes.player())
                                 .then(Commands.argument("enchant", StringArgumentType.string())
@@ -63,15 +66,17 @@ public class SinceCommand {
                                             return builder.buildFuture();
                                         })
                                         .then(Commands.argument("level", IntegerArgumentType.integer(1))
-                                                .executes(context -> executeGiveBook(context, 100))
+                                                .executes(context -> executeGiveBook(context, 100, 0))
                                                 .then(Commands.argument("success", IntegerArgumentType.integer(0, 100))
-                                                        .executes(context -> executeGiveBook(context, IntegerArgumentType.getInteger(context, "success")))
+                                                        .executes(context -> executeGiveBook(context, IntegerArgumentType.getInteger(context, "success"), 0))
+                                                        .then(Commands.argument("destroy", IntegerArgumentType.integer(0, 100))
+                                                                .executes(context -> executeGiveBook(context, IntegerArgumentType.getInteger(context, "success"), IntegerArgumentType.getInteger(context, "destroy")))
+                                                        )
                                                 )
                                         )
                                 )
                         )
                 )
-                // COMMAND: /se giveextractor <target> <random|specific> <amount>
                 .then(Commands.literal("giveextractor")
                         .then(Commands.argument("target", ArgumentTypes.player())
                                 .then(Commands.argument("type", StringArgumentType.word())
@@ -86,7 +91,6 @@ public class SinceCommand {
                                 )
                         )
                 )
-                // COMMAND: /se givecharm <target> <bonus_percent> [amount]
                 .then(Commands.literal("givecharm")
                         .then(Commands.argument("target", ArgumentTypes.player())
                                 .then(Commands.argument("bonus", IntegerArgumentType.integer(1, 100))
@@ -101,7 +105,16 @@ public class SinceCommand {
     }
 
     @SuppressWarnings("SameReturnValue")
-    private int executeGiveBook(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int success) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+    private int executeHelp(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context) {
+        sendMessage(context.getSource(), "help-header");
+        for (String line : plugin.getMessagesFile().getStringList("help-commands")) {
+            context.getSource().getSender().sendMessage(ColorUtils.parse(line));
+        }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    @SuppressWarnings("SameReturnValue")
+    private int executeGiveBook(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int success, int destroy) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
         Player target = targetResolver.resolve(context.getSource()).getFirst();
 
@@ -114,7 +127,7 @@ public class SinceCommand {
 
         int level = IntegerArgumentType.getInteger(context, "level");
 
-        ItemStack book = plugin.getEnchantManager().createEnchantBook(enchantId, level, success);
+        ItemStack book = plugin.getEnchantManager().createEnchantBook(enchantId, level, success, destroy);
         target.getInventory().addItem(book);
 
         sendMessage(context.getSource(), "give-book-success",

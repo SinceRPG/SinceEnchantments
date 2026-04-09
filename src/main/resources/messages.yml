@@ -6,13 +6,22 @@ invalid-number: "&cPlease enter a valid number."
 give-book-success: "&aGave %enchant% book (Level %level%) to %player%."
 give-extractor-success: "&aGave %type% Extractor (x%amount%) to %player%."
 give-charm-success: "&aGave Success Charm (+%bonus%%) (x%amount%) to %player%."
-not-enough-args: "&cUsage: /se givebook <player> <enchant_id> <level> [success_rate]"
+not-enough-args: "&cUsage: /se givebook <player> <enchant_id> <level> [success_rate] [destroy_rate]"
 enchant-not-found: "&cThe enchantment '%enchant%' does not exist in Bukkit or Custom Registry!"
+
+help-header: "&8&m--------&r &bSinceEnchantments &8&m--------"
+help-commands:
+  - "&b/se help &7- Displays this help menu."
+  - "&b/se reload &7- Reloads the plugin configuration."
+  - "&b/se givebook <player> <enchant> <level> [success] [destroy] &7- Gives an enchantment book."
+  - "&b/se giveextractor <player> <random|specific> <amount> &7- Gives an extractor."
+  - "&b/se givecharm <player> <bonus> [amount] &7- Gives a success charm."
 
 enchant-success: "&aEnchantment successful! Your item grows stronger."
 enchant-fail: "&cEnchantment failed! The book was destroyed, but your item is safe."
 enchant-limit-reached: "&cThis item has reached the maximum custom enchantments limit (%limit%)!"
 enchant-max-level: "&cThis item has reached or exceeded the maximum level for this enchantment!"
+
 enchant-wrong-target: "&cThis enchantment cannot be applied to this type of item!"
 enchant-conflict: "&cThis enchantment conflicts with another enchantment on the item!"
 

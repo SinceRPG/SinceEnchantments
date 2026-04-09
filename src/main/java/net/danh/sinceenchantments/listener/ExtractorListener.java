@@ -78,7 +78,8 @@ public class ExtractorListener implements Listener {
 
             manager.removeEnchant(current, removedId);
 
-            ItemStack book = manager.createEnchantBook(removedId, removedLevel, 100);
+            // Pass 0 for destroy rate on extracted books
+            ItemStack book = manager.createEnchantBook(removedId, removedLevel, 100, 0);
             if (!p.getInventory().addItem(book).isEmpty()) {
                 p.getWorld().dropItem(p.getLocation(), book);
             }
@@ -129,7 +130,7 @@ public class ExtractorListener implements Listener {
         }
 
         manager.removeEnchant(weapon, enchantId);
-        ItemStack book = manager.createEnchantBook(enchantId, level, 100);
+        ItemStack book = manager.createEnchantBook(enchantId, level, 100, 0);
 
         if (!p.getInventory().addItem(book).isEmpty()) {
             p.getWorld().dropItem(p.getLocation(), book);
