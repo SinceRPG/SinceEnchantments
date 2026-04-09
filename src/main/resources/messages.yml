@@ -21,6 +21,7 @@ enchant-success: "&aEnchantment successful! Your item grows stronger."
 enchant-fail: "&cEnchantment failed! The book was destroyed, but your item is safe."
 enchant-limit-reached: "&cThis item has reached the maximum custom enchantments limit (%limit%)!"
 enchant-max-level: "&cThis item has reached or exceeded the maximum level for this enchantment!"
+enchant-lower-level: "&cThe book's level is lower than the item's current enchantment level!"
 
 enchant-wrong-target: "&cThis enchantment cannot be applied to this type of item!"
 enchant-conflict: "&cThis enchantment conflicts with another enchantment on the item!"
