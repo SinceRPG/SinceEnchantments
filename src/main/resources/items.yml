@@ -1,11 +1,29 @@
 enchant-book:
   material: "ENCHANTED_BOOK"
-  name: "<gradient:light_purple:dark_purple><bold>Sách Phù Phép: %enchant_name%"
+  name: "<gradient:light_purple:dark_purple><bold>Enchantment Book: %enchant_name%"
   lore:
-    - "&7Độ hiếm: %rarity_color%%rarity_name%"
-    - "&7Cấp độ: &e%level%"
+    - "&7Rarity: %rarity_color%%rarity_name%"
+    - "&7Level: &e%level%"
     - ""
-    - "&7Tỉ lệ thành công: &a%success%%"
-    - "&7Tỉ lệ phá hủy: &c%destroy%%"
+    - "%description%"
     - ""
-    - "&eKéo thả sách này vào trang bị để phù phép!"
+    - "&7Success Rate: &a%success%%"
+    - "&7Destroy Rate: &c%destroy%%"
+    - ""
+    - "&eDrag and drop onto an item to apply!"
+
+random-extractor:
+  material: "PAPER"
+  name: "&8[&d&lRandom Extractor&8]"
+  lore:
+    - "&7Drag & Drop onto an item"
+    - "&7to extract a random enchantment"
+    - "&7into an Enchantment Book."
+
+specific-extractor:
+  material: "PAPER"
+  name: "&8[&b&lSpecific Extractor&8]"
+  lore:
+    - "&7Drag & Drop onto an item"
+    - "&7to open a menu and choose"
+    - "&7which enchantment to extract."

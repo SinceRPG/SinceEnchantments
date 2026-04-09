@@ -133,7 +133,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         StringBuilder currentLine = new StringBuilder();
         boolean useRoman = config.getString("settings.level-format", "ROMAN").equalsIgnoreCase("ROMAN");
 
-        // 1. VANILLA ENCHANTS
         for (Map.Entry<Enchantment, Integer> entry : vanillaEnchants.entrySet()) {
             String keyName = entry.getKey().getKey().getKey();
             String cName = config.getString("vanilla-enchants.minecraft:" + keyName + ".name", formatDefaultName(keyName));
@@ -151,7 +150,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             }
         }
 
-        // 2. VẠCH NGĂN CÁCH
         if (!vanillaEnchants.isEmpty() && !customEnchants.isEmpty()) {
             if (count > 0) {
                 enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
@@ -162,7 +160,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             enchantComponents.add(ColorUtils.parse(divider).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
         }
 
-        // 3. CUSTOM ENCHANTS
         for (Map.Entry<String, Integer> entry : customEnchants.entrySet()) {
             String eId = entry.getKey();
             int eLvl = entry.getValue();
@@ -187,7 +184,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
         }
 
-        // 4. CHÈN VÀO LORE VỚI LOGIC DÒNG TRỐNG
         boolean addEmptyLineAbove = config.getBoolean("settings.add-empty-line-above", true);
         boolean addEmptyLineBelow = config.getBoolean("settings.add-empty-line-below", true);
 

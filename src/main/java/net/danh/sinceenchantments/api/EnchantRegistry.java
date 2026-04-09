@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Registry holding all loaded custom enchantments.
+ */
 public class EnchantRegistry {
 
     private final Map<String, SinceEnchant> registeredEnchants = new HashMap<>();
@@ -18,13 +21,12 @@ public class EnchantRegistry {
     }
 
     /**
-     * Đăng ký một Custom Enchant mới vào hệ thống
+     * Registers a custom enchant and its Bukkit Listener automatically.
      */
     public void register(SinceEnchant enchant) {
         registeredEnchants.put(enchant.getId(), enchant);
-        // Tự động đăng ký Event Listener cho Enchant này luôn! Quá tiện lợi!
         Bukkit.getPluginManager().registerEvents(enchant, plugin);
-        plugin.getLogger().info("Da dang ky Custom Enchant: " + enchant.getId());
+        plugin.getLogger().info("Registered Custom Enchant: " + enchant.getId());
     }
 
     public SinceEnchant getEnchant(String id) {

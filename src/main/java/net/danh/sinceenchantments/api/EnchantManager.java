@@ -1,10 +1,13 @@
 package net.danh.sinceenchantments.api;
 
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.utils.ColorUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -15,23 +18,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Core manager handling NBT data, validation, and Bukkit integration.
+ */
+@SuppressWarnings("UnstableApiUsage")
 public class EnchantManager {
 
-    private final SinceEnchantments plugin;
     public final NamespacedKey ENCHANT_KEY;
-
     public final NamespacedKey BOOK_ID_KEY;
     public final NamespacedKey BOOK_LEVEL_KEY;
     public final NamespacedKey BOOK_SUCCESS_KEY;
     public final NamespacedKey BOOK_DESTROY_KEY;
+    public final NamespacedKey EXTRACTOR_TYPE_KEY; // NEW: Identifies Extractor Type
 
+    private final SinceEnchantments plugin;
     private final Map<String, Integer> maxLevels = new HashMap<>();
     private final Map<String, String> rarities = new HashMap<>();
     private final Map<String, String> enchantNames = new HashMap<>();
-
-    // Lưu trữ Target và Conflict
     private final Map<String, String> targets = new HashMap<>();
     private final Map<String, List<String>> conflicts = new HashMap<>();
+    private final Map<String, List<String>> descriptions = new HashMap<>();
 
     public EnchantManager(SinceEnchantments plugin) {
         this.plugin = plugin;
@@ -40,6 +46,7 @@ public class EnchantManager {
         this.BOOK_LEVEL_KEY = new NamespacedKey(plugin, "book_enchant_level");
         this.BOOK_SUCCESS_KEY = new NamespacedKey(plugin, "book_success_rate");
         this.BOOK_DESTROY_KEY = new NamespacedKey(plugin, "book_destroy_rate");
+        this.EXTRACTOR_TYPE_KEY = new NamespacedKey(plugin, "extractor_type");
         loadEnchantsFromConfig();
     }
 
@@ -49,6 +56,7 @@ public class EnchantManager {
         enchantNames.clear();
         targets.clear();
         conflicts.clear();
+        descriptions.clear();
 
         if (plugin.getConfigFile().getConfig().contains("custom-enchants")) {
             for (String key : plugin.getConfigFile().getConfig().getConfigurationSection("custom-enchants").getKeys(false)) {
@@ -58,67 +66,110 @@ public class EnchantManager {
                 enchantNames.put(key, plugin.getConfigFile().getString(path + ".name", key));
                 targets.put(key, plugin.getConfigFile().getString(path + ".target", "ALL").toUpperCase());
                 conflicts.put(key, plugin.getConfigFile().getStringList(path + ".conflicts"));
+                descriptions.put(key, plugin.getConfigFile().getStringList(path + ".description"));
+            }
+        }
+
+        if (plugin.getConfigFile().getConfig().contains("vanilla-enchants")) {
+            for (String key : plugin.getConfigFile().getConfig().getConfigurationSection("vanilla-enchants").getKeys(false)) {
+                String path = "vanilla-enchants." + key;
+                descriptions.put(key, plugin.getConfigFile().getStringList(path + ".description"));
+                enchantNames.put(key, plugin.getConfigFile().getString(path + ".name", key));
             }
         }
     }
 
-    public int getMaxLevel(String enchantId) { return maxLevels.getOrDefault(enchantId, 1); }
-    public String getRarity(String enchantId) { return rarities.getOrDefault(enchantId, "COMMON"); }
-    public String getEnchantName(String enchantId) { return enchantNames.getOrDefault(enchantId, enchantId); }
+    private Registry<Enchantment> getBukkitRegistry() {
+        return RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT);
+    }
 
-    // ===============================================
-    // KIỂM TRA TARGET VÀ CONFLICTS
-    // ===============================================
+    public boolean isBukkitEnchant(String id) {
+        NamespacedKey key = NamespacedKey.fromString(id.toLowerCase());
+        return key != null && getBukkitRegistry().get(key) != null;
+    }
+
+    public boolean enchantExists(String id) {
+        return plugin.getEnchantRegistry().getEnchant(id) != null || isBukkitEnchant(id);
+    }
+
+    public int getMaxLevel(String enchantId) {
+        if (isBukkitEnchant(enchantId)) {
+            Enchantment bukkitEnc = getBukkitRegistry().get(NamespacedKey.fromString(enchantId.toLowerCase()));
+            if (bukkitEnc != null) return bukkitEnc.getMaxLevel();
+        }
+        return maxLevels.getOrDefault(enchantId, 1);
+    }
+
+    public String getRarity(String enchantId) {
+        if (isBukkitEnchant(enchantId)) return "COMMON";
+        return rarities.getOrDefault(enchantId, "COMMON");
+    }
+
+    public String getEnchantName(String enchantId) {
+        return enchantNames.getOrDefault(enchantId, enchantId);
+    }
+
+    public List<String> getDescription(String enchantId) {
+        return descriptions.getOrDefault(enchantId, new ArrayList<>());
+    }
+
     public boolean isApplicable(String enchantId, Material mat) {
+        if (isBukkitEnchant(enchantId)) {
+            Enchantment bukkitEnc = getBukkitRegistry().get(NamespacedKey.fromString(enchantId.toLowerCase()));
+            if (bukkitEnc != null) return bukkitEnc.canEnchantItem(new ItemStack(mat));
+        }
         String target = targets.getOrDefault(enchantId, "ALL");
         String name = mat.name();
-        switch (target) {
-            case "WEAPON": return name.endsWith("_SWORD") || name.endsWith("_AXE") || name.equals("TRIDENT") || name.equals("MACE");
-            case "ARMOR": return name.endsWith("_HELMET") || name.endsWith("_CHESTPLATE") || name.endsWith("_LEGGINGS") || name.endsWith("_BOOTS");
-            case "SWORD": return name.endsWith("_SWORD");
-            case "BOW": return name.equals("BOW") || name.equals("CROSSBOW");
-            case "TOOL": return name.endsWith("_PICKAXE") || name.endsWith("_SHOVEL") || name.endsWith("_AXE") || name.endsWith("_HOE");
-            case "ALL": return true;
-            default: return true;
-        }
+        return switch (target) {
+            case "WEAPON" ->
+                    name.endsWith("_SWORD") || name.endsWith("_AXE") || name.equals("TRIDENT") || name.equals("MACE");
+            case "ARMOR" ->
+                    name.endsWith("_HELMET") || name.endsWith("_CHESTPLATE") || name.endsWith("_LEGGINGS") || name.endsWith("_BOOTS");
+            case "SWORD" -> name.endsWith("_SWORD");
+            case "BOW" -> name.equals("BOW") || name.equals("CROSSBOW");
+            case "TOOL" ->
+                    name.endsWith("_PICKAXE") || name.endsWith("_SHOVEL") || name.endsWith("_AXE") || name.endsWith("_HOE");
+            default -> true;
+        };
     }
 
     public boolean hasConflict(String enchantId, ItemStack item) {
+        if (isBukkitEnchant(enchantId)) {
+            Enchantment currentBukkit = getBukkitRegistry().get(NamespacedKey.fromString(enchantId.toLowerCase()));
+            if (currentBukkit != null && item.hasItemMeta() && item.getItemMeta().hasEnchants()) {
+                for (Enchantment applied : item.getItemMeta().getEnchants().keySet()) {
+                    if (currentBukkit.conflictsWith(applied)) return true;
+                }
+            }
+            return false;
+        }
+
         List<String> conflictList = conflicts.getOrDefault(enchantId, new ArrayList<>());
         if (conflictList.isEmpty()) return false;
 
-        // Kiểm tra với Custom Enchants đang có
         Map<String, Integer> currentCustoms = getCustomEnchants(item);
         for (String conf : conflictList) {
             if (currentCustoms.containsKey(conf)) return true;
         }
 
-        // Kiểm tra với Vanilla Enchants đang có
         if (item.hasItemMeta() && item.getItemMeta().hasEnchants()) {
             for (Enchantment vanilla : item.getItemMeta().getEnchants().keySet()) {
-                String vId = vanilla.getKey().toString(); // Trả về dạng minecraft:smite
+                String vId = vanilla.getKey().toString();
                 if (conflictList.contains(vId)) return true;
             }
         }
         return false;
     }
 
-    // ===============================================
-    // HỆ THỐNG NBT CHO VŨ KHÍ / GIÁP
-    // ===============================================
     public Map<String, Integer> getCustomEnchants(ItemStack item) {
         Map<String, Integer> enchants = new HashMap<>();
         if (item == null || !item.hasItemMeta()) return enchants;
-        ItemMeta meta = item.getItemMeta();
 
-        String rawData = meta.getPersistentDataContainer().get(ENCHANT_KEY, PersistentDataType.STRING);
+        String rawData = item.getItemMeta().getPersistentDataContainer().get(ENCHANT_KEY, PersistentDataType.STRING);
         if (rawData != null && !rawData.isEmpty()) {
-            String[] pairs = rawData.split(";");
-            for (String pair : pairs) {
+            for (String pair : rawData.split(";")) {
                 String[] split = pair.split(",");
-                if (split.length == 2) {
-                    enchants.put(split[0], Integer.parseInt(split[1]));
-                }
+                if (split.length == 2) enchants.put(split[0], Integer.parseInt(split[1]));
             }
         }
         return enchants;
@@ -140,21 +191,75 @@ public class EnchantManager {
         item.setItemMeta(meta);
     }
 
+    /**
+     * Gets all enchantments (both Vanilla and Custom) currently on the item.
+     */
+    public Map<String, Integer> getAllEnchantsOnItem(ItemStack item) {
+        Map<String, Integer> allEnchants = new HashMap<>(getCustomEnchants(item));
+        if (item != null && item.hasItemMeta() && item.getItemMeta().hasEnchants()) {
+            for (Map.Entry<Enchantment, Integer> entry : item.getItemMeta().getEnchants().entrySet()) {
+                allEnchants.put(entry.getKey().getKey().toString(), entry.getValue());
+            }
+        }
+        return allEnchants;
+    }
+
     public boolean addEnchant(ItemStack item, String enchantId, int level) {
+        int maxLvl = getMaxLevel(enchantId);
+        int finalLevel = Math.min(level, maxLvl);
+
+        if (isBukkitEnchant(enchantId)) {
+            Enchantment bukkitEnc = getBukkitRegistry().get(NamespacedKey.fromString(enchantId.toLowerCase()));
+            if (bukkitEnc != null) {
+                ItemMeta meta = item.getItemMeta();
+                if (meta == null) return false;
+                int currentLvl = meta.getEnchantLevel(bukkitEnc);
+                if (currentLvl >= maxLvl && level <= maxLvl) return false;
+
+                meta.addEnchant(bukkitEnc, finalLevel, true);
+                item.setItemMeta(meta);
+                return true;
+            }
+        }
+
         Map<String, Integer> current = getCustomEnchants(item);
         int currentLevel = current.getOrDefault(enchantId, 0);
-        int maxLvl = getMaxLevel(enchantId);
 
         if (currentLevel >= maxLvl && level <= maxLvl) return false;
-        current.put(enchantId, Math.min(level, maxLvl));
-
+        current.put(enchantId, finalLevel);
         setCustomEnchants(item, current);
         return true;
     }
 
-    // ===============================================
-    // TẠO SÁCH ENCHANT TỪ ITEMS.YML
-    // ===============================================
+    /**
+     * Safely removes an enchantment from the item (Vanilla or Custom).
+     */
+    public void removeEnchant(ItemStack item, String enchantId) {
+        if (isBukkitEnchant(enchantId)) {
+            Enchantment bukkitEnc = getBukkitRegistry().get(NamespacedKey.fromString(enchantId.toLowerCase()));
+            if (bukkitEnc != null && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                meta.removeEnchant(bukkitEnc);
+                item.setItemMeta(meta);
+            }
+        } else {
+            Map<String, Integer> current = getCustomEnchants(item);
+            if (current.containsKey(enchantId)) {
+                current.remove(enchantId);
+                setCustomEnchants(item, current);
+            }
+        }
+    }
+
+    public int getEnchantLevel(ItemStack item, String enchantId) {
+        if (isBukkitEnchant(enchantId)) {
+            Enchantment bukkitEnc = getBukkitRegistry().get(NamespacedKey.fromString(enchantId.toLowerCase()));
+            if (bukkitEnc != null && item.hasItemMeta()) return item.getItemMeta().getEnchantLevel(bukkitEnc);
+            return 0;
+        }
+        return getCustomEnchants(item).getOrDefault(enchantId, 0);
+    }
+
     public ItemStack createEnchantBook(String enchantId, int level, int successRate, int destroyRate) {
         String matStr = plugin.getItemsFile().getString("enchant-book.material", "ENCHANTED_BOOK");
         Material mat = Material.matchMaterial(matStr);
@@ -163,12 +268,13 @@ public class EnchantManager {
         ItemStack book = new ItemStack(mat);
         ItemMeta meta = book.getItemMeta();
 
-        String rawName = plugin.getItemsFile().getString("enchant-book.name", "Sách: %enchant_name%");
+        String rawName = plugin.getItemsFile().getString("enchant-book.name", "Book: %enchant_name%");
         List<String> rawLore = plugin.getItemsFile().getStringList("enchant-book.lore");
 
         String eName = getEnchantName(enchantId);
         String rName = getRarity(enchantId);
         String rColor = plugin.getConfigFile().getString("rarities." + rName, "&f");
+        List<String> description = getDescription(enchantId);
 
         rawName = rawName.replace("%enchant_name%", eName)
                 .replace("%level%", String.valueOf(level))
@@ -178,6 +284,12 @@ public class EnchantManager {
 
         List<Component> finalLore = new ArrayList<>();
         for (String line : rawLore) {
+            if (line.contains("%description%")) {
+                for (String descLine : description) {
+                    finalLore.add(ColorUtils.parse(descLine).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+                }
+                continue;
+            }
             String parsedLine = line.replace("%enchant_name%", eName)
                     .replace("%level%", String.valueOf(level))
                     .replace("%success%", String.valueOf(successRate))
@@ -195,5 +307,36 @@ public class EnchantManager {
 
         book.setItemMeta(meta);
         return book;
+    }
+
+    /**
+     * Creates an Extractor item (Random or Specific).
+     *
+     * @param type   "random" or "specific"
+     * @param amount The amount to give.
+     */
+    public ItemStack createExtractor(String type, int amount) {
+        String path = type.toLowerCase() + "-extractor";
+        String matStr = plugin.getItemsFile().getString(path + ".material", "PAPER");
+        Material mat = Material.matchMaterial(matStr);
+        if (mat == null) mat = Material.PAPER;
+
+        ItemStack extractor = new ItemStack(mat, amount);
+        ItemMeta meta = extractor.getItemMeta();
+
+        String name = plugin.getItemsFile().getString(path + ".name", "Extractor");
+        List<String> lore = plugin.getItemsFile().getStringList(path + ".lore");
+
+        meta.displayName(ColorUtils.parse(name).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+        List<Component> compLore = new ArrayList<>();
+        for (String line : lore) {
+            compLore.add(ColorUtils.parse(line).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+        }
+        meta.lore(compLore);
+
+        meta.getPersistentDataContainer().set(EXTRACTOR_TYPE_KEY, PersistentDataType.STRING, type.toUpperCase());
+
+        extractor.setItemMeta(meta);
+        return extractor;
     }
 }

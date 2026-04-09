@@ -8,11 +8,15 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.utils.ColorUtils;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+@SuppressWarnings({"UnstableApiUsage", "SpellCheckingInspection"})
 public class SinceCommand {
 
     private final SinceEnchantments plugin;
@@ -33,8 +37,6 @@ public class SinceCommand {
     public LiteralCommandNode<CommandSourceStack> buildCommand() {
         return Commands.literal("sinceenchantments")
                 .requires(source -> source.getSender().hasPermission("sinceenchantments.admin"))
-
-                // LỆNH: /se reload
                 .then(Commands.literal("reload")
                         .executes(context -> {
                             plugin.getConfigFile().reload();
@@ -45,17 +47,18 @@ public class SinceCommand {
                             return Command.SINGLE_SUCCESS;
                         })
                 )
-
-                // LỆNH: /se givebook <player> <enchant> <level> [success] [destroy]
+                // COMMAND: /se givebook <target> <enchant> <level>
                 .then(Commands.literal("givebook")
                         .then(Commands.argument("target", ArgumentTypes.player())
-                                .then(Commands.argument("enchant", StringArgumentType.word())
-                                        // Gợi ý Tab Complete từ Registry
+                                .then(Commands.argument("enchant", StringArgumentType.string())
                                         .suggests((context, builder) -> {
+                                            String remaining = builder.getRemainingLowerCase();
                                             for (String id : plugin.getEnchantRegistry().getRegisteredIds()) {
-                                                if (id.startsWith(builder.getRemainingLowerCase())) {
-                                                    builder.suggest(id);
-                                                }
+                                                if (id.startsWith(remaining)) builder.suggest(id);
+                                            }
+                                            for (Enchantment enc : RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT)) {
+                                                String id = enc.getKey().toString();
+                                                if (id.startsWith(remaining)) builder.suggest(id);
                                             }
                                             return builder.buildFuture();
                                         })
@@ -71,14 +74,36 @@ public class SinceCommand {
                                 )
                         )
                 )
+                // COMMAND: /se giveextractor <target> <random|specific> <amount>
+                .then(Commands.literal("giveextractor")
+                        .then(Commands.argument("target", ArgumentTypes.player())
+                                .then(Commands.argument("type", StringArgumentType.word())
+                                        .suggests((context, builder) -> {
+                                            builder.suggest("random");
+                                            builder.suggest("specific");
+                                            return builder.buildFuture();
+                                        })
+                                        .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+                                                .executes(this::executeGiveExtractor)
+                                        )
+                                )
+                        )
+                )
                 .build();
     }
 
+    @SuppressWarnings("SameReturnValue")
     private int executeGiveBook(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int success, int destroy) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
         Player target = targetResolver.resolve(context.getSource()).getFirst();
 
-        String enchantId = StringArgumentType.getString(context, "enchant");
+        String enchantId = StringArgumentType.getString(context, "enchant").toLowerCase();
+
+        if (!plugin.getEnchantManager().enchantExists(enchantId)) {
+            sendMessage(context.getSource(), "enchant-not-found", "%enchant%", enchantId);
+            return Command.SINGLE_SUCCESS;
+        }
+
         int level = IntegerArgumentType.getInteger(context, "level");
 
         ItemStack book = plugin.getEnchantManager().createEnchantBook(enchantId, level, success, destroy);
@@ -87,6 +112,30 @@ public class SinceCommand {
         sendMessage(context.getSource(), "give-book-success",
                 "%enchant%", enchantId,
                 "%level%", String.valueOf(level),
+                "%player%", target.getName());
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    @SuppressWarnings("SameReturnValue")
+    private int executeGiveExtractor(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
+        Player target = targetResolver.resolve(context.getSource()).getFirst();
+
+        String type = StringArgumentType.getString(context, "type");
+        int amount = IntegerArgumentType.getInteger(context, "amount");
+
+        if (!type.equalsIgnoreCase("random") && !type.equalsIgnoreCase("specific")) {
+            sendMessage(context.getSource(), "invalid-number"); // Using as fallback for invalid input
+            return Command.SINGLE_SUCCESS;
+        }
+
+        ItemStack extractor = plugin.getEnchantManager().createExtractor(type, amount);
+        target.getInventory().addItem(extractor);
+
+        sendMessage(context.getSource(), "give-extractor-success",
+                "%type%", type.toUpperCase(),
+                "%amount%", String.valueOf(amount),
                 "%player%", target.getName());
 
         return Command.SINGLE_SUCCESS;

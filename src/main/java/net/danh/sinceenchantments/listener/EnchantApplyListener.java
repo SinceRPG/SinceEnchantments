@@ -31,7 +31,7 @@ public class EnchantApplyListener implements Listener {
         String prefix = plugin.getMessagesFile().getString("prefix", "");
         String msg = plugin.getMessagesFile().getString(path, "");
         for (int i = 0; i < replacements.length; i += 2) {
-            msg = msg.replace(replacements[i], replacements[i+1]);
+            msg = msg.replace(replacements[i], replacements[i + 1]);
         }
         p.sendMessage(ColorUtils.parse(prefix + msg));
     }
@@ -47,7 +47,8 @@ public class EnchantApplyListener implements Listener {
         if (current == null || current.getType() == Material.AIR) return;
 
         ItemMeta cursorMeta = cursor.getItemMeta();
-        if (cursorMeta == null || !cursorMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) return;
+        if (cursorMeta == null || !cursorMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING))
+            return;
 
         event.setCancelled(true);
 
@@ -56,27 +57,27 @@ public class EnchantApplyListener implements Listener {
         int successRate = cursorMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);
         int destroyRate = cursorMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
 
-        // 1. KIỂM TRA TARGET (Loại vật phẩm)
         if (!manager.isApplicable(enchantId, current.getType())) {
             sendMsg(player, "enchant-wrong-target");
             return;
         }
 
-        // 2. KIỂM TRA TƯƠNG KHẮC (Conflicts)
         if (manager.hasConflict(enchantId, current)) {
             sendMsg(player, "enchant-conflict");
             return;
         }
 
-        Map<String, Integer> currentEnchants = manager.getCustomEnchants(current);
-        int limit = plugin.getConfigFile().getInt("settings.max-custom-enchants-per-item", 5);
+        if (!manager.isBukkitEnchant(enchantId)) {
+            Map<String, Integer> currentCustomEnchants = manager.getCustomEnchants(current);
+            int limit = plugin.getConfigFile().getInt("settings.max-custom-enchants-per-item", 5);
 
-        if (!currentEnchants.containsKey(enchantId) && currentEnchants.size() >= limit) {
-            sendMsg(player, "enchant-limit-reached", "%limit%", String.valueOf(limit));
-            return;
+            if (!currentCustomEnchants.containsKey(enchantId) && currentCustomEnchants.size() >= limit) {
+                sendMsg(player, "enchant-limit-reached", "%limit%", String.valueOf(limit));
+                return;
+            }
         }
 
-        int currentLevel = currentEnchants.getOrDefault(enchantId, 0);
+        int currentLevel = manager.getEnchantLevel(current, enchantId);
         if (currentLevel >= manager.getMaxLevel(enchantId)) {
             sendMsg(player, "enchant-max-level");
             return;
