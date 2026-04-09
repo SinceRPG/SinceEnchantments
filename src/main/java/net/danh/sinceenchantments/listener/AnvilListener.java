@@ -38,7 +38,6 @@ public class AnvilListener implements Listener {
         String enchantId = meta2.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
         int bookLvl = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
         int successRate = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);
-        int destroyRate = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
 
         ConfigUtils config = plugin.getConfigFile();
         int costCombine = config.getInt("settings.anvil-xp-combine-books", 5);
@@ -54,7 +53,7 @@ public class AnvilListener implements Listener {
             if (id1.equals(enchantId) && lvl1 == bookLvl) {
                 int nextLvl = lvl1 + 1;
                 if (nextLvl <= manager.getMaxLevel(enchantId)) {
-                    ItemStack resultBook = manager.createEnchantBook(enchantId, nextLvl, successRate, destroyRate);
+                    ItemStack resultBook = manager.createEnchantBook(enchantId, nextLvl, successRate);
                     event.setResult(resultBook);
                     anvilView.setRepairCost(nextLvl * costCombine);
                     return;

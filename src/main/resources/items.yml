@@ -8,7 +8,6 @@ enchant-book:
     - "%description%"
     - ""
     - "&7Success Rate: &a%success%%"
-    - "&7Destroy Rate: &c%destroy%%"
     - ""
     - "&eDrag and drop onto an item to apply!"
 
@@ -27,3 +26,12 @@ specific-extractor:
     - "&7Drag & Drop onto an item"
     - "&7to open a menu and choose"
     - "&7which enchantment to extract."
+
+success-charm:
+  material: "GLOWSTONE_DUST"
+  name: "&8[&e&lSuccess Charm&8]"
+  lore:
+    - "&7Increases the success rate"
+    - "&7of an Enchantment Book by &a+%bonus%%&7."
+    - ""
+    - "&eDrag and drop onto an Enchantment Book to use!"

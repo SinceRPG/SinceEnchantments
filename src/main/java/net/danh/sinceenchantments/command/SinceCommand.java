@@ -47,7 +47,7 @@ public class SinceCommand {
                             return Command.SINGLE_SUCCESS;
                         })
                 )
-                // COMMAND: /se givebook <target> <enchant> <level>
+                // COMMAND: /se givebook <target> <enchant> <level> [success]
                 .then(Commands.literal("givebook")
                         .then(Commands.argument("target", ArgumentTypes.player())
                                 .then(Commands.argument("enchant", StringArgumentType.string())
@@ -63,12 +63,9 @@ public class SinceCommand {
                                             return builder.buildFuture();
                                         })
                                         .then(Commands.argument("level", IntegerArgumentType.integer(1))
-                                                .executes(context -> executeGiveBook(context, 100, 0))
+                                                .executes(context -> executeGiveBook(context, 100))
                                                 .then(Commands.argument("success", IntegerArgumentType.integer(0, 100))
-                                                        .executes(context -> executeGiveBook(context, IntegerArgumentType.getInteger(context, "success"), 0))
-                                                        .then(Commands.argument("destroy", IntegerArgumentType.integer(0, 100))
-                                                                .executes(context -> executeGiveBook(context, IntegerArgumentType.getInteger(context, "success"), IntegerArgumentType.getInteger(context, "destroy")))
-                                                        )
+                                                        .executes(context -> executeGiveBook(context, IntegerArgumentType.getInteger(context, "success")))
                                                 )
                                         )
                                 )
@@ -89,11 +86,22 @@ public class SinceCommand {
                                 )
                         )
                 )
+                // COMMAND: /se givecharm <target> <bonus_percent> [amount]
+                .then(Commands.literal("givecharm")
+                        .then(Commands.argument("target", ArgumentTypes.player())
+                                .then(Commands.argument("bonus", IntegerArgumentType.integer(1, 100))
+                                        .executes(context -> executeGiveCharm(context, 1))
+                                        .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+                                                .executes(context -> executeGiveCharm(context, IntegerArgumentType.getInteger(context, "amount")))
+                                        )
+                                )
+                        )
+                )
                 .build();
     }
 
     @SuppressWarnings("SameReturnValue")
-    private int executeGiveBook(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int success, int destroy) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+    private int executeGiveBook(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int success) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
         Player target = targetResolver.resolve(context.getSource()).getFirst();
 
@@ -106,7 +114,7 @@ public class SinceCommand {
 
         int level = IntegerArgumentType.getInteger(context, "level");
 
-        ItemStack book = plugin.getEnchantManager().createEnchantBook(enchantId, level, success, destroy);
+        ItemStack book = plugin.getEnchantManager().createEnchantBook(enchantId, level, success);
         target.getInventory().addItem(book);
 
         sendMessage(context.getSource(), "give-book-success",
@@ -126,7 +134,7 @@ public class SinceCommand {
         int amount = IntegerArgumentType.getInteger(context, "amount");
 
         if (!type.equalsIgnoreCase("random") && !type.equalsIgnoreCase("specific")) {
-            sendMessage(context.getSource(), "invalid-number"); // Using as fallback for invalid input
+            sendMessage(context.getSource(), "invalid-number");
             return Command.SINGLE_SUCCESS;
         }
 
@@ -135,6 +143,24 @@ public class SinceCommand {
 
         sendMessage(context.getSource(), "give-extractor-success",
                 "%type%", type.toUpperCase(),
+                "%amount%", String.valueOf(amount),
+                "%player%", target.getName());
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    @SuppressWarnings("SameReturnValue")
+    private int executeGiveCharm(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
+        Player target = targetResolver.resolve(context.getSource()).getFirst();
+
+        int bonus = IntegerArgumentType.getInteger(context, "bonus");
+
+        ItemStack charm = plugin.getEnchantManager().createSuccessCharm(bonus, amount);
+        target.getInventory().addItem(charm);
+
+        sendMessage(context.getSource(), "give-charm-success",
+                "%bonus%", String.valueOf(bonus),
                 "%amount%", String.valueOf(amount),
                 "%player%", target.getName());
 

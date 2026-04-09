@@ -28,11 +28,8 @@ public class ExtractorGUI implements InventoryHolder {
     public ExtractorGUI(SinceEnchantments plugin, ItemStack weapon) {
         this.weapon = weapon;
 
-        // Read GUI settings from config.yml
         String titleRaw = plugin.getConfigFile().getString("gui.extractor.title", "&8Select Enchant to Extract");
         int size = plugin.getConfigFile().getInt("gui.extractor.size", 27);
-
-        // Ensure size is valid (multiple of 9, max 54)
         if (size % 9 != 0 || size < 9 || size > 54) size = 27;
 
         Component title = ColorUtils.parse(titleRaw);
@@ -47,7 +44,6 @@ public class ExtractorGUI implements InventoryHolder {
         int slot = 0;
         int maxSize = inventory.getSize();
 
-        // Read Display Item settings from config.yml
         String matStr = plugin.getConfigFile().getString("gui.extractor.display-item.material", "ENCHANTED_BOOK");
         Material mat = Material.matchMaterial(matStr);
         if (mat == null) mat = Material.ENCHANTED_BOOK;
@@ -56,7 +52,7 @@ public class ExtractorGUI implements InventoryHolder {
         List<String> rawLore = plugin.getConfigFile().getStringList("gui.extractor.display-item.lore");
 
         for (Map.Entry<String, Integer> entry : allEnchants.entrySet()) {
-            if (slot >= maxSize) break; // Safety limit
+            if (slot >= maxSize) break;
 
             String id = entry.getKey();
             int level = entry.getValue();
@@ -68,14 +64,12 @@ public class ExtractorGUI implements InventoryHolder {
             String rarity = plugin.getEnchantManager().getRarity(id);
             String color = plugin.getConfigFile().getString("rarities." + rarity, "&f");
 
-            // Format Name
             String parsedName = rawName.replace("%enchant_name%", name)
                     .replace("%level%", String.valueOf(level))
                     .replace("%rarity_name%", rarity)
                     .replace("%rarity_color%", color);
             meta.displayName(ColorUtils.parse(parsedName).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
 
-            // Format Lore
             List<Component> finalLore = new ArrayList<>();
             for (String line : rawLore) {
                 String parsedLine = line.replace("%enchant_name%", name)
@@ -86,7 +80,6 @@ public class ExtractorGUI implements InventoryHolder {
             }
             meta.lore(finalLore);
 
-            // Embed ID and Level to process clicks securely
             meta.getPersistentDataContainer().set(plugin.getEnchantManager().BOOK_ID_KEY, PersistentDataType.STRING, id);
             meta.getPersistentDataContainer().set(plugin.getEnchantManager().BOOK_LEVEL_KEY, PersistentDataType.INTEGER, level);
 

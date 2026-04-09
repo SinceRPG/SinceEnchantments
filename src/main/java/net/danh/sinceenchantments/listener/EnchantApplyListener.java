@@ -37,7 +37,7 @@ public class EnchantApplyListener implements Listener {
     }
 
     @EventHandler
-    public void onDragBook(InventoryClickEvent event) {
+    public void onDragItem(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
         ItemStack cursor = event.getCursor();
@@ -47,15 +47,55 @@ public class EnchantApplyListener implements Listener {
         if (current == null || current.getType() == Material.AIR) return;
 
         ItemMeta cursorMeta = cursor.getItemMeta();
-        if (cursorMeta == null || !cursorMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING))
+        ItemMeta currentMeta = current.getItemMeta();
+        if (cursorMeta == null || currentMeta == null) return;
+
+        // ===============================================
+        // ACTION 1: APPLY SUCCESS CHARM TO ENCHANTMENT BOOK
+        // ===============================================
+        if (cursorMeta.getPersistentDataContainer().has(manager.CHARM_BONUS_KEY, PersistentDataType.INTEGER) &&
+                currentMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
+
+            event.setCancelled(true);
+
+            if (current.getAmount() > 1) {
+                sendMsg(player, "charm-need-unstack");
+                return;
+            }
+
+            int currentSuccess = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);
+            if (currentSuccess >= 100) {
+                sendMsg(player, "charm-max-reached");
+                return;
+            }
+
+            int bonus = cursorMeta.getPersistentDataContainer().getOrDefault(manager.CHARM_BONUS_KEY, PersistentDataType.INTEGER, 1);
+            int newSuccess = Math.min(100, currentSuccess + bonus);
+
+            cursor.setAmount(cursor.getAmount() - 1);
+            player.setItemOnCursor(cursor);
+
+            String enchantId = currentMeta.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
+            int level = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
+
+            ItemStack newBook = manager.createEnchantBook(enchantId, level, newSuccess);
+            event.setCurrentItem(newBook);
+
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
+            sendMsg(player, "charm-apply-success", "%bonus%", String.valueOf(bonus));
             return;
+        }
+
+        // ===============================================
+        // ACTION 2: APPLY ENCHANTMENT BOOK TO ITEM
+        // ===============================================
+        if (!cursorMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) return;
 
         event.setCancelled(true);
 
         String enchantId = cursorMeta.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
         int enchantLevel = cursorMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
         int successRate = cursorMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);
-        int destroyRate = cursorMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
 
         if (!manager.isApplicable(enchantId, current.getType())) {
             sendMsg(player, "enchant-wrong-target");
@@ -84,6 +124,7 @@ public class EnchantApplyListener implements Listener {
         }
 
         cursor.setAmount(cursor.getAmount() - 1);
+        player.setItemOnCursor(cursor);
 
         int roll = random.nextInt(100) + 1;
         if (roll <= successRate) {
@@ -91,15 +132,8 @@ public class EnchantApplyListener implements Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
             sendMsg(player, "enchant-success");
         } else {
-            int destroyRoll = random.nextInt(100) + 1;
-            if (destroyRoll <= destroyRate) {
-                event.setCurrentItem(new ItemStack(Material.AIR));
-                player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1f, 1f);
-                sendMsg(player, "enchant-fail-destroy");
-            } else {
-                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_PLACE, 1f, 0.5f);
-                sendMsg(player, "enchant-fail-safe");
-            }
+            player.playSound(player.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, 1f, 1f);
+            sendMsg(player, "enchant-fail");
         }
     }
 }

@@ -5,19 +5,21 @@ player-not-found: "&cPlayer %player% not found."
 invalid-number: "&cPlease enter a valid number."
 give-book-success: "&aGave %enchant% book (Level %level%) to %player%."
 give-extractor-success: "&aGave %type% Extractor (x%amount%) to %player%."
-not-enough-args: "&cUsage: /se givebook <player> <enchant_id> <level> [success_rate] [destroy_rate]"
+give-charm-success: "&aGave Success Charm (+%bonus%%) (x%amount%) to %player%."
+not-enough-args: "&cUsage: /se givebook <player> <enchant_id> <level> [success_rate]"
 enchant-not-found: "&cThe enchantment '%enchant%' does not exist in Bukkit or Custom Registry!"
 
 enchant-success: "&aEnchantment successful! Your item grows stronger."
-enchant-fail-destroy: "&cOops! Your item was destroyed during the enchantment process!"
-enchant-fail-safe: "&eEnchantment failed, but your item remained intact."
+enchant-fail: "&cEnchantment failed! The book was destroyed, but your item is safe."
 enchant-limit-reached: "&cThis item has reached the maximum custom enchantments limit (%limit%)!"
 enchant-max-level: "&cThis item has reached or exceeded the maximum level for this enchantment!"
-
 enchant-wrong-target: "&cThis enchantment cannot be applied to this type of item!"
 enchant-conflict: "&cThis enchantment conflicts with another enchantment on the item!"
 
-# Extractor Messages
+charm-apply-success: "&aSuccessfully increased the book's success rate by &e+%bonus%%&a!"
+charm-max-reached: "&cThis book already has the maximum success rate (100%)!"
+charm-need-unstack: "&cPlease unstack your enchantment books to 1 before applying a charm!"
+
 extract-no-enchants: "&cThis item has no enchantments to extract!"
 extract-success: "&aSuccessfully extracted &e%enchant% %level% &afrom your item!"
 extract-cancelled: "&cExtraction cancelled. The extractor has been refunded to your inventory."

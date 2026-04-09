@@ -21,15 +21,14 @@ import java.util.Map;
 /**
  * Core manager handling NBT data, validation, and Bukkit integration.
  */
-@SuppressWarnings("UnstableApiUsage")
 public class EnchantManager {
 
     public final NamespacedKey ENCHANT_KEY;
     public final NamespacedKey BOOK_ID_KEY;
     public final NamespacedKey BOOK_LEVEL_KEY;
     public final NamespacedKey BOOK_SUCCESS_KEY;
-    public final NamespacedKey BOOK_DESTROY_KEY;
-    public final NamespacedKey EXTRACTOR_TYPE_KEY; // NEW: Identifies Extractor Type
+    public final NamespacedKey EXTRACTOR_TYPE_KEY;
+    public final NamespacedKey CHARM_BONUS_KEY;
 
     private final SinceEnchantments plugin;
     private final Map<String, Integer> maxLevels = new HashMap<>();
@@ -45,8 +44,8 @@ public class EnchantManager {
         this.BOOK_ID_KEY = new NamespacedKey(plugin, "book_enchant_id");
         this.BOOK_LEVEL_KEY = new NamespacedKey(plugin, "book_enchant_level");
         this.BOOK_SUCCESS_KEY = new NamespacedKey(plugin, "book_success_rate");
-        this.BOOK_DESTROY_KEY = new NamespacedKey(plugin, "book_destroy_rate");
         this.EXTRACTOR_TYPE_KEY = new NamespacedKey(plugin, "extractor_type");
+        this.CHARM_BONUS_KEY = new NamespacedKey(plugin, "charm_bonus");
         loadEnchantsFromConfig();
     }
 
@@ -191,9 +190,6 @@ public class EnchantManager {
         item.setItemMeta(meta);
     }
 
-    /**
-     * Gets all enchantments (both Vanilla and Custom) currently on the item.
-     */
     public Map<String, Integer> getAllEnchantsOnItem(ItemStack item) {
         Map<String, Integer> allEnchants = new HashMap<>(getCustomEnchants(item));
         if (item != null && item.hasItemMeta() && item.getItemMeta().hasEnchants()) {
@@ -260,7 +256,7 @@ public class EnchantManager {
         return getCustomEnchants(item).getOrDefault(enchantId, 0);
     }
 
-    public ItemStack createEnchantBook(String enchantId, int level, int successRate, int destroyRate) {
+    public ItemStack createEnchantBook(String enchantId, int level, int successRate) {
         String matStr = plugin.getItemsFile().getString("enchant-book.material", "ENCHANTED_BOOK");
         Material mat = Material.matchMaterial(matStr);
         if (mat == null) mat = Material.ENCHANTED_BOOK;
@@ -293,7 +289,6 @@ public class EnchantManager {
             String parsedLine = line.replace("%enchant_name%", eName)
                     .replace("%level%", String.valueOf(level))
                     .replace("%success%", String.valueOf(successRate))
-                    .replace("%destroy%", String.valueOf(destroyRate))
                     .replace("%rarity_name%", rName)
                     .replace("%rarity_color%", rColor);
             finalLore.add(ColorUtils.parse(parsedLine).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
@@ -303,7 +298,6 @@ public class EnchantManager {
         meta.getPersistentDataContainer().set(BOOK_ID_KEY, PersistentDataType.STRING, enchantId);
         meta.getPersistentDataContainer().set(BOOK_LEVEL_KEY, PersistentDataType.INTEGER, level);
         meta.getPersistentDataContainer().set(BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, successRate);
-        meta.getPersistentDataContainer().set(BOOK_DESTROY_KEY, PersistentDataType.INTEGER, destroyRate);
 
         book.setItemMeta(meta);
         return book;
@@ -335,8 +329,34 @@ public class EnchantManager {
         meta.lore(compLore);
 
         meta.getPersistentDataContainer().set(EXTRACTOR_TYPE_KEY, PersistentDataType.STRING, type.toUpperCase());
-
         extractor.setItemMeta(meta);
         return extractor;
+    }
+
+    /**
+     * Creates a Success Charm item.
+     */
+    public ItemStack createSuccessCharm(int bonus, int amount) {
+        String matStr = plugin.getItemsFile().getString("success-charm.material", "GLOWSTONE_DUST");
+        Material mat = Material.matchMaterial(matStr);
+        if (mat == null) mat = Material.GLOWSTONE_DUST;
+
+        ItemStack charm = new ItemStack(mat, amount);
+        ItemMeta meta = charm.getItemMeta();
+
+        String name = plugin.getItemsFile().getString("success-charm.name", "Success Charm");
+        List<String> lore = plugin.getItemsFile().getStringList("success-charm.lore");
+
+        meta.displayName(ColorUtils.parse(name.replace("%bonus%", String.valueOf(bonus))).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+
+        List<Component> compLore = new ArrayList<>();
+        for (String line : lore) {
+            compLore.add(ColorUtils.parse(line.replace("%bonus%", String.valueOf(bonus))).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+        }
+        meta.lore(compLore);
+
+        meta.getPersistentDataContainer().set(CHARM_BONUS_KEY, PersistentDataType.INTEGER, bonus);
+        charm.setItemMeta(meta);
+        return charm;
     }
 }
