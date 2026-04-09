@@ -1,0 +1,224 @@
+# ==========================================
+# CẤU HÌNH SINCE ENCHANTMENTS
+# ==========================================
+
+settings:
+  # Placeholder để MMOItems (hoặc plugin khác) nhận diện vị trí chèn enchant
+  placeholder: "#enchants#"
+
+  # Số lượng enchant hiển thị trên 1 dòng
+  enchants-per-line: 3
+
+  # Dấu ngăn cách giữa các enchant (Hỗ trợ Legacy & MiniMessage)
+  separator: "&8, "
+
+  # Màu mặc định cho các enchant không có trong list bên dưới
+  default-color: "&9"
+
+# ==========================================
+# CUSTOM ENCHANTS
+# Hỗ trợ cả mã màu cũ (&c, &#ff0000) và MiniMessage (<red>, <gradient>)
+# Định dạng Key: "namespace:enchant_name"
+# ==========================================
+custom-enchants:
+  # ----------------------------------------
+  # VŨ KHÍ CẬN CHIẾN (Kiếm / Rìu)
+  # ----------------------------------------
+  "minecraft:sharpness":
+    name: "Sắc Bén"
+    color: "&c"
+
+  "minecraft:smite":
+    name: "Hại Thây Ma"
+    color: "&#e6d933"
+
+  "minecraft:bane_of_arthropods":
+    name: "Hại Chân Khớp"
+    color: "&2"
+
+  "minecraft:knockback":
+    name: "Bật Lùi"
+    color: "&7"
+
+  "minecraft:fire_aspect":
+    name: "Gây Cháy"
+    color: "&6"
+
+  "minecraft:looting":
+    name: "Nhặt Đồ"
+    color: "&e"
+
+  "minecraft:sweeping_edge":
+    name: "Quét Cạnh"
+    color: "&f"
+
+  # ----------------------------------------
+  # VŨ KHÍ MỚI 1.21+ (Chùy - Mace)
+  # ----------------------------------------
+  "minecraft:density":
+    name: "Tỉ Trọng"
+    color: "&5"
+
+  "minecraft:breach":
+    name: "Xuyên Giáp"
+    color: "&4"
+
+  "minecraft:wind_burst":
+    name: "Bùng Nổ Gió"
+    color: "&b&l"
+
+  # ----------------------------------------
+  # GIÁP (Armor)
+  # ----------------------------------------
+  "minecraft:protection":
+    name: "Bảo Vệ"
+    color: "<gradient:aqua:blue>"
+
+  "minecraft:fire_protection":
+    name: "Bảo Vệ Khỏi Lửa"
+    color: "&6"
+
+  "minecraft:feather_falling":
+    name: "Nhẹ Nhàng Rơi"
+    color: "&b"
+
+  "minecraft:blast_protection":
+    name: "Bảo Vệ Khỏi Vụ Nổ"
+    color: "&4"
+
+  "minecraft:projectile_protection":
+    name: "Bảo Vệ Khỏi Vật Thể Bay"
+    color: "&7"
+
+  "minecraft:respiration":
+    name: "Hô Hấp"
+    color: "&3"
+
+  "minecraft:aqua_affinity":
+    name: "Ái Lực Nước"
+    color: "&9"
+
+  "minecraft:thorns":
+    name: "Gai"
+    color: "&2"
+
+  "minecraft:depth_strider":
+    name: "Sải Bước Dưới Nước"
+    color: "&1"
+
+  "minecraft:frost_walker":
+    name: "Chân Băng"
+    color: "&b"
+
+  # ----------------------------------------
+  # DỤNG CỤ (Cúp / Cuốc / Rìu / Xẻng)
+  # ----------------------------------------
+  "minecraft:efficiency":
+    name: "Hiệu Suất"
+    color: "&e"
+
+  "minecraft:silk_touch":
+    name: "Mềm Mại"
+    color: "&d"
+
+  "minecraft:unbreaking":
+    name: "Chậm Hỏng"
+    color: "&a"
+
+  "minecraft:fortune":
+    name: "Gia Tài"
+    color: "&6"
+
+  # ----------------------------------------
+  # CUNG (Bow)
+  # ----------------------------------------
+  "minecraft:power":
+    name: "Sức Mạnh"
+    color: "&c"
+
+  "minecraft:punch":
+    name: "Bật Lùi"
+    color: "&7"
+
+  "minecraft:flame":
+    name: "Lửa"
+    color: "&6"
+
+  "minecraft:infinity":
+    name: "Vô Hạn"
+    color: "<gradient:light_purple:dark_purple>"
+
+  # ----------------------------------------
+  # CẦN CÂU (Fishing Rod)
+  # ----------------------------------------
+  "minecraft:luck_of_the_sea":
+    name: "May Mắn Của Biển"
+    color: "&b"
+
+  "minecraft:lure":
+    name: "Nhử Mồi"
+    color: "&a"
+
+  # ----------------------------------------
+  # ĐINH BA (Trident)
+  # ----------------------------------------
+  "minecraft:loyalty":
+    name: "Lòng Trung Thành"
+    color: "&3"
+
+  "minecraft:impaling":
+    name: "Xuyên Thấu"
+    color: "&4"
+
+  "minecraft:riptide":
+    name: "Cuốn Theo Chiều Gió"
+    color: "&b"
+
+  "minecraft:channeling":
+    name: "Dẫn Sét"
+    color: "&e"
+
+  # ----------------------------------------
+  # NỎ (Crossbow)
+  # ----------------------------------------
+  "minecraft:multishot":
+    name: "Đa Mũi Tên"
+    color: "&e"
+
+  "minecraft:piercing":
+    name: "Xuyên Thủng"
+    color: "&7"
+
+  "minecraft:quick_charge":
+    name: "Nạp Nhanh"
+    color: "&a"
+
+  # ----------------------------------------
+  # CHUNG & ĐẶC BIỆT (Lời nguyền / Sửa chữa)
+  # ----------------------------------------
+  "minecraft:mending":
+    name: "Sửa Chữa"
+    color: "<gradient:green:yellow>"
+
+  "minecraft:swift_sneak":
+    name: "Lén Lút Nhanh"
+    color: "&8"
+
+  "minecraft:soul_speed":
+    name: "Tốc Độ Linh Hồn"
+    color: "&8"
+
+  "minecraft:vanishing_curse":
+    name: "Lời Nguyền Biến Mất"
+    color: "&c"
+
+  "minecraft:binding_curse":
+    name: "Lời Nguyền Ràng Buộc"
+    color: "&c"
+
+  # ----------------------------------------
+  # VÍ DỤ PLUGIN BÊN THỨ 3 (Custom Enchant)
+  # ----------------------------------------
+  "ecoenchants:lifesteal":
+    name: "Hút Máu"
+    color: "&d&l"

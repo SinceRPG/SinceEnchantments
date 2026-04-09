@@ -1,0 +1,11 @@
+name: SinceEnchantments
+version: '${version}'
+main: net.danh.sinceenchantments.SinceEnchantments
+api-version: '1.21.11'
+load: POSTWORLD
+authors: [ VoChiDanh ]
+dependencies:
+  server:
+    packetevents:
+      load: BEFORE
+      required: true
