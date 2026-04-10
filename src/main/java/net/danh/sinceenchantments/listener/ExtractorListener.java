@@ -2,6 +2,7 @@ package net.danh.sinceenchantments.listener;
 
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.api.EnchantManager;
+import net.danh.sinceenchantments.gui.ExtractorDialog;
 import net.danh.sinceenchantments.gui.ExtractorGUI;
 import net.danh.sinceenchantments.utils.ColorUtils;
 import org.bukkit.Bukkit;
@@ -68,6 +69,7 @@ public class ExtractorListener implements Listener {
             return;
         }
 
+        // Tạm thời thu hồi Extractor (Nếu huỷ thao tác sẽ được hoàn trả)
         cursor.setAmount(cursor.getAmount() - 1);
         p.setItemOnCursor(cursor);
 
@@ -87,8 +89,16 @@ public class ExtractorListener implements Listener {
             sendMsg(p, "extract-success", "%enchant%", manager.getEnchantName(removedId), "%level%", String.valueOf(removedLevel));
 
         } else if (extractorType.equals("SPECIFIC")) {
-            ExtractorGUI gui = new ExtractorGUI(plugin, current, 0); // Start at Page 0
-            Bukkit.getScheduler().runTask(plugin, () -> p.openInventory(gui.getInventory()));
+            // Đọc cấu hình để quyết định dùng GUI hay Dialog API
+            String mode = plugin.getConfigFile().getString("settings.extractor-mode", "DIALOG").toUpperCase();
+
+            if (mode.equals("GUI")) {
+                ExtractorGUI gui = new ExtractorGUI(plugin, current, 0); // Start at Page 0
+                Bukkit.getScheduler().runTask(plugin, () -> p.openInventory(gui.getInventory()));
+            } else {
+                // Gọi Paper Dialog API
+                ExtractorDialog.open(plugin, p, current);
+            }
         }
     }
 
@@ -114,22 +124,22 @@ public class ExtractorListener implements Listener {
 
         ItemMeta meta = clicked.getItemMeta();
 
-        // Handle Pagination & Borders
+        // Xử lý nút phân trang và border của GUI cũ
         if (meta.getPersistentDataContainer().has(manager.GUI_ACTION_KEY, PersistentDataType.STRING)) {
             String action = meta.getPersistentDataContainer().get(manager.GUI_ACTION_KEY, PersistentDataType.STRING);
             if ("PREV_PAGE".equals(action)) {
-                gui.setCompleted(true); // Prevent refund
+                gui.setCompleted(true); // Ngăn không refund
                 ExtractorGUI newGui = new ExtractorGUI(plugin, gui.getWeapon(), gui.getPage() - 1);
                 p.openInventory(newGui.getInventory());
             } else if ("NEXT_PAGE".equals(action)) {
-                gui.setCompleted(true); // Prevent refund
+                gui.setCompleted(true); // Ngăn không refund
                 ExtractorGUI newGui = new ExtractorGUI(plugin, gui.getWeapon(), gui.getPage() + 1);
                 p.openInventory(newGui.getInventory());
             }
             return;
         }
 
-        // Handle Enchant Extraction
+        // Xử lý Extractor của GUI cũ
         if (!meta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) return;
 
         String enchantId = meta.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
@@ -160,6 +170,7 @@ public class ExtractorListener implements Listener {
 
     @EventHandler
     public void onCloseGUI(InventoryCloseEvent event) {
+        // Chỉ xử lý Refund cho GUI Chest Legacy. Dialog API xử lý Refund trực tiếp trong Callback.
         if (event.getInventory().getHolder() instanceof ExtractorGUI gui) {
             if (!gui.isCompleted()) {
                 Player p = (Player) event.getPlayer();

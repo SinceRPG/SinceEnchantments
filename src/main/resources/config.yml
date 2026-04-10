@@ -10,9 +10,26 @@ settings:
   divider: "&8&m                         &8&m"
   anvil-xp-combine-books: 5
   anvil-xp-apply-book: 3
+  # Chế độ của Specific Extractor: "GUI" (Chest truyền thống) hoặc "DIALOG" (Paper 1.21.6+ Dialog)
+  extractor-mode: "DIALOG"
 
 # ==========================================
-# GUI CONFIGURATIONS
+# DIALOG CONFIGURATIONS (PAPER 1.21.6+)
+# ==========================================
+dialog:
+  extractor:
+    title: "<dark_gray><bold>Extract Enchantment"
+    body: "<gray>Choose an enchantment from your item below\n<gray>to extract it safely into a book."
+    columns: 3 # Số cột nút bấm hiển thị (khuyên dùng: 3 hoặc 4)
+    cancel-button:
+      name: "<red><bold>Cancel & Refund"
+      tooltip: "<gray>Click to cancel extraction\n<gray>and get your extractor back."
+    enchant-button:
+      name: "%rarity_color%%enchant_name% %level%"
+      tooltip: "<gray>Click to extract <yellow>%enchant_name%\n<gray>from your item and destroy the extractor."
+
+# ==========================================
+# GUI CONFIGURATIONS (LEGACY)
 # ==========================================
 gui:
   extractor:
