@@ -140,7 +140,6 @@ public class EnchantApplyListener implements Listener {
             if (returnBooks) {
                 Map<String, Integer> allEnchants = manager.getAllEnchantsOnItem(current);
                 for (Map.Entry<String, Integer> entry : allEnchants.entrySet()) {
-                    if (manager.isBukkitEnchant(entry.getKey())) continue;
                     ItemStack book = manager.createEnchantBook(entry.getKey(), entry.getValue(), 100, 0);
                     if (!player.getInventory().addItem(book).isEmpty()) {
                         player.getWorld().dropItem(player.getLocation(), book);
