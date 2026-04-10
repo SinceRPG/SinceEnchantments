@@ -56,13 +56,13 @@ public class SinceCommand {
                         .then(Commands.argument("target", ArgumentTypes.player())
                                 .then(Commands.argument("enchant", StringArgumentType.string())
                                         .suggests((context, builder) -> {
-                                            String remaining = '"' + builder.getRemainingLowerCase();
+                                            String remaining = builder.getRemainingLowerCase();
                                             for (String id : plugin.getEnchantRegistry().getRegisteredIds()) {
-                                                if (id.startsWith(remaining)) builder.suggest('"' + id + '"');
+                                                if (id.toLowerCase().startsWith(remaining)) builder.suggest(id);
                                             }
                                             for (Enchantment enc : RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT)) {
-                                                String id = enc.getKey().toString();
-                                                if (id.startsWith(remaining)) builder.suggest('"' + id + '"');
+                                                String id = enc.getKey().toString().toLowerCase();
+                                                if (id.startsWith(remaining)) builder.suggest(id);
                                             }
                                             return builder.buildFuture();
                                         })
@@ -144,7 +144,7 @@ public class SinceCommand {
     private int executeGiveBook(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int success, int destroy) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
         Player target = targetResolver.resolve(context.getSource()).getFirst();
-        String enchantId = StringArgumentType.getString(context, "enchant").toLowerCase();
+        String enchantId = StringArgumentType.getString(context, "enchant").replace("\"", "").toLowerCase();
 
         if (!plugin.getEnchantManager().enchantExists(enchantId)) {
             sendMessage(context.getSource(), "enchant-not-found", "%enchant%", enchantId);
