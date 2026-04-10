@@ -28,7 +28,6 @@ public class ExtractorDialog {
         Component title = ColorUtils.parse(titleRaw);
         Component body = ColorUtils.parse(bodyRaw);
 
-        // Lấy toàn bộ enchant đang có trên vũ khí
         Map<String, Integer> allEnchants = plugin.getEnchantManager().getAllEnchantsOnItem(weapon);
         List<ActionButton> buttons = new ArrayList<>();
 
@@ -53,12 +52,10 @@ public class ExtractorDialog {
                     .replace("%rarity_name%", rarity)
                     .replace("%rarity_color%", color);
 
-            // Nút xử lý khi người chơi bấm chọn rút Enchant
             DialogAction action = DialogAction.customClick((view, audience) -> {
-                audience.closeDialog(); // Đóng dialog ngay lập tức
+                audience.closeDialog();
 
                 if (audience instanceof Player p) {
-                    // Kiểm tra lại lần cuối để tránh lỗi nếu item bị thay đổi ngoài ý muốn
                     Map<String, Integer> verify = plugin.getEnchantManager().getAllEnchantsOnItem(weapon);
                     if (!verify.containsKey(id)) {
                         String prefix = plugin.getMessagesFile().getString("prefix", "");
@@ -67,7 +64,6 @@ public class ExtractorDialog {
                         return;
                     }
 
-                    // Thực thi logic xoá enchant và đưa sách cho người chơi
                     plugin.getEnchantManager().removeEnchant(weapon, id);
                     ItemStack book = plugin.getEnchantManager().createEnchantBook(id, level, 100, 0);
 
@@ -91,15 +87,13 @@ public class ExtractorDialog {
                     .build());
         }
 
-        // Nút Cancel & Refund
         String cancelName = plugin.getConfigFile().getString("dialog.extractor.cancel-button.name", "&cCancel");
         String cancelTooltip = plugin.getConfigFile().getString("dialog.extractor.cancel-button.tooltip", "&7Refund extractor");
 
         DialogAction cancelAction = DialogAction.customClick((view, audience) -> {
-            audience.closeDialog(); // Đóng dialog
+            audience.closeDialog();
 
             if (audience instanceof Player p) {
-                // Trả lại Extractor vì người chơi đã huỷ
                 ItemStack refund = plugin.getEnchantManager().createExtractor("specific", 1);
                 if (!p.getInventory().addItem(refund).isEmpty()) {
                     p.getWorld().dropItem(p.getLocation(), refund);
@@ -118,20 +112,18 @@ public class ExtractorDialog {
 
         int columns = plugin.getConfigFile().getInt("dialog.extractor.columns", 3);
 
-        // Khởi tạo và xây dựng Dialog
         Dialog dialog = Dialog.create(builder -> builder.empty()
                 .base(DialogBase.builder(title)
-                        .canCloseWithEscape(false) // Bắt buộc người chơi phải nhấn chọn hoặc nhấn Cancel
+                        .canCloseWithEscape(false)
                         .body(List.<DialogBody>of(
                                 DialogBody.plainMessage(body),
-                                DialogBody.item(weapon).build() // Đã thêm .build() để lấy DialogBody chuẩn
+                                DialogBody.item(weapon).build()
                         ))
                         .build()
                 )
                 .type(DialogType.multiAction(buttons, exitAction, columns))
         );
 
-        // Hiển thị cho người chơi
         player.showDialog(dialog);
     }
 }
