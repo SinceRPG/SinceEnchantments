@@ -119,7 +119,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         Map<String, Integer> customEnchants = SinceEnchantments.getInstance().getEnchantManager().getCustomEnchants(item);
         boolean overrideVanilla = config.getBoolean("settings.override-vanilla-enchants", true);
 
-        if ((!overrideVanilla && customEnchants.isEmpty()) || (overrideVanilla && vanillaEnchants.isEmpty() && customEnchants.isEmpty())) {
+        if (((!overrideVanilla && customEnchants.isEmpty()) || (overrideVanilla && vanillaEnchants.isEmpty() && customEnchants.isEmpty())) && !SinceEnchantments.getInstance().getEnchantManager().isLocked(item)) {
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;
@@ -190,6 +190,19 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
         if (count > 0) {
             enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+        }
+
+        if (config.getBoolean("settings.show-slots", true)) {
+            int maxSlots = SinceEnchantments.getInstance().getEnchantManager().getMaxSlots(item);
+            int currentSlots = customEnchants.size();
+            String slotLine = config.getString("settings.slots-format", "&7Enchantment Slots: &e%current% / %max%");
+            slotLine = slotLine.replace("%current%", String.valueOf(currentSlots)).replace("%max%", String.valueOf(maxSlots));
+            enchantComponents.add(ColorUtils.parse(slotLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+        }
+
+        if (SinceEnchantments.getInstance().getEnchantManager().isLocked(item)) {
+            String lockLine = config.getString("settings.locked-format", "&c&l");
+            enchantComponents.add(ColorUtils.parse(lockLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
         }
 
         boolean addEmptyLineAbove = config.getBoolean("settings.add-empty-line-above", true);

@@ -36,3 +36,28 @@ success-charm:
     - "&7of an Enchantment Book by &a+%bonus%%&7."
     - ""
     - "&eDrag and drop onto an Enchantment Book to use!"
+
+slot-gem:
+  material: "EMERALD"
+  name: "&8[&b&lSlot Gem&8]"
+  lore:
+    - "&7Drag & Drop onto an item"
+    - "&7to modify its maximum"
+    - "&7enchantment slots by &e%modifier%&7."
+
+lock-scroll:
+  material: "PAPER"
+  name: "&8[&c&lLock Scroll&8]"
+  lore:
+    - "&7Drag & Drop onto an item"
+    - "&7to toggle its lock status."
+    - "&7Locked items cannot be enchanted,"
+    - "&7wiped, or extracted from."
+
+purge-scroll:
+  material: "PAPER"
+  name: "&8[&a&lPurge Scroll&8]"
+  lore:
+    - "&7Drag & Drop onto an item"
+    - "&7to remove ALL enchantments."
+    - "&7Returns books: &e%returns%"

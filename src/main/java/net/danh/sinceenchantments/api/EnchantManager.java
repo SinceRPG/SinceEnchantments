@@ -31,6 +31,12 @@ public class EnchantManager {
     public final NamespacedKey EXTRACTOR_TYPE_KEY;
     public final NamespacedKey CHARM_BONUS_KEY;
     public final NamespacedKey GUI_ACTION_KEY;
+    public final NamespacedKey MAX_SLOTS_KEY;
+    public final NamespacedKey SLOT_MODIFIER_KEY;
+    public final NamespacedKey LOCKED_KEY;
+    public final NamespacedKey LOCK_SCROLL_KEY;
+    public final NamespacedKey PURGE_SCROLL_KEY;
+    public final NamespacedKey PURGE_RETURN_KEY;
 
     private final SinceEnchantments plugin;
     private final Map<String, Integer> maxLevels = new HashMap<>();
@@ -38,7 +44,9 @@ public class EnchantManager {
     private final Map<String, String> enchantNames = new HashMap<>();
     private final Map<String, String> targets = new HashMap<>();
     private final Map<String, List<String>> conflicts = new HashMap<>();
+    private final Map<String, List<String>> requires = new HashMap<>();
     private final Map<String, List<String>> descriptions = new HashMap<>();
+    private final Map<String, List<String>> itemWhitelist = new HashMap<>();
 
     public EnchantManager(SinceEnchantments plugin) {
         this.plugin = plugin;
@@ -50,6 +58,13 @@ public class EnchantManager {
         this.EXTRACTOR_TYPE_KEY = new NamespacedKey(plugin, "extractor_type");
         this.CHARM_BONUS_KEY = new NamespacedKey(plugin, "charm_bonus");
         this.GUI_ACTION_KEY = new NamespacedKey(plugin, "gui_action");
+        this.MAX_SLOTS_KEY = new NamespacedKey(plugin, "max_slots");
+        this.SLOT_MODIFIER_KEY = new NamespacedKey(plugin, "slot_modifier");
+        this.LOCKED_KEY = new NamespacedKey(plugin, "item_locked");
+        this.LOCK_SCROLL_KEY = new NamespacedKey(plugin, "lock_scroll");
+        this.PURGE_SCROLL_KEY = new NamespacedKey(plugin, "purge_scroll");
+        this.PURGE_RETURN_KEY = new NamespacedKey(plugin, "purge_return_books");
+
         loadEnchantsFromConfig();
     }
 
@@ -59,7 +74,9 @@ public class EnchantManager {
         enchantNames.clear();
         targets.clear();
         conflicts.clear();
+        requires.clear();
         descriptions.clear();
+        itemWhitelist.clear();
 
         if (plugin.getConfigFile().getConfig().contains("custom-enchants")) {
             for (String key : plugin.getConfigFile().getConfig().getConfigurationSection("custom-enchants").getKeys(false)) {
@@ -69,6 +86,7 @@ public class EnchantManager {
                 enchantNames.put(key, plugin.getConfigFile().getString(path + ".name", key));
                 targets.put(key, plugin.getConfigFile().getString(path + ".target", "ALL").toUpperCase());
                 conflicts.put(key, plugin.getConfigFile().getStringList(path + ".conflicts"));
+                requires.put(key, plugin.getConfigFile().getStringList(path + ".requires"));
                 descriptions.put(key, plugin.getConfigFile().getStringList(path + ".description"));
             }
         }
@@ -78,6 +96,12 @@ public class EnchantManager {
                 String path = "vanilla-enchants." + key;
                 descriptions.put(key, plugin.getConfigFile().getStringList(path + ".description"));
                 enchantNames.put(key, plugin.getConfigFile().getString(path + ".name", key));
+            }
+        }
+
+        if (plugin.getConfigFile().getConfig().contains("item-whitelist")) {
+            for (String matKey : plugin.getConfigFile().getConfig().getConfigurationSection("item-whitelist").getKeys(false)) {
+                itemWhitelist.put(matKey.toUpperCase(), plugin.getConfigFile().getStringList("item-whitelist." + matKey));
             }
         }
     }
@@ -114,6 +138,60 @@ public class EnchantManager {
 
     public List<String> getDescription(String enchantId) {
         return descriptions.getOrDefault(enchantId, new ArrayList<>());
+    }
+
+    public int getMaxSlots(ItemStack item) {
+        int defaultSlots = plugin.getConfigFile().getInt("settings.max-custom-enchants-per-item", 5);
+        if (item == null || !item.hasItemMeta()) return defaultSlots;
+        return item.getItemMeta().getPersistentDataContainer().getOrDefault(MAX_SLOTS_KEY, PersistentDataType.INTEGER, defaultSlots);
+    }
+
+    public void addMaxSlots(ItemStack item, int amount) {
+        if (item == null || !item.hasItemMeta()) return;
+        int current = getMaxSlots(item);
+        ItemMeta meta = item.getItemMeta();
+        meta.getPersistentDataContainer().set(MAX_SLOTS_KEY, PersistentDataType.INTEGER, Math.max(0, current + amount));
+        item.setItemMeta(meta);
+    }
+
+    public boolean isLocked(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        return item.getItemMeta().getPersistentDataContainer().getOrDefault(LOCKED_KEY, PersistentDataType.BYTE, (byte) 0) == 1;
+    }
+
+    public void toggleLock(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return;
+        ItemMeta meta = item.getItemMeta();
+        boolean locked = isLocked(item);
+        meta.getPersistentDataContainer().set(LOCKED_KEY, PersistentDataType.BYTE, (byte) (locked ? 0 : 1));
+        item.setItemMeta(meta);
+    }
+
+    public boolean isWhitelisted(Material mat, String enchantId) {
+        String name = mat.name();
+        if (itemWhitelist.containsKey(name)) {
+            return itemWhitelist.get(name).contains(enchantId);
+        }
+        return true;
+    }
+
+    public List<String> getMissingRequirements(String enchantId, ItemStack item) {
+        List<String> missing = new ArrayList<>();
+        List<String> reqs = requires.getOrDefault(enchantId, new ArrayList<>());
+        if (reqs.isEmpty()) return missing;
+
+        Map<String, Integer> currentCustoms = getCustomEnchants(item);
+        for (String req : reqs) {
+            if (isBukkitEnchant(req)) {
+                Enchantment bukkitEnc = getBukkitRegistry().get(NamespacedKey.fromString(req.toLowerCase()));
+                if (bukkitEnc == null || !item.hasItemMeta() || item.getItemMeta().getEnchantLevel(bukkitEnc) == 0) {
+                    missing.add(getEnchantName(req));
+                }
+            } else {
+                if (!currentCustoms.containsKey(req)) missing.add(getEnchantName(req));
+            }
+        }
+        return missing;
     }
 
     public boolean isApplicable(String enchantId, Material mat) {
@@ -352,5 +430,76 @@ public class EnchantManager {
         meta.getPersistentDataContainer().set(CHARM_BONUS_KEY, PersistentDataType.INTEGER, bonus);
         charm.setItemMeta(meta);
         return charm;
+    }
+
+    public ItemStack createSlotGem(int modifier, int amount) {
+        String matStr = plugin.getItemsFile().getString("slot-gem.material", "EMERALD");
+        Material mat = Material.matchMaterial(matStr);
+        if (mat == null) mat = Material.EMERALD;
+
+        ItemStack item = new ItemStack(mat, amount);
+        ItemMeta meta = item.getItemMeta();
+
+        String name = plugin.getItemsFile().getString("slot-gem.name", "Slot Gem");
+        List<String> lore = plugin.getItemsFile().getStringList("slot-gem.lore");
+
+        String modStr = (modifier >= 0 ? "+" : "") + modifier;
+        meta.displayName(ColorUtils.parse(name.replace("%modifier%", modStr)).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+
+        List<Component> compLore = new ArrayList<>();
+        for (String line : lore) {
+            compLore.add(ColorUtils.parse(line.replace("%modifier%", modStr)).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+        }
+        meta.lore(compLore);
+        meta.getPersistentDataContainer().set(SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, modifier);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public ItemStack createLockScroll(int amount) {
+        String matStr = plugin.getItemsFile().getString("lock-scroll.material", "PAPER");
+        Material mat = Material.matchMaterial(matStr);
+        if (mat == null) mat = Material.PAPER;
+
+        ItemStack item = new ItemStack(mat, amount);
+        ItemMeta meta = item.getItemMeta();
+
+        String name = plugin.getItemsFile().getString("lock-scroll.name", "Lock Scroll");
+        List<String> lore = plugin.getItemsFile().getStringList("lock-scroll.lore");
+
+        meta.displayName(ColorUtils.parse(name).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+
+        List<Component> compLore = new ArrayList<>();
+        for (String line : lore) {
+            compLore.add(ColorUtils.parse(line).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+        }
+        meta.lore(compLore);
+        meta.getPersistentDataContainer().set(LOCK_SCROLL_KEY, PersistentDataType.BYTE, (byte) 1);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public ItemStack createPurgeScroll(boolean returnBooks, int amount) {
+        String matStr = plugin.getItemsFile().getString("purge-scroll.material", "PAPER");
+        Material mat = Material.matchMaterial(matStr);
+        if (mat == null) mat = Material.PAPER;
+
+        ItemStack item = new ItemStack(mat, amount);
+        ItemMeta meta = item.getItemMeta();
+
+        String name = plugin.getItemsFile().getString("purge-scroll.name", "Purge Scroll");
+        List<String> lore = plugin.getItemsFile().getStringList("purge-scroll.lore");
+
+        meta.displayName(ColorUtils.parse(name).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+
+        List<Component> compLore = new ArrayList<>();
+        for (String line : lore) {
+            compLore.add(ColorUtils.parse(line.replace("%returns%", returnBooks ? "True" : "False")).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+        }
+        meta.lore(compLore);
+        meta.getPersistentDataContainer().set(PURGE_SCROLL_KEY, PersistentDataType.BYTE, (byte) 1);
+        meta.getPersistentDataContainer().set(PURGE_RETURN_KEY, PersistentDataType.BYTE, (byte) (returnBooks ? 1 : 0));
+        item.setItemMeta(meta);
+        return item;
     }
 }

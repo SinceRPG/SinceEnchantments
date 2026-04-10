@@ -5,6 +5,7 @@ import net.danh.sinceenchantments.api.EnchantManager;
 import net.danh.sinceenchantments.utils.ColorUtils;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -13,8 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class EnchantApplyListener implements Listener {
 
@@ -53,23 +53,18 @@ public class EnchantApplyListener implements Listener {
 
         if (cursorMeta.getPersistentDataContainer().has(manager.CHARM_BONUS_KEY, PersistentDataType.INTEGER) &&
                 currentMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
-
             event.setCancelled(true);
-
             if (current.getAmount() > 1) {
                 sendMsg(player, "charm-need-unstack");
                 return;
             }
-
             int currentSuccess = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);
             if (currentSuccess >= 100) {
                 sendMsg(player, "charm-max-reached");
                 return;
             }
-
             int bonus = cursorMeta.getPersistentDataContainer().getOrDefault(manager.CHARM_BONUS_KEY, PersistentDataType.INTEGER, 1);
             int newSuccess = Math.min(100, currentSuccess + bonus);
-
             int currentDestroy = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
             int newDestroy = Math.max(0, currentDestroy - bonus);
 
@@ -87,9 +82,76 @@ public class EnchantApplyListener implements Listener {
             return;
         }
 
-        if (!cursorMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) return;
+        if (cursorMeta.getPersistentDataContainer().has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
+            event.setCancelled(true);
+            if (manager.isLocked(current)) {
+                sendMsg(player, "item-locked");
+                return;
+            }
+            int modifier = cursorMeta.getPersistentDataContainer().get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER);
+            manager.addMaxSlots(current, modifier);
 
+            cursor.setAmount(cursor.getAmount() - 1);
+            player.setItemOnCursor(cursor);
+            player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1f, 2f);
+            sendMsg(player, "slot-gem-applied");
+            return;
+        }
+
+        // Feature: Lock/Unlock Scroll
+        if (cursorMeta.getPersistentDataContainer().has(manager.LOCK_SCROLL_KEY, PersistentDataType.BYTE)) {
+            event.setCancelled(true);
+            manager.toggleLock(current);
+
+            cursor.setAmount(cursor.getAmount() - 1);
+            player.setItemOnCursor(cursor);
+            player.playSound(player.getLocation(), Sound.BLOCK_CHEST_LOCKED, 1f, 1f);
+            sendMsg(player, "item-lock-toggled");
+            return;
+        }
+
+        if (cursorMeta.getPersistentDataContainer().has(manager.PURGE_SCROLL_KEY, PersistentDataType.BYTE)) {
+            event.setCancelled(true);
+            if (manager.isLocked(current)) {
+                sendMsg(player, "item-locked");
+                return;
+            }
+            boolean returnBooks = cursorMeta.getPersistentDataContainer().getOrDefault(manager.PURGE_RETURN_KEY, PersistentDataType.BYTE, (byte) 0) == 1;
+
+            if (returnBooks) {
+                Map<String, Integer> allEnchants = manager.getAllEnchantsOnItem(current);
+                for (Map.Entry<String, Integer> entry : allEnchants.entrySet()) {
+                    if (manager.isBukkitEnchant(entry.getKey())) continue; // Skip vanilla
+                    ItemStack book = manager.createEnchantBook(entry.getKey(), entry.getValue(), 100, 0);
+                    if (!player.getInventory().addItem(book).isEmpty()) {
+                        player.getWorld().dropItem(player.getLocation(), book);
+                    }
+                }
+            }
+
+            manager.setCustomEnchants(current, new HashMap<>());
+            if (current.hasItemMeta() && current.getItemMeta().hasEnchants()) {
+                ItemMeta m = current.getItemMeta();
+                for (Enchantment e : new ArrayList<>(m.getEnchants().keySet())) {
+                    m.removeEnchant(e);
+                }
+                current.setItemMeta(m);
+            }
+
+            cursor.setAmount(cursor.getAmount() - 1);
+            player.setItemOnCursor(cursor);
+            player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1f, 1f);
+            sendMsg(player, "purge-applied");
+            return;
+        }
+
+        if (!cursorMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) return;
         event.setCancelled(true);
+
+        if (manager.isLocked(current)) {
+            sendMsg(player, "item-locked");
+            return;
+        }
 
         String enchantId = cursorMeta.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
         int enchantLevel = cursorMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
@@ -100,6 +162,17 @@ public class EnchantApplyListener implements Listener {
             return;
         }
 
+        if (!manager.isWhitelisted(current.getType(), enchantId)) {
+            sendMsg(player, "enchant-not-whitelisted");
+            return;
+        }
+
+        List<String> missingReqs = manager.getMissingRequirements(enchantId, current);
+        if (!missingReqs.isEmpty()) {
+            sendMsg(player, "enchant-missing-requirements", "%requires%", String.join(", ", missingReqs));
+            return;
+        }
+
         if (manager.hasConflict(enchantId, current)) {
             sendMsg(player, "enchant-conflict");
             return;
@@ -107,10 +180,9 @@ public class EnchantApplyListener implements Listener {
 
         if (!manager.isBukkitEnchant(enchantId)) {
             Map<String, Integer> currentCustomEnchants = manager.getCustomEnchants(current);
-            int limit = plugin.getConfigFile().getInt("settings.max-custom-enchants-per-item", 5);
-
+            int limit = manager.getMaxSlots(current);
             if (!currentCustomEnchants.containsKey(enchantId) && currentCustomEnchants.size() >= limit) {
-                sendMsg(player, "enchant-limit-reached", "%limit%", String.valueOf(limit));
+                sendMsg(player, "enchant-limit-reached", "%slots%", String.valueOf(limit));
                 return;
             }
         }

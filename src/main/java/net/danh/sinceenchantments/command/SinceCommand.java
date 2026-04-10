@@ -1,6 +1,7 @@
 package net.danh.sinceenchantments.command;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -57,7 +58,7 @@ public class SinceCommand {
                                         .suggests((context, builder) -> {
                                             String remaining = builder.getRemainingLowerCase();
                                             for (String id : plugin.getEnchantRegistry().getRegisteredIds()) {
-                                                if (id.startsWith(remaining)) builder.suggest(id);
+                                                if (id.startsWith(remaining)) builder.suggest('"' + id + '"');
                                             }
                                             for (Enchantment enc : RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT)) {
                                                 String id = enc.getKey().toString();
@@ -101,10 +102,37 @@ public class SinceCommand {
                                 )
                         )
                 )
+                .then(Commands.literal("giveslotgem")
+                        .then(Commands.argument("target", ArgumentTypes.player())
+                                .then(Commands.argument("modifier", IntegerArgumentType.integer(-100, 100))
+                                        .executes(context -> executeGiveSlotGem(context, 1))
+                                        .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+                                                .executes(context -> executeGiveSlotGem(context, IntegerArgumentType.getInteger(context, "amount")))
+                                        )
+                                )
+                        )
+                )
+                .then(Commands.literal("givelock")
+                        .then(Commands.argument("target", ArgumentTypes.player())
+                                .executes(context -> executeGiveLock(context, 1))
+                                .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+                                        .executes(context -> executeGiveLock(context, IntegerArgumentType.getInteger(context, "amount")))
+                                )
+                        )
+                )
+                .then(Commands.literal("givepurge")
+                        .then(Commands.argument("target", ArgumentTypes.player())
+                                .then(Commands.argument("return_books", BoolArgumentType.bool())
+                                        .executes(context -> executeGivePurge(context, 1))
+                                        .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+                                                .executes(context -> executeGivePurge(context, IntegerArgumentType.getInteger(context, "amount")))
+                                        )
+                                )
+                        )
+                )
                 .build();
     }
 
-    @SuppressWarnings("SameReturnValue")
     private int executeHelp(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context) {
         sendMessage(context.getSource(), "help-header");
         for (String line : plugin.getMessagesFile().getStringList("help-commands")) {
@@ -113,11 +141,9 @@ public class SinceCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    @SuppressWarnings("SameReturnValue")
     private int executeGiveBook(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int success, int destroy) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
         Player target = targetResolver.resolve(context.getSource()).getFirst();
-
         String enchantId = StringArgumentType.getString(context, "enchant").toLowerCase();
 
         if (!plugin.getEnchantManager().enchantExists(enchantId)) {
@@ -126,7 +152,6 @@ public class SinceCommand {
         }
 
         int level = IntegerArgumentType.getInteger(context, "level");
-
         ItemStack book = plugin.getEnchantManager().createEnchantBook(enchantId, level, success, destroy);
         target.getInventory().addItem(book);
 
@@ -134,11 +159,9 @@ public class SinceCommand {
                 "%enchant%", enchantId,
                 "%level%", String.valueOf(level),
                 "%player%", target.getName());
-
         return Command.SINGLE_SUCCESS;
     }
 
-    @SuppressWarnings("SameReturnValue")
     private int executeGiveExtractor(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
         Player target = targetResolver.resolve(context.getSource()).getFirst();
@@ -158,15 +181,12 @@ public class SinceCommand {
                 "%type%", type.toUpperCase(),
                 "%amount%", String.valueOf(amount),
                 "%player%", target.getName());
-
         return Command.SINGLE_SUCCESS;
     }
 
-    @SuppressWarnings("SameReturnValue")
     private int executeGiveCharm(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
         Player target = targetResolver.resolve(context.getSource()).getFirst();
-
         int bonus = IntegerArgumentType.getInteger(context, "bonus");
 
         ItemStack charm = plugin.getEnchantManager().createSuccessCharm(bonus, amount);
@@ -176,7 +196,49 @@ public class SinceCommand {
                 "%bonus%", String.valueOf(bonus),
                 "%amount%", String.valueOf(amount),
                 "%player%", target.getName());
+        return Command.SINGLE_SUCCESS;
+    }
 
+    private int executeGiveSlotGem(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
+        Player target = targetResolver.resolve(context.getSource()).getFirst();
+        int modifier = IntegerArgumentType.getInteger(context, "modifier");
+
+        ItemStack gem = plugin.getEnchantManager().createSlotGem(modifier, amount);
+        target.getInventory().addItem(gem);
+
+        sendMessage(context.getSource(), "give-slotgem-success",
+                "%modifier%", String.valueOf(modifier),
+                "%amount%", String.valueOf(amount),
+                "%player%", target.getName());
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int executeGiveLock(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
+        Player target = targetResolver.resolve(context.getSource()).getFirst();
+
+        ItemStack scroll = plugin.getEnchantManager().createLockScroll(amount);
+        target.getInventory().addItem(scroll);
+
+        sendMessage(context.getSource(), "give-lock-success",
+                "%amount%", String.valueOf(amount),
+                "%player%", target.getName());
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int executeGivePurge(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
+        Player target = targetResolver.resolve(context.getSource()).getFirst();
+        boolean returnBooks = BoolArgumentType.getBool(context, "return_books");
+
+        ItemStack scroll = plugin.getEnchantManager().createPurgeScroll(returnBooks, amount);
+        target.getInventory().addItem(scroll);
+
+        sendMessage(context.getSource(), "give-purge-success",
+                "%return%", returnBooks ? "True" : "False",
+                "%amount%", String.valueOf(amount),
+                "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
     }
 }

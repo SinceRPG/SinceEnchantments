@@ -12,6 +12,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.view.AnvilView;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.Map;
+
 public class AnvilListener implements Listener {
 
     private final SinceEnchantments plugin;
@@ -62,8 +64,19 @@ public class AnvilListener implements Listener {
             return;
         }
 
+        if (manager.isLocked(slot1)) return;
         if (!manager.isApplicable(enchantId, slot1.getType())) return;
+        if (!manager.isWhitelisted(slot1.getType(), enchantId)) return;
+        if (!manager.getMissingRequirements(enchantId, slot1).isEmpty()) return;
         if (manager.hasConflict(enchantId, slot1)) return;
+
+        if (!manager.isBukkitEnchant(enchantId)) {
+            Map<String, Integer> currentCustomEnchants = manager.getCustomEnchants(slot1);
+            int limit = manager.getMaxSlots(slot1);
+            if (!currentCustomEnchants.containsKey(enchantId) && currentCustomEnchants.size() >= limit) {
+                return;
+            }
+        }
 
         int currentLvl = manager.getEnchantLevel(slot1, enchantId);
         int newLvl = currentLvl;

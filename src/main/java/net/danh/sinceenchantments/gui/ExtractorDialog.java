@@ -62,7 +62,6 @@ public class ExtractorDialog {
 
             DialogAction action = DialogAction.customClick((view, audience) -> {
                 audience.closeDialog();
-
                 if (audience instanceof Player p) {
                     Map<String, Integer> verify = plugin.getEnchantManager().getAllEnchantsOnItem(weapon);
                     if (!verify.containsKey(id)) {
@@ -100,7 +99,6 @@ public class ExtractorDialog {
 
         DialogAction cancelAction = DialogAction.customClick((view, audience) -> {
             audience.closeDialog();
-
             if (audience instanceof Player p) {
                 ItemStack refund = plugin.getEnchantManager().createExtractor("specific", 1);
                 if (!p.getInventory().addItem(refund).isEmpty()) {
@@ -119,7 +117,6 @@ public class ExtractorDialog {
                 .build();
 
         int columns = plugin.getConfigFile().getInt("dialog.extractor.columns", 3);
-
         ItemStack displayWeapon = formatDisplayWeapon(plugin, weapon.clone());
 
         Dialog dialog = Dialog.create(builder -> builder.empty()
@@ -136,7 +133,6 @@ public class ExtractorDialog {
 
         player.showDialog(dialog);
     }
-
 
     private static ItemStack formatDisplayWeapon(SinceEnchantments plugin, ItemStack item) {
         if (item == null || !item.hasItemMeta()) return item;
@@ -161,7 +157,7 @@ public class ExtractorDialog {
         Map<Enchantment, Integer> vanillaEnchants = meta.getEnchants();
         Map<String, Integer> customEnchants = plugin.getEnchantManager().getCustomEnchants(item);
 
-        if (vanillaEnchants.isEmpty() && customEnchants.isEmpty()) {
+        if (vanillaEnchants.isEmpty() && customEnchants.isEmpty() && !plugin.getEnchantManager().isLocked(item)) {
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;
@@ -225,6 +221,19 @@ public class ExtractorDialog {
 
         if (count > 0) {
             enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+        }
+
+        if (config.getBoolean("settings.show-slots", true)) {
+            int maxSlots = plugin.getEnchantManager().getMaxSlots(item);
+            int currentSlots = customEnchants.size();
+            String slotLine = config.getString("settings.slots-format", "&7Enchantment Slots: &e%current% / %max%");
+            slotLine = slotLine.replace("%current%", String.valueOf(currentSlots)).replace("%max%", String.valueOf(maxSlots));
+            enchantComponents.add(ColorUtils.parse(slotLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+        }
+
+        if (plugin.getEnchantManager().isLocked(item)) {
+            String lockLine = config.getString("settings.locked-format", "&c&l");
+            enchantComponents.add(ColorUtils.parse(lockLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
         }
 
         boolean addEmptyLineAbove = config.getBoolean("settings.add-empty-line-above", true);

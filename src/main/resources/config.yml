@@ -58,6 +58,13 @@ settings:
   # "GUI": Uses the legacy 54-slot Chest Inventory menu.
   extractor-mode: "DIALOG"
 
+  # Display the number of Slot Enchant (Default: true)
+  show-slots: true
+  slots-format: "&7Enchantment Slots: &e%current% / %max%"
+
+  # The line displayed when the item is locked.
+  locked-format: "&c&l"
+
 # ==========================================
 # DIALOG CONFIGURATIONS (PAPER 1.21.6+ ONLY)
 # ==========================================
@@ -121,6 +128,15 @@ gui:
       lore:
         - "&7Click to safely extract"
         - "&7this enchantment into a book!"
+
+# ==========================================
+# ITEM WHITELIST
+# If an item appears in this list, it will ONLY accept the enchantments listed below.
+# ==========================================
+item-whitelist:
+#  DIAMOND_SWORD:
+#    - "since:lifesteal"
+#    - "minecraft:sharpness"
 
 # ==========================================
 # RARITY SYSTEM

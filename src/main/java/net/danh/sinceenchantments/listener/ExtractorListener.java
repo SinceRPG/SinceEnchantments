@@ -63,6 +63,11 @@ public class ExtractorListener implements Listener {
 
         event.setCancelled(true);
 
+        if (manager.isLocked(current)) {
+            sendMsg(p, "item-locked");
+            return;
+        }
+
         Map<String, Integer> allEnchants = manager.getAllEnchantsOnItem(current);
         if (allEnchants.isEmpty()) {
             sendMsg(p, "extract-no-enchants");
@@ -119,7 +124,6 @@ public class ExtractorListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onClickGUI(InventoryClickEvent event) {
         if (!(event.getInventory().getHolder() instanceof ExtractorGUI gui)) return;
-
         event.setCancelled(true);
 
         if (!(event.getWhoClicked() instanceof Player p)) return;
@@ -169,7 +173,6 @@ public class ExtractorListener implements Listener {
         gui.setCompleted(true);
         p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
         sendMsg(p, "extract-success", "%enchant%", manager.getEnchantName(enchantId), "%level%", String.valueOf(level));
-
         p.closeInventory();
     }
 
@@ -179,7 +182,6 @@ public class ExtractorListener implements Listener {
             if (!gui.isCompleted()) {
                 Player p = (Player) event.getPlayer();
                 ItemStack refund = manager.createExtractor("specific", 1);
-
                 if (!p.getInventory().addItem(refund).isEmpty()) {
                     p.getWorld().dropItem(p.getLocation(), refund);
                 }
