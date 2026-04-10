@@ -252,9 +252,8 @@ public class ExtractorDialog {
 
         if (config.getBoolean("settings.show-slots", true)) {
             int maxSlots = plugin.getEnchantManager().getMaxSlots(item);
-            int currentSlots = customEnchants.size();
             String slotLine = config.getString("settings.slots-format", "&7Enchantment Slots: &e%current% / %max%");
-            slotLine = slotLine.replace("%current%", String.valueOf(currentSlots)).replace("%max%", String.valueOf(maxSlots));
+            slotLine = slotLine.replace("%current%", String.valueOf(totalEnchantsApplied)).replace("%max%", String.valueOf(maxSlots));
             enchantComponents.add(ColorUtils.parse(slotLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
         }
 
@@ -265,11 +264,31 @@ public class ExtractorDialog {
 
         if (config.getBoolean("settings.show-whitelist-preview", true)) {
             List<String> allowedEnchants = plugin.getEnchantManager().getWhitelistedEnchants(item);
-            if (!allowedEnchants.isEmpty()) {
+            List<String> unappliedAllowed = new ArrayList<>();
+            for (String allowedId : allowedEnchants) {
+                boolean applied = false;
+                if (customEnchants.containsKey(allowedId)) {
+                    applied = true;
+                } else {
+                    for (Enchantment vEnch : vanillaEnchants.keySet()) {
+                        String fullKey = vEnch.getKey().getNamespace() + ":" + vEnch.getKey().getKey();
+                        if (fullKey.equals(allowedId)) {
+                            applied = true;
+                            break;
+                        }
+                    }
+                }
+                if (!applied) {
+                    unappliedAllowed.add(allowedId);
+                }
+            }
+
+            if (!unappliedAllowed.isEmpty()) {
+                enchantComponents.add(Component.text(EMPTY_MARKER));
                 String header = config.getString("settings.whitelist-header", "&8Allowed Enchantments:");
                 enchantComponents.add(ColorUtils.parse(header).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
                 String format = config.getString("settings.whitelist-preview-format", "&8 - %enchant_name%");
-                for (String allowedId : allowedEnchants) {
+                for (String allowedId : unappliedAllowed) {
                     String eName = plugin.getEnchantManager().getEnchantName(allowedId);
                     String line = format.replace("%enchant_name%", eName);
                     enchantComponents.add(ColorUtils.parse(line).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));

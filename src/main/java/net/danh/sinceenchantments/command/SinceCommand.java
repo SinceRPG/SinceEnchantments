@@ -56,13 +56,13 @@ public class SinceCommand {
                         .then(Commands.argument("target", ArgumentTypes.player())
                                 .then(Commands.argument("enchant", StringArgumentType.string())
                                         .suggests((context, builder) -> {
-                                            String remaining = builder.getRemainingLowerCase();
+                                            String remaining = '"' + builder.getRemainingLowerCase();
                                             for (String id : plugin.getEnchantRegistry().getRegisteredIds()) {
                                                 if (id.startsWith(remaining)) builder.suggest('"' + id + '"');
                                             }
                                             for (Enchantment enc : RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT)) {
                                                 String id = enc.getKey().toString();
-                                                if (id.startsWith(remaining)) builder.suggest(id);
+                                                if (id.startsWith(remaining)) builder.suggest('"' + id + '"');
                                             }
                                             return builder.buildFuture();
                                         })

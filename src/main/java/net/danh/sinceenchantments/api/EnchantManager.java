@@ -218,6 +218,16 @@ public class EnchantManager {
         return Math.max(0, raw + modifier);
     }
 
+    public int getAppliedEnchantsCount(ItemStack item) {
+        int count = getCustomEnchants(item).size();
+        if (plugin.getConfigFile().getBoolean("settings.override-vanilla-enchants", true)) {
+            if (item != null && item.hasItemMeta() && item.getItemMeta().hasEnchants()) {
+                count += item.getItemMeta().getEnchants().size();
+            }
+        }
+        return count;
+    }
+
     public boolean isLocked(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
         return item.getItemMeta().getPersistentDataContainer().getOrDefault(LOCKED_KEY, PersistentDataType.BYTE, (byte) 0) == 1;

@@ -179,13 +179,12 @@ public class EnchantApplyListener implements Listener {
             return;
         }
 
-        if (!manager.isBukkitEnchant(enchantId)) {
-            Map<String, Integer> currentCustomEnchants = manager.getCustomEnchants(current);
-            int limit = manager.getMaxSlots(current);
-            if (!currentCustomEnchants.containsKey(enchantId) && currentCustomEnchants.size() >= limit) {
-                sendMsg(player, "enchant-limit-reached", "%slots%", String.valueOf(limit));
-                return;
-            }
+        int limit = manager.getMaxSlots(current);
+        boolean isUpgrading = manager.getEnchantLevel(current, enchantId) > 0;
+
+        if (!isUpgrading && manager.getAppliedEnchantsCount(current) >= limit) {
+            sendMsg(player, "enchant-limit-reached", "%slots%", String.valueOf(limit));
+            return;
         }
 
         int currentLevel = manager.getEnchantLevel(current, enchantId);
