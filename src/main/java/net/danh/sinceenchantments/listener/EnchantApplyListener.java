@@ -14,11 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class EnchantApplyListener implements Listener {
 
@@ -97,7 +93,7 @@ public class EnchantApplyListener implements Listener {
             }
             int gemModifier = cursorMeta.getPersistentDataContainer().get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER);
             int currentModifier = currentMeta.getPersistentDataContainer().getOrDefault(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, 0);
-            int maxAllowed = plugin.getConfigFile().getInt("settings.max-slot-modifiers-allowed", 5);
+            int maxAllowed = manager.getMaxSlotModifiersAllowed(current);
 
             if (gemModifier > 0 && currentModifier >= maxAllowed) {
                 sendMsg(player, "slot-gem-max-reached", "%max%", String.valueOf(maxAllowed));

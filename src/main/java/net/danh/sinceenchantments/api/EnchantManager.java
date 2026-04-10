@@ -47,6 +47,9 @@ public class EnchantManager {
     private final Map<String, Integer> itemMaxSlots = new HashMap<>();
     private final Map<String, Integer> mmoItemsMaxSlots = new HashMap<>();
 
+    private final Map<String, Integer> itemMaxSlotModifiers = new HashMap<>();
+    private final Map<String, Integer> mmoItemsMaxSlotModifiers = new HashMap<>();
+
     public EnchantManager(SinceEnchantments plugin) {
         this.plugin = plugin;
         this.ENCHANT_KEY = new NamespacedKey(plugin, "custom_enchants");
@@ -79,6 +82,8 @@ public class EnchantManager {
         mmoItemsWhitelist.clear();
         itemMaxSlots.clear();
         mmoItemsMaxSlots.clear();
+        itemMaxSlotModifiers.clear();
+        mmoItemsMaxSlotModifiers.clear();
 
         if (plugin.getConfigFile().getConfig().contains("custom-enchants")) {
             for (String key : plugin.getConfigFile().getConfig().getConfigurationSection("custom-enchants").getKeys(false)) {
@@ -122,6 +127,18 @@ public class EnchantManager {
         if (plugin.getConfigFile().getConfig().contains("mmoitems-max-slots")) {
             for (String key : plugin.getConfigFile().getConfig().getConfigurationSection("mmoitems-max-slots").getKeys(false)) {
                 mmoItemsMaxSlots.put(key.toUpperCase(), plugin.getConfigFile().getInt("mmoitems-max-slots." + key));
+            }
+        }
+
+        if (plugin.getConfigFile().getConfig().contains("item-max-slot-modifiers")) {
+            for (String key : plugin.getConfigFile().getConfig().getConfigurationSection("item-max-slot-modifiers").getKeys(false)) {
+                itemMaxSlotModifiers.put(key.toUpperCase(), plugin.getConfigFile().getInt("item-max-slot-modifiers." + key));
+            }
+        }
+
+        if (plugin.getConfigFile().getConfig().contains("mmoitems-max-slot-modifiers")) {
+            for (String key : plugin.getConfigFile().getConfig().getConfigurationSection("mmoitems-max-slot-modifiers").getKeys(false)) {
+                mmoItemsMaxSlotModifiers.put(key.toUpperCase(), plugin.getConfigFile().getInt("mmoitems-max-slot-modifiers." + key));
             }
         }
     }
@@ -210,6 +227,44 @@ public class EnchantManager {
         }
 
         return matched ? totalSlots : defaultSlots;
+    }
+
+    public int getMaxSlotModifiersAllowed(ItemStack item) {
+        int defaultAllowed = plugin.getConfigFile().getInt("settings.default-max-slot-modifiers-allowed", 5);
+        if (item == null || !item.hasItemMeta()) return defaultAllowed;
+
+        int maxAllowed = 0;
+        boolean matched = false;
+
+        NamespacedKey mmoTypeKey = new NamespacedKey("mmoitems", "type");
+        NamespacedKey mmoIdKey = new NamespacedKey("mmoitems", "id");
+        ItemMeta meta = item.getItemMeta();
+
+        if (meta.getPersistentDataContainer().has(mmoTypeKey, PersistentDataType.STRING) &&
+                meta.getPersistentDataContainer().has(mmoIdKey, PersistentDataType.STRING)) {
+            String mmoType = meta.getPersistentDataContainer().get(mmoTypeKey, PersistentDataType.STRING);
+            String mmoId = meta.getPersistentDataContainer().get(mmoIdKey, PersistentDataType.STRING);
+            String fullMmoKey = (mmoType + "." + mmoId).toUpperCase();
+
+            for (Map.Entry<String, Integer> entry : mmoItemsMaxSlotModifiers.entrySet()) {
+                if (isMatch(fullMmoKey, entry.getKey())) {
+                    maxAllowed += entry.getValue();
+                    matched = true;
+                }
+            }
+        }
+
+        if (matched) return maxAllowed;
+
+        String matName = item.getType().name().toUpperCase();
+        for (Map.Entry<String, Integer> entry : itemMaxSlotModifiers.entrySet()) {
+            if (isMatch(matName, entry.getKey())) {
+                maxAllowed += entry.getValue();
+                matched = true;
+            }
+        }
+
+        return matched ? maxAllowed : defaultAllowed;
     }
 
     public int getMaxSlots(ItemStack item) {
