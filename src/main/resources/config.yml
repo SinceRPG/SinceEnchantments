@@ -42,7 +42,7 @@ settings:
 
   # The absolute maximum number of CUSTOM enchantments a single item can hold.
   # This prevents players from creating overpowered god-items.
-  max-custom-enchants-per-item: 5
+  default-max-custom-enchants-per-item: 5
 
   # The visual divider line placed between Vanilla enchantments and Custom enchantments.
   divider: "&8&m                         &8&m"
@@ -64,6 +64,34 @@ settings:
 
   # The line displayed when the item is locked.
   locked-format: "&c&l"
+
+# ==========================================
+# MAX SLOTS CONFIGURATION
+# ==========================================
+item-max-slots:
+  DIAMOND_SWORD: 3
+  IRON_SWORD: 2
+  DIAMOND_CHESTPLATE: 4
+
+mmoitems-max-slots:
+  SWORD.LEGENDARY_BLADE: 6
+  ARMOR.MYTHIC_CHESTPLATE: 5
+
+# ==========================================
+# WHITELIST CONFIGURATION
+# ==========================================
+item-whitelist:
+  DIAMOND_SWORD:
+    - "since:lifesteal"
+    - "minecraft:sharpness"
+  BOW:
+    - "minecraft:power"
+
+mmoitems-whitelist:
+  SWORD.LEGENDARY_BLADE:
+    - "since:fireball"
+    - "since:thunder"
+    - "since:lifesteal"
 
 # ==========================================
 # DIALOG CONFIGURATIONS (PAPER 1.21.6+ ONLY)
@@ -128,15 +156,6 @@ gui:
       lore:
         - "&7Click to safely extract"
         - "&7this enchantment into a book!"
-
-# ==========================================
-# ITEM WHITELIST
-# If an item appears in this list, it will ONLY accept the enchantments listed below.
-# ==========================================
-item-whitelist:
-#  DIAMOND_SWORD:
-#    - "since:lifesteal"
-#    - "minecraft:sharpness"
 
 # ==========================================
 # RARITY SYSTEM

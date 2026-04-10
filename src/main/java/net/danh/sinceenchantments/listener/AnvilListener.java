@@ -66,7 +66,7 @@ public class AnvilListener implements Listener {
 
         if (manager.isLocked(slot1)) return;
         if (!manager.isApplicable(enchantId, slot1.getType())) return;
-        if (!manager.isWhitelisted(slot1.getType(), enchantId)) return;
+        if (!manager.isWhitelisted(slot1, enchantId)) return;
         if (!manager.getMissingRequirements(enchantId, slot1).isEmpty()) return;
         if (manager.hasConflict(enchantId, slot1)) return;
 

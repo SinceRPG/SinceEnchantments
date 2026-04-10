@@ -18,9 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Core manager handling NBT data, validation, and Bukkit integration.
- */
 public class EnchantManager {
 
     public final NamespacedKey ENCHANT_KEY;
@@ -31,7 +28,7 @@ public class EnchantManager {
     public final NamespacedKey EXTRACTOR_TYPE_KEY;
     public final NamespacedKey CHARM_BONUS_KEY;
     public final NamespacedKey GUI_ACTION_KEY;
-    public final NamespacedKey MAX_SLOTS_KEY;
+
     public final NamespacedKey SLOT_MODIFIER_KEY;
     public final NamespacedKey LOCKED_KEY;
     public final NamespacedKey LOCK_SCROLL_KEY;
@@ -46,7 +43,12 @@ public class EnchantManager {
     private final Map<String, List<String>> conflicts = new HashMap<>();
     private final Map<String, List<String>> requires = new HashMap<>();
     private final Map<String, List<String>> descriptions = new HashMap<>();
+
     private final Map<String, List<String>> itemWhitelist = new HashMap<>();
+    private final Map<String, List<String>> mmoItemsWhitelist = new HashMap<>();
+
+    private final Map<String, Integer> itemMaxSlots = new HashMap<>();
+    private final Map<String, Integer> mmoItemsMaxSlots = new HashMap<>();
 
     public EnchantManager(SinceEnchantments plugin) {
         this.plugin = plugin;
@@ -58,7 +60,7 @@ public class EnchantManager {
         this.EXTRACTOR_TYPE_KEY = new NamespacedKey(plugin, "extractor_type");
         this.CHARM_BONUS_KEY = new NamespacedKey(plugin, "charm_bonus");
         this.GUI_ACTION_KEY = new NamespacedKey(plugin, "gui_action");
-        this.MAX_SLOTS_KEY = new NamespacedKey(plugin, "max_slots");
+
         this.SLOT_MODIFIER_KEY = new NamespacedKey(plugin, "slot_modifier");
         this.LOCKED_KEY = new NamespacedKey(plugin, "item_locked");
         this.LOCK_SCROLL_KEY = new NamespacedKey(plugin, "lock_scroll");
@@ -77,6 +79,9 @@ public class EnchantManager {
         requires.clear();
         descriptions.clear();
         itemWhitelist.clear();
+        mmoItemsWhitelist.clear();
+        itemMaxSlots.clear();
+        mmoItemsMaxSlots.clear();
 
         if (plugin.getConfigFile().getConfig().contains("custom-enchants")) {
             for (String key : plugin.getConfigFile().getConfig().getConfigurationSection("custom-enchants").getKeys(false)) {
@@ -100,8 +105,26 @@ public class EnchantManager {
         }
 
         if (plugin.getConfigFile().getConfig().contains("item-whitelist")) {
-            for (String matKey : plugin.getConfigFile().getConfig().getConfigurationSection("item-whitelist").getKeys(false)) {
-                itemWhitelist.put(matKey.toUpperCase(), plugin.getConfigFile().getStringList("item-whitelist." + matKey));
+            for (String key : plugin.getConfigFile().getConfig().getConfigurationSection("item-whitelist").getKeys(false)) {
+                itemWhitelist.put(key.toUpperCase(), plugin.getConfigFile().getStringList("item-whitelist." + key));
+            }
+        }
+
+        if (plugin.getConfigFile().getConfig().contains("mmoitems-whitelist")) {
+            for (String key : plugin.getConfigFile().getConfig().getConfigurationSection("mmoitems-whitelist").getKeys(false)) {
+                mmoItemsWhitelist.put(key.toUpperCase(), plugin.getConfigFile().getStringList("mmoitems-whitelist." + key));
+            }
+        }
+
+        if (plugin.getConfigFile().getConfig().contains("item-max-slots")) {
+            for (String key : plugin.getConfigFile().getConfig().getConfigurationSection("item-max-slots").getKeys(false)) {
+                itemMaxSlots.put(key.toUpperCase(), plugin.getConfigFile().getInt("item-max-slots." + key));
+            }
+        }
+
+        if (plugin.getConfigFile().getConfig().contains("mmoitems-max-slots")) {
+            for (String key : plugin.getConfigFile().getConfig().getConfigurationSection("mmoitems-max-slots").getKeys(false)) {
+                mmoItemsMaxSlots.put(key.toUpperCase(), plugin.getConfigFile().getInt("mmoitems-max-slots." + key));
             }
         }
     }
@@ -140,18 +163,38 @@ public class EnchantManager {
         return descriptions.getOrDefault(enchantId, new ArrayList<>());
     }
 
-    public int getMaxSlots(ItemStack item) {
-        int defaultSlots = plugin.getConfigFile().getInt("settings.max-custom-enchants-per-item", 5);
+    public int getRawMaxSlots(ItemStack item) {
+        int defaultSlots = plugin.getConfigFile().getInt("settings.default-max-custom-enchants-per-item", 5);
         if (item == null || !item.hasItemMeta()) return defaultSlots;
-        return item.getItemMeta().getPersistentDataContainer().getOrDefault(MAX_SLOTS_KEY, PersistentDataType.INTEGER, defaultSlots);
+
+        NamespacedKey mmoTypeKey = new NamespacedKey("mmoitems", "type");
+        NamespacedKey mmoIdKey = new NamespacedKey("mmoitems", "id");
+        ItemMeta meta = item.getItemMeta();
+
+        if (meta.getPersistentDataContainer().has(mmoTypeKey, PersistentDataType.STRING) &&
+                meta.getPersistentDataContainer().has(mmoIdKey, PersistentDataType.STRING)) {
+            String mmoType = meta.getPersistentDataContainer().get(mmoTypeKey, PersistentDataType.STRING);
+            String mmoId = meta.getPersistentDataContainer().get(mmoIdKey, PersistentDataType.STRING);
+            String fullMmoKey = mmoType + "." + mmoId;
+
+            if (mmoItemsMaxSlots.containsKey(fullMmoKey)) {
+                return mmoItemsMaxSlots.get(fullMmoKey);
+            }
+        }
+
+        String matName = item.getType().name();
+        if (itemMaxSlots.containsKey(matName)) {
+            return itemMaxSlots.get(matName);
+        }
+
+        return defaultSlots;
     }
 
-    public void addMaxSlots(ItemStack item, int amount) {
-        if (item == null || !item.hasItemMeta()) return;
-        int current = getMaxSlots(item);
-        ItemMeta meta = item.getItemMeta();
-        meta.getPersistentDataContainer().set(MAX_SLOTS_KEY, PersistentDataType.INTEGER, Math.max(0, current + amount));
-        item.setItemMeta(meta);
+    public int getMaxSlots(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return plugin.getConfigFile().getInt("settings.default-max-custom-enchants-per-item", 5);
+        int raw = getRawMaxSlots(item);
+        int modifier = item.getItemMeta().getPersistentDataContainer().getOrDefault(SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, 0);
+        return Math.max(0, raw + modifier);
     }
 
     public boolean isLocked(ItemStack item) {
@@ -167,11 +210,29 @@ public class EnchantManager {
         item.setItemMeta(meta);
     }
 
-    public boolean isWhitelisted(Material mat, String enchantId) {
-        String name = mat.name();
-        if (itemWhitelist.containsKey(name)) {
-            return itemWhitelist.get(name).contains(enchantId);
+    public boolean isWhitelisted(ItemStack item, String enchantId) {
+        if (item == null || !item.hasItemMeta()) return true;
+
+        NamespacedKey mmoTypeKey = new NamespacedKey("mmoitems", "type");
+        NamespacedKey mmoIdKey = new NamespacedKey("mmoitems", "id");
+        ItemMeta meta = item.getItemMeta();
+
+        if (meta.getPersistentDataContainer().has(mmoTypeKey, PersistentDataType.STRING) &&
+                meta.getPersistentDataContainer().has(mmoIdKey, PersistentDataType.STRING)) {
+            String mmoType = meta.getPersistentDataContainer().get(mmoTypeKey, PersistentDataType.STRING);
+            String mmoId = meta.getPersistentDataContainer().get(mmoIdKey, PersistentDataType.STRING);
+            String fullMmoKey = mmoType + "." + mmoId;
+
+            if (mmoItemsWhitelist.containsKey(fullMmoKey)) {
+                return mmoItemsWhitelist.get(fullMmoKey).contains(enchantId);
+            }
         }
+
+        String matName = item.getType().name();
+        if (itemWhitelist.containsKey(matName)) {
+            return itemWhitelist.get(matName).contains(enchantId);
+        }
+
         return true;
     }
 

@@ -14,7 +14,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 public class EnchantApplyListener implements Listener {
 
@@ -49,7 +53,6 @@ public class EnchantApplyListener implements Listener {
         ItemMeta cursorMeta = cursor.getItemMeta();
         ItemMeta currentMeta = current.getItemMeta();
         if (cursorMeta == null || currentMeta == null) return;
-
 
         if (cursorMeta.getPersistentDataContainer().has(manager.CHARM_BONUS_KEY, PersistentDataType.INTEGER) &&
                 currentMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
@@ -88,8 +91,11 @@ public class EnchantApplyListener implements Listener {
                 sendMsg(player, "item-locked");
                 return;
             }
-            int modifier = cursorMeta.getPersistentDataContainer().get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER);
-            manager.addMaxSlots(current, modifier);
+            int gemModifier = cursorMeta.getPersistentDataContainer().get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER);
+            int currentModifier = currentMeta.getPersistentDataContainer().getOrDefault(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, 0);
+
+            currentMeta.getPersistentDataContainer().set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, currentModifier + gemModifier);
+            current.setItemMeta(currentMeta);
 
             cursor.setAmount(cursor.getAmount() - 1);
             player.setItemOnCursor(cursor);
@@ -98,7 +104,6 @@ public class EnchantApplyListener implements Listener {
             return;
         }
 
-        // Feature: Lock/Unlock Scroll
         if (cursorMeta.getPersistentDataContainer().has(manager.LOCK_SCROLL_KEY, PersistentDataType.BYTE)) {
             event.setCancelled(true);
             manager.toggleLock(current);
@@ -121,7 +126,7 @@ public class EnchantApplyListener implements Listener {
             if (returnBooks) {
                 Map<String, Integer> allEnchants = manager.getAllEnchantsOnItem(current);
                 for (Map.Entry<String, Integer> entry : allEnchants.entrySet()) {
-                    if (manager.isBukkitEnchant(entry.getKey())) continue; // Skip vanilla
+                    if (manager.isBukkitEnchant(entry.getKey())) continue;
                     ItemStack book = manager.createEnchantBook(entry.getKey(), entry.getValue(), 100, 0);
                     if (!player.getInventory().addItem(book).isEmpty()) {
                         player.getWorld().dropItem(player.getLocation(), book);
@@ -162,7 +167,7 @@ public class EnchantApplyListener implements Listener {
             return;
         }
 
-        if (!manager.isWhitelisted(current.getType(), enchantId)) {
+        if (!manager.isWhitelisted(current, enchantId)) {
             sendMsg(player, "enchant-not-whitelisted");
             return;
         }
