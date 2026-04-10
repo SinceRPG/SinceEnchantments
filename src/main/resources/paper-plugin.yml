@@ -1,14 +1,12 @@
 name: SinceEnchantments
 version: '${version}'
 main: net.danh.sinceenchantments.SinceEnchantments
-api-version: '1.21.11'
+api-version: '1.21'
 load: POSTWORLD
 authors: [ VoChiDanh ]
+website: https://gitlab.com/sincerpg/SinceEnchantments/-/wikis/home
 dependencies:
   server:
     packetevents:
       load: BEFORE
       required: true
-    MythicLib:
-      load: BEFORE
-      required: false

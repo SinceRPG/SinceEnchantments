@@ -1,52 +1,121 @@
+# ============================================================================== #
+#                                                                                #
+#                      S I N C E   E N C H A N T M E N T S                       #
+#                            Main Configuration File                             #
+#                                                                                #
+# ============================================================================== #
+
+# ==========================================
+# GENERAL SETTINGS
+# ==========================================
 settings:
+  # The exact string you must put in your item's lore (e.g., via MMOItems or Vanilla commands)
+  # where you want the plugin to inject the custom enchantments list.
   placeholder: "{enchants}"
+
+  # IMPORTANT: Compatibility Mode for MMOItems / Custom Enchant Plugins!
+  # TRUE: The plugin will hide all default Minecraft enchantments (and other plugins' enchants)
+  #       and rewrite them beautifully inside the {enchants} placeholder.
+  # FALSE: The plugin will IGNORE vanilla enchants and ONLY inject its own custom enchantments
+  #        into the {enchants} placeholder. Set this to FALSE if you use MMOItems stats or EcoEnchants.
+  override-vanilla-enchants: true
+
+  # How many enchantments should be displayed on a single line of lore?
+  # Setting this to 1 makes it look like Vanilla. Setting it to 2 or 3 saves lore space.
   enchants-per-line: 2
+
+  # The text/color used to separate multiple enchantments on the same line (if enchants-per-line > 1).
   separator: "&8 | "
+
+  # The default color applied to Vanilla enchantments (if override-vanilla-enchants is true).
   default-color: "&9"
+
+  # Should the plugin automatically add a blank line above the enchantments list for better spacing?
   add-empty-line-above: true
+
+  # Should the plugin automatically add a blank line below the enchantments list?
   add-empty-line-below: true
+
+  # How should enchantment levels be displayed?
+  # Options: "ROMAN" (I, II, III, IV, V) or "NUMBER" (1, 2, 3, 4, 5).
   level-format: "ROMAN"
+
+  # The absolute maximum number of CUSTOM enchantments a single item can hold.
+  # This prevents players from creating overpowered god-items.
   max-custom-enchants-per-item: 5
+
+  # The visual divider line placed between Vanilla enchantments and Custom enchantments.
   divider: "&8&m                         &8&m"
+
+  # The amount of XP Levels it costs to combine two identical custom enchantment books in an Anvil.
   anvil-xp-combine-books: 5
+
+  # The amount of XP Levels it costs to apply a custom enchantment book directly to a weapon/armor in an Anvil.
   anvil-xp-apply-book: 3
-  # Specific Extractor Mode: "GUI" (Traditional Chest) or "DIALOG" (Paper 1.21.6+ Dialog)
+
+  # Which menu system should the Specific Extractor open?
+  # "DIALOG": Uses the modern, glitch-free Paper 1.21.6+ Native Dialog API (Highly Recommended).
+  # "GUI": Uses the legacy 54-slot Chest Inventory menu.
   extractor-mode: "DIALOG"
 
 # ==========================================
-# DIALOG CONFIGURATIONS (PAPER 1.21.6+)
+# DIALOG CONFIGURATIONS (PAPER 1.21.6+ ONLY)
 # ==========================================
+# Note: You can use MiniMessage tags here (e.g., <red>, <bold>, <gradient:blue:green>).
 dialog:
   extractor:
+    # The large title displayed at the top of the Dialog screen.
     title: "<dark_gray><bold>Extract Enchantment"
+
+    # The descriptive text displayed right above the item and buttons. Use \n for a new line.
     body: "<gray>Choose an enchantment from your item below\n<gray>to extract it safely into a book."
-    columns: 3 # Number of button columns to display (recommended: 3 or 4)
+
+    # How many buttons (enchants) should be displayed per row? (Recommended: 3 or 4)
+    columns: 3
+
     cancel-button:
+      # The name of the mandatory exit button.
       name: "<red><bold>Cancel & Refund"
+      # The hover text (tooltip) for the cancel button.
       tooltip: "<gray>Click to cancel extraction\n<gray>and get your extractor back."
+
     enchant-button:
+      # The format of the buttons that represent the enchantments on the item.
+      # Available placeholders: %rarity_color%, %enchant_name%, %level%, %rarity_name%
       name: "%rarity_color%%enchant_name% %level%"
+      # The hover text (tooltip) when hovering over a specific enchantment button.
       tooltip: "<gray>Click to extract <yellow>%enchant_name%\n<gray>from your item and destroy the extractor."
 
 # ==========================================
-# GUI CONFIGURATIONS (LEGACY)
+# GUI CONFIGURATIONS (LEGACY CHEST MENU)
 # ==========================================
+# Note: Uses legacy color codes (&a, &b, &c, etc.).
 gui:
   extractor:
+    # The title of the chest inventory. %page% shows the current page number.
     title: "&8Select Enchant (Page %page%)"
-    size: 54 # Must be 27, 36, 45, or 54
+
+    # The total number of slots in the chest. MUST be a multiple of 9 (27, 36, 45, or 54).
+    size: 54
+
     border:
+      # The material used to fill empty slots around the edges.
       material: "BLACK_STAINED_GLASS_PANE"
+      # Leave as " " for an invisible name.
       name: " "
+
     next-page:
       material: "ARROW"
       name: "&aNext Page"
-      slot: 53
+      slot: 53 # The specific slot for this button (0-53)
+
     prev-page:
       material: "ARROW"
       name: "&cPrevious Page"
-      slot: 45
+      slot: 45 # The specific slot for this button (0-53)
+
     display-item:
+      # The material representing the extractable enchantments.
       material: "ENCHANTED_BOOK"
       name: "%rarity_color%%enchant_name% %level%"
       lore:
@@ -56,27 +125,38 @@ gui:
 # ==========================================
 # RARITY SYSTEM
 # ==========================================
+# Define the color codes associated with each rarity tier.
+# These keys (COMMON, UNCOMMON, etc.) are referenced in the custom-enchants section below.
 rarities:
-  COMMON: "&f"
-  UNCOMMON: "&a"
-  RARE: "&9"
-  EPIC: "&5"
-  LEGENDARY: "&6&l"
+  COMMON: "&f"       # White
+  UNCOMMON: "&a"     # Green
+  RARE: "&9"         # Blue
+  EPIC: "&5"         # Purple
+  LEGENDARY: "&6&l"  # Gold & Bold
 
 # ==========================================
-# CUSTOM ENCHANTS
+# CUSTOM ENCHANTMENTS
 # ==========================================
+# Here you configure all custom enchantments loaded by internal modules or external addons.
 custom-enchants:
+
   "since:lifesteal":
+    # The display name of the enchantment in the lore.
     name: "Lifesteal"
+    # Ties into the 'rarities' section above to determine the color.
     rarity: "EPIC"
+    # The absolute maximum level this enchantment can reach.
     max-level: 5
+    # What items can this be applied to? (ALL, WEAPON, SWORD, BOW, TOOL, ARMOR)
     target: "WEAPON"
+    # The description shown on Enchantment Books.
     description:
       - "&7Heals you for a portion"
       - "&7of your max health on hit."
+    # Module-specific variables that developers use in their code.
     settings:
       heal-multiplier: 1.0
+    # Module-specific chat messages sent to the player.
     messages:
       action: "&a+ %amount% HP (Lifesteal)!"
 
@@ -89,7 +169,7 @@ custom-enchants:
       - "&7Left-click the air to"
       - "&7shoot a destructive fireball."
     settings:
-      cooldown: 5000
+      cooldown: 5000 # Cooldown in milliseconds (5000ms = 5 seconds)
       explosion-power: 2.0
     messages:
       on-cooldown: "&cSkill is on cooldown for %time%s!"
@@ -104,7 +184,7 @@ custom-enchants:
       - "&7Chance to strike lightning"
       - "&7on your enemies."
     settings:
-      chance-per-level: 8
+      chance-per-level: 8 # 8% chance per level (Level 5 = 40%)
       extra-damage: 3.0
     messages:
       activate: "&b⚡ Lightning struck the target!"
@@ -118,7 +198,7 @@ custom-enchants:
       - "&7Mines a 3x3 area"
       - "&7around the broken block."
     settings:
-      radius: 1
+      radius: 1 # 1 = 3x3 area, 2 = 5x5 area
     messages:
       activate: "&eArea mining activated!"
 
@@ -131,7 +211,7 @@ custom-enchants:
       - "&7Chance to completely"
       - "&7evade incoming damage."
     settings:
-      chance-per-level: 5
+      chance-per-level: 5 # 5% dodge chance per level
     messages:
       activate: "&fSuccessfully dodged an attack!"
 

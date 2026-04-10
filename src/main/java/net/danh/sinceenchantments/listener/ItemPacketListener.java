@@ -117,14 +117,17 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
         Map<Enchantment, Integer> vanillaEnchants = meta.getEnchants();
         Map<String, Integer> customEnchants = SinceEnchantments.getInstance().getEnchantManager().getCustomEnchants(item);
+        boolean overrideVanilla = config.getBoolean("settings.override-vanilla-enchants", true);
 
-        if (vanillaEnchants.isEmpty() && customEnchants.isEmpty()) {
+        if ((!overrideVanilla && customEnchants.isEmpty()) || (overrideVanilla && vanillaEnchants.isEmpty() && customEnchants.isEmpty())) {
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;
         }
 
-        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        if (overrideVanilla) {
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
 
         List<Component> enchantComponents = new ArrayList<>();
         int count = 0;
@@ -133,31 +136,36 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         StringBuilder currentLine = new StringBuilder();
         boolean useRoman = config.getString("settings.level-format", "ROMAN").equalsIgnoreCase("ROMAN");
 
-        for (Map.Entry<Enchantment, Integer> entry : vanillaEnchants.entrySet()) {
-            String keyName = entry.getKey().getKey().getKey();
-            String cName = config.getString("vanilla-enchants.minecraft:" + keyName + ".name", formatDefaultName(keyName));
-            String cColor = config.getString("vanilla-enchants.minecraft:" + keyName + ".color", config.getString("settings.default-color", "&9"));
+        if (overrideVanilla) {
+            for (Map.Entry<Enchantment, Integer> entry : vanillaEnchants.entrySet()) {
+                String namespace = entry.getKey().getKey().getNamespace();
+                String keyName = entry.getKey().getKey().getKey();
+                String fullKey = namespace + ":" + keyName;
 
-            String formatted = cColor + cName + " " + (useRoman ? toRoman(entry.getValue()) : entry.getValue());
-            if (count > 0) currentLine.append(separator);
-            currentLine.append(formatted);
-            count++;
+                String cName = config.getString("vanilla-enchants." + fullKey + ".name", formatDefaultName(keyName));
+                String cColor = config.getString("vanilla-enchants." + fullKey + ".color", config.getString("settings.default-color", "&9"));
 
-            if (count == maxPerLine) {
-                enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
-                currentLine = new StringBuilder();
-                count = 0;
+                String formatted = cColor + cName + " " + (useRoman ? toRoman(entry.getValue()) : entry.getValue());
+                if (count > 0) currentLine.append(separator);
+                currentLine.append(formatted);
+                count++;
+
+                if (count == maxPerLine) {
+                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    currentLine = new StringBuilder();
+                    count = 0;
+                }
             }
-        }
 
-        if (!vanillaEnchants.isEmpty() && !customEnchants.isEmpty()) {
-            if (count > 0) {
-                enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
-                currentLine = new StringBuilder();
-                count = 0;
+            if (!vanillaEnchants.isEmpty() && !customEnchants.isEmpty()) {
+                if (count > 0) {
+                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    currentLine = new StringBuilder();
+                    count = 0;
+                }
+                String divider = config.getString("settings.divider", "&7&m----------------------");
+                enchantComponents.add(ColorUtils.parse(divider).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
             }
-            String divider = config.getString("settings.divider", "&7&m----------------------");
-            enchantComponents.add(ColorUtils.parse(divider).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
         }
 
         for (Map.Entry<String, Integer> entry : customEnchants.entrySet()) {
