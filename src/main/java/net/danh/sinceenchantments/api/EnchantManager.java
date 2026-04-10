@@ -179,7 +179,6 @@ public class EnchantManager {
     }
 
     private boolean isMatch(String text, String pattern) {
-        plugin.getLogger().warning(text + " | " + pattern);
         if (pattern.equals("*")) return true;
         if (pattern.startsWith("*") && pattern.endsWith("*") && pattern.length() >= 2) {
             return text.contains(pattern.substring(1, pattern.length() - 1));
