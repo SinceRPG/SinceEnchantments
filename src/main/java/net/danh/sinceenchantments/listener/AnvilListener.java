@@ -46,7 +46,6 @@ public class AnvilListener implements Listener {
 
         if (!(event.getView() instanceof AnvilView anvilView)) return;
 
-        // BOOK + BOOK
         if (slot1.hasItemMeta() && slot1.getItemMeta().getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
             String id1 = slot1.getItemMeta().getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
             int lvl1 = slot1.getItemMeta().getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
@@ -63,7 +62,6 @@ public class AnvilListener implements Listener {
             return;
         }
 
-        // ITEM + BOOK
         if (!manager.isApplicable(enchantId, slot1.getType())) return;
         if (manager.hasConflict(enchantId, slot1)) return;
 

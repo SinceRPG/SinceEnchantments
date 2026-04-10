@@ -101,7 +101,7 @@ public class ExtractorListener implements Listener {
             String mode = plugin.getConfigFile().getString("settings.extractor-mode", "DIALOG").toUpperCase();
 
             if (mode.equals("GUI")) {
-                ExtractorGUI gui = new ExtractorGUI(plugin, current, 0); // Start at Page 0
+                ExtractorGUI gui = new ExtractorGUI(plugin, current, 0);
                 Bukkit.getScheduler().runTask(plugin, () -> p.openInventory(gui.getInventory()));
             } else {
                 Bukkit.getScheduler().runTask(plugin, () -> ExtractorDialog.open(plugin, p, current));

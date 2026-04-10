@@ -39,7 +39,6 @@ public class ExtractorGUI implements InventoryHolder {
     }
 
     private void populate(SinceEnchantments plugin, int size) {
-        // Calculate inner slots dynamically (surrounded by borders)
         List<Integer> innerSlots = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             if (i > 8 && i < size - 9 && i % 9 != 0 && i % 9 != 8) {
@@ -47,7 +46,6 @@ public class ExtractorGUI implements InventoryHolder {
             }
         }
 
-        // Apply Borders
         String borderMatStr = plugin.getConfigFile().getString("gui.extractor.border.material", "BLACK_STAINED_GLASS_PANE");
         Material borderMat = Material.matchMaterial(borderMatStr);
         if (borderMat == null) borderMat = Material.BLACK_STAINED_GLASS_PANE;
@@ -64,7 +62,6 @@ public class ExtractorGUI implements InventoryHolder {
             }
         }
 
-        // Fetch Enchants
         Map<String, Integer> allEnchantsMap = plugin.getEnchantManager().getAllEnchantsOnItem(weapon);
         List<Map.Entry<String, Integer>> allEnchants = new ArrayList<>(allEnchantsMap.entrySet());
 
@@ -75,7 +72,6 @@ public class ExtractorGUI implements InventoryHolder {
         int startIndex = page * maxItems;
         int endIndex = Math.min(startIndex + maxItems, allEnchants.size());
 
-        // Fill Enchants
         int slotIndex = 0;
         String matStr = plugin.getConfigFile().getString("gui.extractor.display-item.material", "ENCHANTED_BOOK");
         Material mat = Material.matchMaterial(matStr);
@@ -119,7 +115,6 @@ public class ExtractorGUI implements InventoryHolder {
             inventory.setItem(innerSlots.get(slotIndex++), displayBook);
         }
 
-        // Apply Pagination Arrows
         if (page > 0) {
             int prevSlot = plugin.getConfigFile().getInt("gui.extractor.prev-page.slot", size - 9);
             Material pMat = Material.matchMaterial(plugin.getConfigFile().getString("gui.extractor.prev-page.material", "ARROW"));

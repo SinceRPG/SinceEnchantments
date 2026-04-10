@@ -37,7 +37,7 @@ public class SinceCommand {
     public LiteralCommandNode<CommandSourceStack> buildCommand() {
         return Commands.literal("sinceenchantments")
                 .requires(source -> source.getSender().hasPermission("sinceenchantments.admin"))
-                .executes(this::executeHelp) // Show help by default
+                .executes(this::executeHelp)
                 .then(Commands.literal("help")
                         .executes(this::executeHelp)
                 )
