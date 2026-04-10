@@ -103,9 +103,9 @@ item-max-slots:
   "*DIAMOND*": 1
 
 mmoitems-max-slots:
-  "SWORD.*": 2
-  "*.LEGENDARY_*": 3
-  "ARMOR.MYTHIC_CHESTPLATE": 5
+  "SWORD:*": 2
+  "*:LEGENDARY_*": 3
+  "ARMOR:MYTHIC_CHESTPLATE": 5
 
 # ============================================================================== #
 # MAX SLOT MODIFIERS CONFIGURATION (SLOT GEMS)
@@ -123,9 +123,9 @@ item-max-slot-modifiers:
   "*DIAMOND*": 2
 
 mmoitems-max-slot-modifiers:
-  "SWORD.*": 4
-  "*.LEGENDARY_*": 5
-  "ARMOR.MYTHIC_CHESTPLATE": 8
+  "SWORD:*": 4
+  "*:LEGENDARY_*": 5
+  "ARMOR:MYTHIC_CHESTPLATE": 8
 
 # ============================================================================== #
 # WHITELIST CONFIGURATION
@@ -147,7 +147,7 @@ item-whitelist:
     - "minecraft:power"
 
 mmoitems-whitelist:
-  "SWORD.*":
+  "SWORD:*":
     - "since:fireball"
     - "since:thunder"
     - "since:lifesteal"

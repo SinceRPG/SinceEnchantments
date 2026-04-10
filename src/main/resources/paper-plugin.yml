@@ -10,3 +10,6 @@ dependencies:
     packetevents:
       load: BEFORE
       required: true
+    MythicLib:
+      load: BEFORE
+      required: false
