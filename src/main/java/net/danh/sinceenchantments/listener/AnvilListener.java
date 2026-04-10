@@ -30,6 +30,8 @@ public class AnvilListener implements Listener {
         if (slot1 == null || slot2 == null) return;
         if (slot1.getType() == Material.AIR || slot2.getType() == Material.AIR) return;
 
+        if (slot1.getAmount() > 1) return;
+
         ItemMeta meta2 = slot2.getItemMeta();
         if (meta2 == null || !meta2.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
             return;
@@ -45,6 +47,8 @@ public class AnvilListener implements Listener {
         int costApply = config.getInt("settings.anvil-xp-apply-book", 3);
 
         if (!(event.getView() instanceof AnvilView anvilView)) return;
+
+        anvilView.setMaximumRepairCost(999999999);
 
         if (slot1.hasItemMeta() && slot1.getItemMeta().getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
             String id1 = slot1.getItemMeta().getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);

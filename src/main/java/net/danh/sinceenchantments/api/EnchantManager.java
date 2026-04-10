@@ -13,12 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class EnchantManager {
 
@@ -218,7 +213,8 @@ public class EnchantManager {
     }
 
     public int getMaxSlots(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return plugin.getConfigFile().getInt("settings.default-max-custom-enchants-per-item", 5);
+        if (item == null || !item.hasItemMeta())
+            return plugin.getConfigFile().getInt("settings.default-max-custom-enchants-per-item", 5);
         int raw = getRawMaxSlots(item);
         int modifier = item.getItemMeta().getPersistentDataContainer().getOrDefault(SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, 0);
         return Math.max(0, raw + modifier);
@@ -374,7 +370,12 @@ public class EnchantManager {
         if (rawData != null && !rawData.isEmpty()) {
             for (String pair : rawData.split(";")) {
                 String[] split = pair.split(",");
-                if (split.length == 2) enchants.put(split[0], Integer.parseInt(split[1]));
+                if (split.length == 2) {
+                    try {
+                        enchants.put(split[0], Integer.parseInt(split[1]));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
             }
         }
         return enchants;

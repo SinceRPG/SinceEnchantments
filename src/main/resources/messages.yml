@@ -24,6 +24,7 @@ give-slotgem-success: "&aGave Slot Gem (%modifier%) (x%amount%) to %player%."
 give-lock-success: "&aGave Lock Scroll (x%amount%) to %player%."
 give-purge-success: "&aGave Purge Scroll (Return Books: %return%) (x%amount%) to %player%."
 
+item-need-unstack: "&cPlease unstack your items to 1 before modifying them!"
 item-locked: "&cThis item is locked! You cannot modify its enchantments."
 item-lock-toggled: "&aSuccessfully toggled the lock status of this item!"
 slot-gem-applied: "&aSuccessfully modified the enchantment slots of this item!"

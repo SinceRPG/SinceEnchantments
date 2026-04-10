@@ -63,6 +63,11 @@ public class ExtractorListener implements Listener {
 
         event.setCancelled(true);
 
+        if (current.getAmount() > 1) {
+            sendMsg(p, "item-need-unstack");
+            return;
+        }
+
         if (manager.isLocked(current)) {
             sendMsg(p, "item-locked");
             return;

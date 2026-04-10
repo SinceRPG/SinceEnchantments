@@ -14,7 +14,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 public class EnchantApplyListener implements Listener {
 
@@ -54,7 +58,7 @@ public class EnchantApplyListener implements Listener {
                 currentMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
             event.setCancelled(true);
             if (current.getAmount() > 1) {
-                sendMsg(player, "charm-need-unstack");
+                sendMsg(player, "item-need-unstack");
                 return;
             }
             int currentSuccess = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);
@@ -83,6 +87,10 @@ public class EnchantApplyListener implements Listener {
 
         if (cursorMeta.getPersistentDataContainer().has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
             event.setCancelled(true);
+            if (current.getAmount() > 1) {
+                sendMsg(player, "item-need-unstack");
+                return;
+            }
             if (manager.isLocked(current)) {
                 sendMsg(player, "item-locked");
                 return;
@@ -102,6 +110,10 @@ public class EnchantApplyListener implements Listener {
 
         if (cursorMeta.getPersistentDataContainer().has(manager.LOCK_SCROLL_KEY, PersistentDataType.BYTE)) {
             event.setCancelled(true);
+            if (current.getAmount() > 1) {
+                sendMsg(player, "item-need-unstack");
+                return;
+            }
             manager.toggleLock(current);
 
             cursor.setAmount(cursor.getAmount() - 1);
@@ -113,6 +125,10 @@ public class EnchantApplyListener implements Listener {
 
         if (cursorMeta.getPersistentDataContainer().has(manager.PURGE_SCROLL_KEY, PersistentDataType.BYTE)) {
             event.setCancelled(true);
+            if (current.getAmount() > 1) {
+                sendMsg(player, "item-need-unstack");
+                return;
+            }
             if (manager.isLocked(current)) {
                 sendMsg(player, "item-locked");
                 return;
@@ -148,6 +164,11 @@ public class EnchantApplyListener implements Listener {
 
         if (!cursorMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) return;
         event.setCancelled(true);
+
+        if (current.getAmount() > 1) {
+            sendMsg(player, "item-need-unstack");
+            return;
+        }
 
         if (manager.isLocked(current)) {
             sendMsg(player, "item-locked");
