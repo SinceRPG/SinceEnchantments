@@ -63,7 +63,7 @@ settings:
   slots-format: "&7Enchantment Slots: &e%current% / %max%"
 
   # The line displayed when the item is locked.
-  locked-format: "&c&l"
+  locked-format: "&c&lLocked Enchant"
 
   # If true, items that are bound by a specific whitelist will display a preview
   # of all allowed enchantments directly in their lore.
