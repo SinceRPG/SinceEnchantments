@@ -64,23 +64,31 @@ settings:
 
   # The line displayed when the item is locked.
   locked-format: "&c&l"
-# If true, items that are bound by a specific whitelist will display a preview
-# of all allowed enchantments directly in their lore.
-# (Note: Items that allow all enchantments by default will not display this preview).
-show-whitelist-preview: true
 
-# The title or header text displayed directly above the whitelist preview list in the item's lore.
-whitelist-header: "&8Allowed Enchantments:"
+  # If true, items that are bound by a specific whitelist will display a preview
+  # of all allowed enchantments directly in their lore.
+  # (Note: Items that allow all enchantments by default will not display this preview).
+  show-whitelist-preview: true
 
-# The text format used for each individual enchantment listed under the whitelist header.
-# Available placeholders: %enchant_name%
-whitelist-preview-format: "&8 - %enchant_name%"
+  # The title or header text displayed directly above the whitelist preview list in the item's lore.
+  whitelist-header: "&8Allowed Enchantments:"
 
-# If the total number of enchantments applied to an item is less than or equal to this threshold,
-# the item will display them in a "Detailed Mode" (showing the Enchant Name + Level, followed by its full description).
-# If the total number of enchantments exceeds this number, the display will automatically collapse
-# into a "Compact Mode" (hiding descriptions and grouping multiple enchants per line based on 'enchants-per-line').
-detailed-display-threshold: 5
+  # The text format used for each individual enchantment listed under the whitelist header.
+  # Available placeholders: %enchant_name%
+  whitelist-preview-format: "&8 - %enchant_name%"
+
+  # If the total number of enchantments applied to an item is less than or equal to this threshold,
+  # the item will display them in a "Detailed Mode" (showing the Enchant Name + Level, followed by its full description).
+  # If the total number of enchantments exceeds this number, the display will automatically collapse
+  # into a "Compact Mode" (hiding descriptions and grouping multiple enchants per line based on 'enchants-per-line').
+  detailed-display-threshold: 5
+
+  # Defines the absolute maximum number of extra slots a player can add to an item using Slot Gems.
+  # For example, if a sword naturally has 2 slots, and this is set to 5, the player can only use
+  # Slot Gems until the item gains +5 bonus slots (making the total 7 slots).
+  # This acts as a hard cap to prevent players from applying an infinite amount of Slot Gems
+  # to a single item and creating completely broken, overpowered weapons.
+  max-slot-modifiers-allowed: 5
 
 # ============================================================================== #
 # MAX SLOTS CONFIGURATION
@@ -96,6 +104,17 @@ mmoitems-max-slots:
   "SWORD.*": 2
   "*.LEGENDARY_*": 3
   "ARMOR.MYTHIC_CHESTPLATE": 5
+
+
+item-max-slot-modifiers:
+  "*_SWORD": 3
+  "*_CHESTPLATE": 5
+  "*DIAMOND*": 2
+
+mmoitems-max-slot-modifiers:
+  "SWORD.*": 4
+  "*.LEGENDARY_*": 5
+  "ARMOR.MYTHIC_CHESTPLATE": 8
 
 # ============================================================================== #
 # WHITELIST CONFIGURATION

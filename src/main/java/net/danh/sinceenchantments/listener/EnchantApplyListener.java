@@ -97,6 +97,12 @@ public class EnchantApplyListener implements Listener {
             }
             int gemModifier = cursorMeta.getPersistentDataContainer().get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER);
             int currentModifier = currentMeta.getPersistentDataContainer().getOrDefault(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, 0);
+            int maxAllowed = plugin.getConfigFile().getInt("settings.max-slot-modifiers-allowed", 5);
+
+            if (gemModifier > 0 && currentModifier >= maxAllowed) {
+                sendMsg(player, "slot-gem-max-reached", "%max%", String.valueOf(maxAllowed));
+                return;
+            }
 
             currentMeta.getPersistentDataContainer().set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, currentModifier + gemModifier);
             current.setItemMeta(currentMeta);

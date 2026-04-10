@@ -12,6 +12,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.view.AnvilView;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class AnvilListener implements Listener {
 
     private final SinceEnchantments plugin;
@@ -32,35 +35,89 @@ public class AnvilListener implements Listener {
 
         if (slot1.getAmount() > 1) return;
 
-        ItemMeta meta2 = slot2.getItemMeta();
-        if (meta2 == null || !meta2.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
-            return;
-        }
-
-        String enchantId = meta2.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
-        int bookLvl = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
-        int successRate = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);
-        int destroyRate = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
+        if (!(event.getView() instanceof AnvilView anvilView)) return;
+        anvilView.setMaximumRepairCost(999999999);
 
         ConfigUtils config = plugin.getConfigFile();
         int costCombine = config.getInt("settings.anvil-xp-combine-books", 5);
         int costApply = config.getInt("settings.anvil-xp-apply-book", 3);
 
-        if (!(event.getView() instanceof AnvilView anvilView)) return;
+        ItemMeta meta2 = slot2.getItemMeta();
+        boolean isBook2 = meta2 != null && meta2.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING);
 
-        anvilView.setMaximumRepairCost(999999999);
+        if (!isBook2) {
+            ItemStack result = event.getResult();
+            if (result != null && result.getType() != Material.AIR && slot1.getType() != Material.ENCHANTED_BOOK) {
+                Map<String, Integer> enchants1 = manager.getCustomEnchants(slot1);
+                Map<String, Integer> enchants2 = manager.getCustomEnchants(slot2);
+
+                if (!enchants1.isEmpty() || !enchants2.isEmpty()) {
+                    Map<String, Integer> merged = new HashMap<>(enchants1);
+                    int costIncrease = 0;
+
+                    for (Map.Entry<String, Integer> e2 : enchants2.entrySet()) {
+                        String id = e2.getKey();
+                        int lvl2 = e2.getValue();
+                        int lvl1 = merged.getOrDefault(id, 0);
+
+                        if (lvl1 == 0) {
+                            if (merged.size() < manager.getMaxSlots(result)) {
+                                merged.put(id, lvl2);
+                                costIncrease += lvl2 * costApply;
+                            }
+                        } else if (lvl1 == lvl2) {
+                            int nextLvl = lvl1 + 1;
+                            if (nextLvl <= manager.getMaxLevel(id)) {
+                                merged.put(id, nextLvl);
+                                costIncrease += nextLvl * costCombine;
+                            }
+                        } else if (lvl2 > lvl1) {
+                            merged.put(id, lvl2);
+                            costIncrease += lvl2 * costApply;
+                        }
+                    }
+
+                    manager.setCustomEnchants(result, merged);
+
+                    ItemMeta rMeta = result.getItemMeta();
+                    if (slot1.hasItemMeta()) {
+                        if (slot1.getItemMeta().getPersistentDataContainer().has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
+                            rMeta.getPersistentDataContainer().set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER,
+                                    slot1.getItemMeta().getPersistentDataContainer().get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER));
+                        }
+                        if (manager.isLocked(slot1)) {
+                            rMeta.getPersistentDataContainer().set(manager.LOCKED_KEY, PersistentDataType.BYTE, (byte) 1);
+                        }
+                    }
+                    result.setItemMeta(rMeta);
+
+                    event.setResult(result);
+                    anvilView.setRepairCost(anvilView.getRepairCost() + costIncrease);
+                }
+            }
+            return;
+        }
+
+        String enchantId = meta2.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
+        int bookLvl = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
+        int successRate2 = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);
+        int destroyRate2 = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
 
         if (slot1.hasItemMeta() && slot1.getItemMeta().getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
             String id1 = slot1.getItemMeta().getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
             int lvl1 = slot1.getItemMeta().getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
+            int successRate1 = slot1.getItemMeta().getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);
+            int destroyRate1 = slot1.getItemMeta().getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
 
             if (id1.equals(enchantId) && lvl1 == bookLvl) {
                 int nextLvl = lvl1 + 1;
                 if (nextLvl <= manager.getMaxLevel(enchantId)) {
-                    ItemStack resultBook = manager.createEnchantBook(enchantId, nextLvl, successRate, destroyRate);
+                    int avgSuccess = (successRate1 + successRate2) / 2;
+                    int avgDestroy = (destroyRate1 + destroyRate2) / 2;
+
+                    ItemStack resultBook = manager.createEnchantBook(enchantId, nextLvl, avgSuccess, avgDestroy);
                     event.setResult(resultBook);
                     anvilView.setRepairCost(nextLvl * costCombine);
-                    return;
                 }
             }
             return;

@@ -25,6 +25,7 @@ item-need-unstack: "&cPlease unstack your items to 1 before modifying them!"
 item-locked: "&cThis item is locked! You cannot modify its enchantments."
 item-lock-toggled: "&aSuccessfully toggled the lock status of this item!"
 slot-gem-applied: "&aSuccessfully modified the enchantment slots of this item!"
+slot-gem-max-reached: "&cThis item has reached the maximum allowed slot modifiers (&e%max%&c)!"
 purge-applied: "&aSuccessfully purged all enchantments from this item!"
 
 enchant-success: "&aEnchantment successful! Your item grows stronger."
