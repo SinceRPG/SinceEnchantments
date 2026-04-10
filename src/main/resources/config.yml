@@ -64,31 +64,58 @@ settings:
 
   # The line displayed when the item is locked.
   locked-format: "&c&l"
+# If true, items that are bound by a specific whitelist will display a preview
+# of all allowed enchantments directly in their lore.
+# (Note: Items that allow all enchantments by default will not display this preview).
+show-whitelist-preview: true
 
-# ==========================================
+# The title or header text displayed directly above the whitelist preview list in the item's lore.
+whitelist-header: "&8Allowed Enchantments:"
+
+# The text format used for each individual enchantment listed under the whitelist header.
+# Available placeholders: %enchant_name%
+whitelist-preview-format: "&8 - %enchant_name%"
+
+# If the total number of enchantments applied to an item is less than or equal to this threshold,
+# the item will display them in a "Detailed Mode" (showing the Enchant Name + Level, followed by its full description).
+# If the total number of enchantments exceeds this number, the display will automatically collapse
+# into a "Compact Mode" (hiding descriptions and grouping multiple enchants per line based on 'enchants-per-line').
+detailed-display-threshold: 5
+
+# ============================================================================== #
 # MAX SLOTS CONFIGURATION
-# ==========================================
+# Supports Wildcards: *SUFFIX, PREFIX*, *CONTAINS*
+# If an item matches multiple, the slot values will be SUMMED.
+# ============================================================================== #
 item-max-slots:
-  DIAMOND_SWORD: 3
-  IRON_SWORD: 2
-  DIAMOND_CHESTPLATE: 4
+  "*_SWORD": 2
+  "*_CHESTPLATE": 3
+  "*DIAMOND*": 1
 
 mmoitems-max-slots:
-  SWORD.LEGENDARY_BLADE: 6
-  ARMOR.MYTHIC_CHESTPLATE: 5
+  "SWORD.*": 2
+  "*.LEGENDARY_*": 3
+  "ARMOR.MYTHIC_CHESTPLATE": 5
 
-# ==========================================
+# ============================================================================== #
 # WHITELIST CONFIGURATION
-# ==========================================
+# Supports Wildcards: *SUFFIX, PREFIX*, *CONTAINS*
+# If an item matches multiple, the allowed enchantments will be merged together.
+# ============================================================================== #
 item-whitelist:
-  DIAMOND_SWORD:
+  "*_SWORD":
     - "since:lifesteal"
     - "minecraft:sharpness"
-  BOW:
+    - "minecraft:fire_aspect"
+  "*_PICKAXE":
+    - "since:excavator"
+    - "minecraft:efficiency"
+    - "minecraft:fortune"
+  "BOW":
     - "minecraft:power"
 
 mmoitems-whitelist:
-  SWORD.LEGENDARY_BLADE:
+  "SWORD.*":
     - "since:fireball"
     - "since:thunder"
     - "since:lifesteal"

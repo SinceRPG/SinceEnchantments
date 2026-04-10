@@ -13,10 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class EnchantManager {
 
@@ -129,6 +126,20 @@ public class EnchantManager {
         }
     }
 
+    private boolean isMatch(String text, String pattern) {
+        if (pattern.equals("*")) return true;
+        if (pattern.startsWith("*") && pattern.endsWith("*") && pattern.length() >= 2) {
+            return text.contains(pattern.substring(1, pattern.length() - 1));
+        }
+        if (pattern.startsWith("*")) {
+            return text.endsWith(pattern.substring(1));
+        }
+        if (pattern.endsWith("*")) {
+            return text.startsWith(pattern.substring(0, pattern.length() - 1));
+        }
+        return text.equals(pattern);
+    }
+
     private Registry<Enchantment> getBukkitRegistry() {
         return RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT);
     }
@@ -167,6 +178,17 @@ public class EnchantManager {
         int defaultSlots = plugin.getConfigFile().getInt("settings.default-max-custom-enchants-per-item", 5);
         if (item == null || !item.hasItemMeta()) return defaultSlots;
 
+        int totalSlots = 0;
+        boolean matched = false;
+
+        String matName = item.getType().name().toUpperCase();
+        for (Map.Entry<String, Integer> entry : itemMaxSlots.entrySet()) {
+            if (isMatch(matName, entry.getKey())) {
+                totalSlots += entry.getValue();
+                matched = true;
+            }
+        }
+
         NamespacedKey mmoTypeKey = new NamespacedKey("mmoitems", "type");
         NamespacedKey mmoIdKey = new NamespacedKey("mmoitems", "id");
         ItemMeta meta = item.getItemMeta();
@@ -175,23 +197,22 @@ public class EnchantManager {
                 meta.getPersistentDataContainer().has(mmoIdKey, PersistentDataType.STRING)) {
             String mmoType = meta.getPersistentDataContainer().get(mmoTypeKey, PersistentDataType.STRING);
             String mmoId = meta.getPersistentDataContainer().get(mmoIdKey, PersistentDataType.STRING);
-            String fullMmoKey = mmoType + "." + mmoId;
+            String fullMmoKey = (mmoType + "." + mmoId).toUpperCase();
 
-            if (mmoItemsMaxSlots.containsKey(fullMmoKey)) {
-                return mmoItemsMaxSlots.get(fullMmoKey);
+            for (Map.Entry<String, Integer> entry : mmoItemsMaxSlots.entrySet()) {
+                if (isMatch(fullMmoKey, entry.getKey())) {
+                    totalSlots += entry.getValue();
+                    matched = true;
+                }
             }
         }
 
-        String matName = item.getType().name();
-        if (itemMaxSlots.containsKey(matName)) {
-            return itemMaxSlots.get(matName);
-        }
-
-        return defaultSlots;
+        return matched ? totalSlots : defaultSlots;
     }
 
     public int getMaxSlots(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return plugin.getConfigFile().getInt("settings.default-max-custom-enchants-per-item", 5);
+        if (item == null || !item.hasItemMeta())
+            return plugin.getConfigFile().getInt("settings.default-max-custom-enchants-per-item", 5);
         int raw = getRawMaxSlots(item);
         int modifier = item.getItemMeta().getPersistentDataContainer().getOrDefault(SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, 0);
         return Math.max(0, raw + modifier);
@@ -210,8 +231,20 @@ public class EnchantManager {
         item.setItemMeta(meta);
     }
 
-    public boolean isWhitelisted(ItemStack item, String enchantId) {
-        if (item == null || !item.hasItemMeta()) return true;
+    public List<String> getWhitelistedEnchants(ItemStack item) {
+        List<String> allowed = new ArrayList<>();
+        if (item == null || !item.hasItemMeta()) return allowed;
+
+        Set<String> mergedWhitelist = new HashSet<>();
+        boolean matched = false;
+
+        String matName = item.getType().name().toUpperCase();
+        for (Map.Entry<String, List<String>> entry : itemWhitelist.entrySet()) {
+            if (isMatch(matName, entry.getKey())) {
+                mergedWhitelist.addAll(entry.getValue());
+                matched = true;
+            }
+        }
 
         NamespacedKey mmoTypeKey = new NamespacedKey("mmoitems", "type");
         NamespacedKey mmoIdKey = new NamespacedKey("mmoitems", "id");
@@ -221,19 +254,28 @@ public class EnchantManager {
                 meta.getPersistentDataContainer().has(mmoIdKey, PersistentDataType.STRING)) {
             String mmoType = meta.getPersistentDataContainer().get(mmoTypeKey, PersistentDataType.STRING);
             String mmoId = meta.getPersistentDataContainer().get(mmoIdKey, PersistentDataType.STRING);
-            String fullMmoKey = mmoType + "." + mmoId;
+            String fullMmoKey = (mmoType + "." + mmoId).toUpperCase();
 
-            if (mmoItemsWhitelist.containsKey(fullMmoKey)) {
-                return mmoItemsWhitelist.get(fullMmoKey).contains(enchantId);
+            for (Map.Entry<String, List<String>> entry : mmoItemsWhitelist.entrySet()) {
+                if (isMatch(fullMmoKey, entry.getKey())) {
+                    mergedWhitelist.addAll(entry.getValue());
+                    matched = true;
+                }
             }
         }
 
-        String matName = item.getType().name();
-        if (itemWhitelist.containsKey(matName)) {
-            return itemWhitelist.get(matName).contains(enchantId);
+        if (matched) {
+            allowed.addAll(mergedWhitelist);
         }
+        return allowed;
+    }
 
-        return true;
+    public boolean isWhitelisted(ItemStack item, String enchantId) {
+        List<String> allowed = getWhitelistedEnchants(item);
+        if (allowed.isEmpty()) {
+            return true;
+        }
+        return allowed.contains(enchantId);
     }
 
     public List<String> getMissingRequirements(String enchantId, ItemStack item) {

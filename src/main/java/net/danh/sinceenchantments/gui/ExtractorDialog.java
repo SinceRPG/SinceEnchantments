@@ -157,7 +157,7 @@ public class ExtractorDialog {
         Map<Enchantment, Integer> vanillaEnchants = meta.getEnchants();
         Map<String, Integer> customEnchants = plugin.getEnchantManager().getCustomEnchants(item);
 
-        if (vanillaEnchants.isEmpty() && customEnchants.isEmpty() && !plugin.getEnchantManager().isLocked(item)) {
+        if (vanillaEnchants.isEmpty() && customEnchants.isEmpty() && !plugin.getEnchantManager().isLocked(item) && plugin.getEnchantManager().getWhitelistedEnchants(item).isEmpty()) {
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;
@@ -166,37 +166,55 @@ public class ExtractorDialog {
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
         List<Component> enchantComponents = new ArrayList<>();
+        int detailedThreshold = config.getInt("settings.detailed-display-threshold", 5);
+        int totalEnchantsApplied = (config.getBoolean("settings.override-vanilla-enchants", true) ? vanillaEnchants.size() : 0) + customEnchants.size();
+        boolean useDetailedDisplay = totalEnchantsApplied > 0 && totalEnchantsApplied <= detailedThreshold;
+
         int count = 0;
         int maxPerLine = config.getInt("settings.enchants-per-line", 2);
         String separator = config.getString("settings.separator", "&8 | ");
         StringBuilder currentLine = new StringBuilder();
         boolean useRoman = config.getString("settings.level-format", "ROMAN").equalsIgnoreCase("ROMAN");
 
-        for (Map.Entry<Enchantment, Integer> entry : vanillaEnchants.entrySet()) {
-            String keyName = entry.getKey().getKey().getKey();
-            String cName = config.getString("vanilla-enchants.minecraft:" + keyName + ".name", formatDefaultName(keyName));
-            String cColor = config.getString("vanilla-enchants.minecraft:" + keyName + ".color", config.getString("settings.default-color", "&9"));
+        if (config.getBoolean("settings.override-vanilla-enchants", true)) {
+            for (Map.Entry<Enchantment, Integer> entry : vanillaEnchants.entrySet()) {
+                String namespace = entry.getKey().getKey().getNamespace();
+                String keyName = entry.getKey().getKey().getKey();
+                String fullKey = namespace + ":" + keyName;
 
-            String formatted = cColor + cName + " " + (useRoman ? toRoman(entry.getValue()) : entry.getValue());
-            if (count > 0) currentLine.append(separator);
-            currentLine.append(formatted);
-            count++;
+                String cName = config.getString("vanilla-enchants." + fullKey + ".name", formatDefaultName(keyName));
+                String cColor = config.getString("vanilla-enchants." + fullKey + ".color", config.getString("settings.default-color", "&9"));
 
-            if (count == maxPerLine) {
-                enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
-                currentLine = new StringBuilder();
-                count = 0;
+                String formatted = cColor + cName + " " + (useRoman ? toRoman(entry.getValue()) : entry.getValue());
+
+                if (useDetailedDisplay) {
+                    enchantComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    List<String> descriptions = plugin.getEnchantManager().getDescription(fullKey);
+                    for (String dLine : descriptions) {
+                        enchantComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    }
+                } else {
+                    if (count > 0) currentLine.append(separator);
+                    currentLine.append(formatted);
+                    count++;
+
+                    if (count == maxPerLine) {
+                        enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                        currentLine = new StringBuilder();
+                        count = 0;
+                    }
+                }
             }
-        }
 
-        if (!vanillaEnchants.isEmpty() && !customEnchants.isEmpty()) {
-            if (count > 0) {
-                enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
-                currentLine = new StringBuilder();
-                count = 0;
+            if (!vanillaEnchants.isEmpty() && !customEnchants.isEmpty() && !useDetailedDisplay) {
+                if (count > 0) {
+                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    currentLine = new StringBuilder();
+                    count = 0;
+                }
+                String divider = config.getString("settings.divider", "&7&m----------------------");
+                enchantComponents.add(ColorUtils.parse(divider).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
             }
-            String divider = config.getString("settings.divider", "&7&m----------------------");
-            enchantComponents.add(ColorUtils.parse(divider).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
         }
 
         for (Map.Entry<String, Integer> entry : customEnchants.entrySet()) {
@@ -208,18 +226,27 @@ public class ExtractorDialog {
             String rarityColor = config.getString("rarities." + rarityKey, "&f");
 
             String formatted = rarityColor + eName + " " + (useRoman ? toRoman(eLvl) : eLvl);
-            if (count > 0) currentLine.append(separator);
-            currentLine.append(formatted);
-            count++;
 
-            if (count == maxPerLine) {
-                enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
-                currentLine = new StringBuilder();
-                count = 0;
+            if (useDetailedDisplay) {
+                enchantComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                List<String> descriptions = plugin.getEnchantManager().getDescription(eId);
+                for (String dLine : descriptions) {
+                    enchantComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                }
+            } else {
+                if (count > 0) currentLine.append(separator);
+                currentLine.append(formatted);
+                count++;
+
+                if (count == maxPerLine) {
+                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    currentLine = new StringBuilder();
+                    count = 0;
+                }
             }
         }
 
-        if (count > 0) {
+        if (!useDetailedDisplay && count > 0) {
             enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
         }
 
@@ -234,6 +261,20 @@ public class ExtractorDialog {
         if (plugin.getEnchantManager().isLocked(item)) {
             String lockLine = config.getString("settings.locked-format", "&c&l");
             enchantComponents.add(ColorUtils.parse(lockLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+        }
+
+        if (config.getBoolean("settings.show-whitelist-preview", true)) {
+            List<String> allowedEnchants = plugin.getEnchantManager().getWhitelistedEnchants(item);
+            if (!allowedEnchants.isEmpty()) {
+                String header = config.getString("settings.whitelist-header", "&8Allowed Enchantments:");
+                enchantComponents.add(ColorUtils.parse(header).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                String format = config.getString("settings.whitelist-preview-format", "&8 - %enchant_name%");
+                for (String allowedId : allowedEnchants) {
+                    String eName = plugin.getEnchantManager().getEnchantName(allowedId);
+                    String line = format.replace("%enchant_name%", eName);
+                    enchantComponents.add(ColorUtils.parse(line).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                }
+            }
         }
 
         boolean addEmptyLineAbove = config.getBoolean("settings.add-empty-line-above", true);
