@@ -32,7 +32,6 @@ public class AnvilListener implements Listener {
 
         if (slot1 == null || slot2 == null) return;
         if (slot1.getType() == Material.AIR || slot2.getType() == Material.AIR) return;
-
         if (slot1.getAmount() > 1) return;
 
         if (!(event.getView() instanceof AnvilView anvilView)) return;
@@ -47,36 +46,52 @@ public class AnvilListener implements Listener {
 
         if (!isBook2) {
             ItemStack result = event.getResult();
-            if (result != null && result.getType() != Material.AIR && slot1.getType() != Material.ENCHANTED_BOOK) {
-                Map<String, Integer> enchants1 = manager.getCustomEnchants(slot1);
-                Map<String, Integer> enchants2 = manager.getCustomEnchants(slot2);
+            boolean vanillaHasNoResult = (result == null || result.getType() == Material.AIR);
 
-                if (!enchants1.isEmpty() || !enchants2.isEmpty()) {
-                    Map<String, Integer> merged = new HashMap<>(enchants1);
-                    int costIncrease = 0;
+            if (vanillaHasNoResult) {
+                if (slot1.getType() == slot2.getType() && slot1.getType() != Material.ENCHANTED_BOOK) {
+                    result = slot1.clone();
+                } else {
+                    return;
+                }
+            } else {
+                result = result.clone();
+            }
 
-                    for (Map.Entry<String, Integer> e2 : enchants2.entrySet()) {
-                        String id = e2.getKey();
-                        int lvl2 = e2.getValue();
-                        int lvl1 = merged.getOrDefault(id, 0);
+            Map<String, Integer> enchants1 = manager.getCustomEnchants(slot1);
+            Map<String, Integer> enchants2 = manager.getCustomEnchants(slot2);
 
-                        if (lvl1 == 0) {
-                            if (merged.size() < manager.getMaxSlots(result)) {
-                                merged.put(id, lvl2);
-                                costIncrease += lvl2 * costApply;
-                            }
-                        } else if (lvl1 == lvl2) {
-                            int nextLvl = lvl1 + 1;
-                            if (nextLvl <= manager.getMaxLevel(id)) {
-                                merged.put(id, nextLvl);
-                                costIncrease += nextLvl * costCombine;
-                            }
-                        } else if (lvl2 > lvl1) {
+            if (!enchants1.isEmpty() || !enchants2.isEmpty()) {
+                Map<String, Integer> merged = new HashMap<>(enchants1);
+                int costIncrease = 0;
+                boolean changed = false;
+
+                for (Map.Entry<String, Integer> e2 : enchants2.entrySet()) {
+                    String id = e2.getKey();
+                    int lvl2 = e2.getValue();
+                    int lvl1 = merged.getOrDefault(id, 0);
+
+                    if (lvl1 == 0) {
+                        if (merged.size() < manager.getMaxSlots(result)) {
                             merged.put(id, lvl2);
                             costIncrease += lvl2 * costApply;
+                            changed = true;
                         }
+                    } else if (lvl1 == lvl2) {
+                        int nextLvl = lvl1 + 1;
+                        if (nextLvl <= manager.getMaxLevel(id)) {
+                            merged.put(id, nextLvl);
+                            costIncrease += nextLvl * costCombine;
+                            changed = true;
+                        }
+                    } else if (lvl2 > lvl1) {
+                        merged.put(id, lvl2);
+                        costIncrease += (lvl2 - lvl1) * costApply;
+                        changed = true;
                     }
+                }
 
+                if (changed || !vanillaHasNoResult) {
                     manager.setCustomEnchants(result, merged);
 
                     ItemMeta rMeta = result.getItemMeta();
@@ -92,7 +107,7 @@ public class AnvilListener implements Listener {
                     result.setItemMeta(rMeta);
 
                     event.setResult(result);
-                    anvilView.setRepairCost(anvilView.getRepairCost() + costIncrease);
+                    anvilView.setRepairCost(anvilView.getRepairCost() + costIncrease + (vanillaHasNoResult ? 1 : 0));
                 }
             }
             return;

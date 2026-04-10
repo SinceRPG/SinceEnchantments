@@ -243,6 +243,11 @@ custom-enchants:
     max-level: 5
     # What items can this be applied to? (ALL, WEAPON, SWORD, BOW, TOOL, ARMOR)
     target: "WEAPON"
+    # The 'requires' list defines enchantments that MUST already exist on the item
+    # before a player can apply this enchantment.
+    # Example: The weapon MUST have 'Sharpness' applied before you can add 'Lifesteal'.
+    requires:
+      - "minecraft:sharpness"
     # The description shown on Enchantment Books.
     description:
       - "&7Heals you for a portion"
@@ -259,6 +264,11 @@ custom-enchants:
     rarity: "LEGENDARY"
     max-level: 3
     target: "SWORD"
+    # You can also require multiple custom or vanilla enchantments at the same time.
+    # Example: Fireball requires BOTH Vanilla Fire Aspect AND Custom Thunder Strike.
+    requires:
+      - "minecraft:fire_aspect"
+      - "since:thunder"
     description:
       - "&7Left-click the air to"
       - "&7shoot a destructive fireball."
@@ -288,6 +298,9 @@ custom-enchants:
     rarity: "LEGENDARY"
     max-level: 2
     target: "TOOL"
+    # Example: Excavator requires Vanilla Efficiency to be on the tool first.
+    requires:
+      - "minecraft:efficiency"
     description:
       - "&7Mines a 3x3 area"
       - "&7around the broken block."

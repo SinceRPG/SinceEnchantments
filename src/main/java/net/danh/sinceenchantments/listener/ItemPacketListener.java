@@ -119,7 +119,9 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         Map<String, Integer> customEnchants = SinceEnchantments.getInstance().getEnchantManager().getCustomEnchants(item);
         boolean overrideVanilla = config.getBoolean("settings.override-vanilla-enchants", true);
 
-        if (((!overrideVanilla && customEnchants.isEmpty()) || (overrideVanilla && vanillaEnchants.isEmpty() && customEnchants.isEmpty())) && !SinceEnchantments.getInstance().getEnchantManager().isLocked(item) && SinceEnchantments.getInstance().getEnchantManager().getWhitelistedEnchants(item).isEmpty()) {
+        if (((!overrideVanilla && customEnchants.isEmpty()) || (overrideVanilla && vanillaEnchants.isEmpty() && customEnchants.isEmpty()))
+                && !SinceEnchantments.getInstance().getEnchantManager().isLocked(item)
+                && SinceEnchantments.getInstance().getEnchantManager().getWhitelistedEnchants(item).isEmpty()) {
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;
