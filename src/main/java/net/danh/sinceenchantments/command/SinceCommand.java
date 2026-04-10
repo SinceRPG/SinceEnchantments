@@ -170,7 +170,7 @@ public class SinceCommand {
         int amount = IntegerArgumentType.getInteger(context, "amount");
 
         if (!type.equalsIgnoreCase("random") && !type.equalsIgnoreCase("specific")) {
-            sendMessage(context.getSource(), "invalid-number");
+            sendMessage(context.getSource(), "invalid-extractor-type");
             return Command.SINGLE_SUCCESS;
         }
 

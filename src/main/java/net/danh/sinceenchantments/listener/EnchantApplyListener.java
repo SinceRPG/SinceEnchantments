@@ -58,7 +58,7 @@ public class EnchantApplyListener implements Listener {
                 currentMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
             event.setCancelled(true);
             if (current.getAmount() > 1) {
-                sendMsg(player, "item-need-unstack");
+                sendMsg(player, "charm-need-unstack");
                 return;
             }
             int currentSuccess = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);

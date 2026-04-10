@@ -1,10 +1,7 @@
 prefix: "&8[&bSinceEnchantments&8] &r"
 reload: "&aConfiguration successfully reloaded!"
-no-permission: "&cYou do not have permission to execute this command."
-player-not-found: "&cPlayer %player% not found."
-invalid-number: "&cPlease enter a valid number."
-not-enough-args: "&cUsage: /se givebook <player> <enchant_id> <level>"
 enchant-not-found: "&cThe enchantment '%enchant%' does not exist in Bukkit or Custom Registry!"
+invalid-extractor-type: "&cInvalid extractor type! Use 'random' or 'specific'."
 
 help-header: "&8&m--------&r &bSinceEnchantments &8&m--------"
 help-commands:
