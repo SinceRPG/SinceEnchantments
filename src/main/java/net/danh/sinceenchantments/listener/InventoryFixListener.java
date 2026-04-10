@@ -10,6 +10,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
 
 public class InventoryFixListener implements Listener {
 
@@ -21,8 +22,10 @@ public class InventoryFixListener implements Listener {
 
     private boolean needsUpdate(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
-        return item.getItemMeta().getPersistentDataContainer().has(manager.BOOK_ID_KEY) ||
-                item.getItemMeta().getPersistentDataContainer().has(manager.ENCHANT_KEY);
+        PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+        if (pdc.has(manager.BOOK_ID_KEY) || pdc.has(manager.ENCHANT_KEY)) return true;
+        if (manager.isLocked(item)) return true;
+        return !manager.getWhitelistedEnchants(item).isEmpty();
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

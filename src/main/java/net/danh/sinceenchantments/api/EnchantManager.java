@@ -13,6 +13,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.lang.reflect.Method;
@@ -193,7 +194,18 @@ public class EnchantManager {
     }
 
     public String getMMOItemKey(ItemStack item) {
-        if (!mmoItemsHooked || item == null) return null;
+        if (item == null || !item.hasItemMeta()) return null;
+        PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+        NamespacedKey typeKey = new NamespacedKey("mmoitems", "type");
+        NamespacedKey idKey = new NamespacedKey("mmoitems", "id");
+
+        if (pdc.has(typeKey, PersistentDataType.STRING) && pdc.has(idKey, PersistentDataType.STRING)) {
+            String type = pdc.get(typeKey, PersistentDataType.STRING);
+            String id = pdc.get(idKey, PersistentDataType.STRING);
+            if (type != null && id != null) return (type + ":" + id).toUpperCase();
+        }
+
+        if (!mmoItemsHooked) return null;
         try {
             Object nbtItem = nbtItemGetMethod.invoke(null, item);
             if ((boolean) nbtItemHasTypeMethod.invoke(nbtItem)) {
@@ -206,6 +218,44 @@ public class EnchantManager {
         } catch (Exception ignored) {
         }
         return null;
+    }
+
+    public void cleanItemLore(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return;
+        ItemMeta meta = item.getItemMeta();
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        NamespacedKey startKey = new NamespacedKey(plugin, "lore_start");
+        NamespacedKey countKey = new NamespacedKey(plugin, "lore_count");
+        NamespacedKey placeholderKey = new NamespacedKey(plugin, "lore_placeholder");
+
+        if (pdc.has(countKey, PersistentDataType.INTEGER)) {
+            int start = pdc.getOrDefault(startKey, PersistentDataType.INTEGER, -1);
+            int count = pdc.getOrDefault(countKey, PersistentDataType.INTEGER, 0);
+            boolean hadPlaceholder = pdc.getOrDefault(placeholderKey, PersistentDataType.BYTE, (byte) 0) == 1;
+
+            if (start != -1 && count > 0) {
+                List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
+                for (int i = 0; i < count; i++) {
+                    if (start < lore.size()) {
+                        lore.remove(start);
+                    }
+                }
+
+                if (hadPlaceholder) {
+                    String placeholderStr = plugin.getConfigFile().getString("settings.placeholder", "#enchants#");
+                    if (start <= lore.size()) {
+                        lore.add(start, ColorUtils.parse(placeholderStr).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+                    } else {
+                        lore.add(ColorUtils.parse(placeholderStr).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+                    }
+                }
+                meta.lore(lore);
+            }
+            pdc.remove(startKey);
+            pdc.remove(countKey);
+            pdc.remove(placeholderKey);
+            item.setItemMeta(meta);
+        }
     }
 
     private Registry<Enchantment> getBukkitRegistry() {

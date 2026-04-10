@@ -18,6 +18,9 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.NamespacedKey;
 import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
@@ -25,9 +28,6 @@ import java.util.List;
 import java.util.Map;
 
 public class ItemPacketListener extends PacketListenerAbstract implements PacketListener {
-
-    private static final String MARKER = "     ";
-    private static final String EMPTY_MARKER = "      ";
 
     @Override
     public void onPacketSend(@NonNull PacketSendEvent event) {
@@ -43,15 +43,19 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             } else if (event.getPacketType() == PacketType.Play.Server.WINDOW_ITEMS) {
                 WrapperPlayServerWindowItems wrapper = new WrapperPlayServerWindowItems(event);
                 List<ItemStack> items = wrapper.getItems();
+                boolean modified = false;
                 for (int i = 0; i < items.size(); i++) {
                     ItemStack peItem = items.get(i);
                     if (peItem != null && !peItem.isEmpty()) {
                         org.bukkit.inventory.ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
                         bukkitItem = formatSkyblockItem(bukkitItem);
                         items.set(i, SpigotConversionUtil.fromBukkitItemStack(bukkitItem));
+                        modified = true;
                     }
                 }
-                wrapper.setItems(items);
+                if (modified) {
+                    wrapper.setItems(items);
+                }
             }
         } catch (Exception ignored) {
         }
@@ -74,28 +78,18 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
     }
 
     private org.bukkit.inventory.ItemStack cleanCreativeItem(org.bukkit.inventory.ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return item;
-        ItemMeta meta = item.getItemMeta();
-        List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
-        boolean changed = false;
-
-        for (int i = lore.size() - 1; i >= 0; i--) {
-            String plain = ColorUtils.toPlainText(lore.get(i));
-            if (plain.endsWith(MARKER) || plain.equals(EMPTY_MARKER)) {
-                lore.remove(i);
-                changed = true;
-            }
-        }
-
-        if (changed) {
+        SinceEnchantments.getInstance().getEnchantManager().cleanItemLore(item);
+        if (item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
             meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
-            meta.lore(lore);
             item.setItemMeta(meta);
         }
         return item;
     }
 
     private org.bukkit.inventory.ItemStack formatSkyblockItem(org.bukkit.inventory.ItemStack item) {
+        SinceEnchantments.getInstance().getEnchantManager().cleanItemLore(item);
+
         if (item == null || !item.hasItemMeta()) return item;
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
@@ -107,11 +101,11 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         int targetIndex = -1;
 
         for (int i = lore.size() - 1; i >= 0; i--) {
-            String plainLore = ColorUtils.toPlainText(lore.get(i));
-            String plainLoreLower = plainLore.toLowerCase();
-            if (plainLoreLower.contains(placeholderStr) || plainLore.endsWith(MARKER) || plainLore.equals(EMPTY_MARKER)) {
+            String plainLore = ColorUtils.toPlainText(lore.get(i)).toLowerCase();
+            if (plainLore.contains(placeholderStr)) {
                 targetIndex = i;
                 lore.remove(i);
+                break;
             }
         }
 
@@ -122,6 +116,10 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         if (((!overrideVanilla && customEnchants.isEmpty()) || (overrideVanilla && vanillaEnchants.isEmpty() && customEnchants.isEmpty()))
                 && !SinceEnchantments.getInstance().getEnchantManager().isLocked(item)
                 && SinceEnchantments.getInstance().getEnchantManager().getWhitelistedEnchants(item).isEmpty()) {
+
+            if (targetIndex != -1) {
+                lore.add(targetIndex, ColorUtils.parse(config.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
+            }
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;
@@ -154,10 +152,10 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
                 String formatted = cColor + cName + " " + (useRoman ? toRoman(entry.getValue()) : entry.getValue());
 
                 if (useDetailedDisplay) {
-                    enchantComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    enchantComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false));
                     List<String> descriptions = SinceEnchantments.getInstance().getEnchantManager().getDescription(fullKey);
                     for (String dLine : descriptions) {
-                        enchantComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                        enchantComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false));
                     }
                 } else {
                     if (count > 0) currentLine.append(separator);
@@ -165,7 +163,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
                     count++;
 
                     if (count == maxPerLine) {
-                        enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                        enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
                         currentLine = new StringBuilder();
                         count = 0;
                     }
@@ -174,12 +172,12 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
             if (!vanillaEnchants.isEmpty() && !customEnchants.isEmpty() && !useDetailedDisplay) {
                 if (count > 0) {
-                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
                     currentLine = new StringBuilder();
                     count = 0;
                 }
                 String divider = config.getString("settings.divider", "&7&m----------------------");
-                enchantComponents.add(ColorUtils.parse(divider).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                enchantComponents.add(ColorUtils.parse(divider).decoration(TextDecoration.ITALIC, false));
             }
         }
 
@@ -194,10 +192,10 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             String formatted = rarityColor + eName + " " + (useRoman ? toRoman(eLvl) : eLvl);
 
             if (useDetailedDisplay) {
-                enchantComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                enchantComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false));
                 List<String> descriptions = SinceEnchantments.getInstance().getEnchantManager().getDescription(eId);
                 for (String dLine : descriptions) {
-                    enchantComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    enchantComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false));
                 }
             } else {
                 if (count > 0) currentLine.append(separator);
@@ -205,7 +203,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
                 count++;
 
                 if (count == maxPerLine) {
-                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
                     currentLine = new StringBuilder();
                     count = 0;
                 }
@@ -213,19 +211,19 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         }
 
         if (!useDetailedDisplay && count > 0) {
-            enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+            enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
         }
 
         if (config.getBoolean("settings.show-slots", true)) {
             int maxSlots = SinceEnchantments.getInstance().getEnchantManager().getMaxSlots(item);
             String slotLine = config.getString("settings.slots-format", "&7Enchantment Slots: &e%current% / %max%");
             slotLine = slotLine.replace("%current%", String.valueOf(totalEnchantsApplied)).replace("%max%", String.valueOf(maxSlots));
-            enchantComponents.add(ColorUtils.parse(slotLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+            enchantComponents.add(ColorUtils.parse(slotLine).decoration(TextDecoration.ITALIC, false));
         }
 
         if (SinceEnchantments.getInstance().getEnchantManager().isLocked(item)) {
-            String lockLine = config.getString("settings.locked-format", "&c&l");
-            enchantComponents.add(ColorUtils.parse(lockLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+            String lockLine = config.getString("settings.locked-format", "&c&lLocked");
+            enchantComponents.add(ColorUtils.parse(lockLine).decoration(TextDecoration.ITALIC, false));
         }
 
         if (config.getBoolean("settings.show-whitelist-preview", true)) {
@@ -250,46 +248,62 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             }
 
             if (!unappliedAllowed.isEmpty()) {
-                enchantComponents.add(Component.text(EMPTY_MARKER));
+                enchantComponents.add(Component.empty());
                 String header = config.getString("settings.whitelist-header", "&8Allowed Enchantments:");
-                enchantComponents.add(ColorUtils.parse(header).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                enchantComponents.add(ColorUtils.parse(header).decoration(TextDecoration.ITALIC, false));
                 String format = config.getString("settings.whitelist-preview-format", "&8 - %enchant_name%");
                 for (String allowedId : unappliedAllowed) {
                     String eName = SinceEnchantments.getInstance().getEnchantManager().getEnchantName(allowedId);
                     String line = format.replace("%enchant_name%", eName);
-                    enchantComponents.add(ColorUtils.parse(line).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    enchantComponents.add(ColorUtils.parse(line).decoration(TextDecoration.ITALIC, false));
                 }
             }
+        }
+
+        if (enchantComponents.isEmpty()) {
+            if (targetIndex != -1) {
+                lore.add(targetIndex, ColorUtils.parse(config.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
+            }
+            meta.lore(lore);
+            item.setItemMeta(meta);
+            return item;
         }
 
         boolean addEmptyLineAbove = config.getBoolean("settings.add-empty-line-above", true);
         boolean addEmptyLineBelow = config.getBoolean("settings.add-empty-line-below", true);
+        boolean hadPlaceholder = (targetIndex != -1);
 
-        if (targetIndex != -1) {
+        if (hadPlaceholder) {
             if (addEmptyLineAbove && targetIndex > 0) {
                 String abovePlain = ColorUtils.toPlainText(lore.get(targetIndex - 1)).trim();
-                if (!abovePlain.isEmpty()) enchantComponents.add(0, Component.text(EMPTY_MARKER));
+                if (!abovePlain.isEmpty()) enchantComponents.add(0, Component.empty());
             }
             if (addEmptyLineBelow && targetIndex < lore.size()) {
                 String belowPlain = ColorUtils.toPlainText(lore.get(targetIndex)).trim();
-                if (!belowPlain.isEmpty()) enchantComponents.add(Component.text(EMPTY_MARKER));
+                if (!belowPlain.isEmpty()) enchantComponents.add(Component.empty());
             }
-            lore.addAll(targetIndex, enchantComponents);
         } else {
             if (!lore.isEmpty()) {
                 if (addEmptyLineAbove) {
-                    String abovePlain = ColorUtils.toPlainText(lore.get(0)).trim();
-                    if (!abovePlain.isEmpty()) enchantComponents.add(0, Component.text(EMPTY_MARKER));
+                    String abovePlain = ColorUtils.toPlainText(lore.get(lore.size() - 1)).trim();
+                    if (!abovePlain.isEmpty()) enchantComponents.add(0, Component.empty());
                 }
-                if (addEmptyLineBelow && lore.size() > 1) {
-                    String belowPlain = ColorUtils.toPlainText(lore.get(1)).trim();
-                    if (!belowPlain.isEmpty()) enchantComponents.add(Component.text(EMPTY_MARKER));
-                }
-                lore.addAll(1, enchantComponents);
-            } else {
-                lore.addAll(enchantComponents);
             }
         }
+
+        int startIdx;
+        if (hadPlaceholder) {
+            lore.addAll(targetIndex, enchantComponents);
+            startIdx = targetIndex;
+        } else {
+            startIdx = lore.size();
+            lore.addAll(enchantComponents);
+        }
+
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_start"), PersistentDataType.INTEGER, startIdx);
+        pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_count"), PersistentDataType.INTEGER, enchantComponents.size());
+        pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_placeholder"), PersistentDataType.BYTE, (byte) (hadPlaceholder ? 1 : 0));
 
         meta.lore(lore);
         item.setItemMeta(meta);

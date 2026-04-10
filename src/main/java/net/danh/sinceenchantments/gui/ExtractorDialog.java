@@ -12,12 +12,15 @@ import net.danh.sinceenchantments.utils.ConfigUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +28,6 @@ import java.util.Map;
 
 @SuppressWarnings({"UnstableApiUsage"})
 public class ExtractorDialog {
-
-    private static final String MARKER = "     ";
-    private static final String EMPTY_MARKER = "      ";
 
     public static void open(SinceEnchantments plugin, Player player, ItemStack weapon) {
         String titleRaw = plugin.getConfigFile().getString("dialog.extractor.title", "<dark_gray><bold>Extract Enchantment");
@@ -135,6 +135,8 @@ public class ExtractorDialog {
     }
 
     private static ItemStack formatDisplayWeapon(SinceEnchantments plugin, ItemStack item) {
+        plugin.getEnchantManager().cleanItemLore(item);
+
         if (item == null || !item.hasItemMeta()) return item;
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
@@ -146,28 +148,37 @@ public class ExtractorDialog {
         int targetIndex = -1;
 
         for (int i = lore.size() - 1; i >= 0; i--) {
-            String plainLore = ColorUtils.toPlainText(lore.get(i));
-            String plainLoreLower = plainLore.toLowerCase();
-            if (plainLoreLower.contains(placeholderStr) || plainLore.endsWith(MARKER) || plainLore.equals(EMPTY_MARKER)) {
+            String plainLore = ColorUtils.toPlainText(lore.get(i)).toLowerCase();
+            if (plainLore.contains(placeholderStr)) {
                 targetIndex = i;
                 lore.remove(i);
+                break;
             }
         }
 
         Map<Enchantment, Integer> vanillaEnchants = meta.getEnchants();
         Map<String, Integer> customEnchants = plugin.getEnchantManager().getCustomEnchants(item);
+        boolean overrideVanilla = config.getBoolean("settings.override-vanilla-enchants", true);
 
-        if (vanillaEnchants.isEmpty() && customEnchants.isEmpty() && !plugin.getEnchantManager().isLocked(item) && plugin.getEnchantManager().getWhitelistedEnchants(item).isEmpty()) {
+        if (((!overrideVanilla && customEnchants.isEmpty()) || (overrideVanilla && vanillaEnchants.isEmpty() && customEnchants.isEmpty()))
+                && !plugin.getEnchantManager().isLocked(item)
+                && plugin.getEnchantManager().getWhitelistedEnchants(item).isEmpty()) {
+
+            if (targetIndex != -1) {
+                lore.add(targetIndex, ColorUtils.parse(config.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
+            }
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;
         }
 
-        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        if (overrideVanilla) {
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
 
         List<Component> enchantComponents = new ArrayList<>();
         int detailedThreshold = config.getInt("settings.detailed-display-threshold", 5);
-        int totalEnchantsApplied = (config.getBoolean("settings.override-vanilla-enchants", true) ? vanillaEnchants.size() : 0) + customEnchants.size();
+        int totalEnchantsApplied = (overrideVanilla ? vanillaEnchants.size() : 0) + customEnchants.size();
         boolean useDetailedDisplay = totalEnchantsApplied > 0 && totalEnchantsApplied <= detailedThreshold;
 
         int count = 0;
@@ -176,7 +187,7 @@ public class ExtractorDialog {
         StringBuilder currentLine = new StringBuilder();
         boolean useRoman = config.getString("settings.level-format", "ROMAN").equalsIgnoreCase("ROMAN");
 
-        if (config.getBoolean("settings.override-vanilla-enchants", true)) {
+        if (overrideVanilla) {
             for (Map.Entry<Enchantment, Integer> entry : vanillaEnchants.entrySet()) {
                 String namespace = entry.getKey().getKey().getNamespace();
                 String keyName = entry.getKey().getKey().getKey();
@@ -188,10 +199,10 @@ public class ExtractorDialog {
                 String formatted = cColor + cName + " " + (useRoman ? toRoman(entry.getValue()) : entry.getValue());
 
                 if (useDetailedDisplay) {
-                    enchantComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    enchantComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false));
                     List<String> descriptions = plugin.getEnchantManager().getDescription(fullKey);
                     for (String dLine : descriptions) {
-                        enchantComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                        enchantComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false));
                     }
                 } else {
                     if (count > 0) currentLine.append(separator);
@@ -199,7 +210,7 @@ public class ExtractorDialog {
                     count++;
 
                     if (count == maxPerLine) {
-                        enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                        enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
                         currentLine = new StringBuilder();
                         count = 0;
                     }
@@ -208,12 +219,12 @@ public class ExtractorDialog {
 
             if (!vanillaEnchants.isEmpty() && !customEnchants.isEmpty() && !useDetailedDisplay) {
                 if (count > 0) {
-                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
                     currentLine = new StringBuilder();
                     count = 0;
                 }
                 String divider = config.getString("settings.divider", "&7&m----------------------");
-                enchantComponents.add(ColorUtils.parse(divider).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                enchantComponents.add(ColorUtils.parse(divider).decoration(TextDecoration.ITALIC, false));
             }
         }
 
@@ -228,10 +239,10 @@ public class ExtractorDialog {
             String formatted = rarityColor + eName + " " + (useRoman ? toRoman(eLvl) : eLvl);
 
             if (useDetailedDisplay) {
-                enchantComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                enchantComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false));
                 List<String> descriptions = plugin.getEnchantManager().getDescription(eId);
                 for (String dLine : descriptions) {
-                    enchantComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    enchantComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false));
                 }
             } else {
                 if (count > 0) currentLine.append(separator);
@@ -239,7 +250,7 @@ public class ExtractorDialog {
                 count++;
 
                 if (count == maxPerLine) {
-                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
                     currentLine = new StringBuilder();
                     count = 0;
                 }
@@ -247,19 +258,19 @@ public class ExtractorDialog {
         }
 
         if (!useDetailedDisplay && count > 0) {
-            enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+            enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
         }
 
         if (config.getBoolean("settings.show-slots", true)) {
             int maxSlots = plugin.getEnchantManager().getMaxSlots(item);
             String slotLine = config.getString("settings.slots-format", "&7Enchantment Slots: &e%current% / %max%");
             slotLine = slotLine.replace("%current%", String.valueOf(totalEnchantsApplied)).replace("%max%", String.valueOf(maxSlots));
-            enchantComponents.add(ColorUtils.parse(slotLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+            enchantComponents.add(ColorUtils.parse(slotLine).decoration(TextDecoration.ITALIC, false));
         }
 
         if (plugin.getEnchantManager().isLocked(item)) {
-            String lockLine = config.getString("settings.locked-format", "&c&l");
-            enchantComponents.add(ColorUtils.parse(lockLine).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+            String lockLine = config.getString("settings.locked-format", "&c&lLocked");
+            enchantComponents.add(ColorUtils.parse(lockLine).decoration(TextDecoration.ITALIC, false));
         }
 
         if (config.getBoolean("settings.show-whitelist-preview", true)) {
@@ -284,46 +295,62 @@ public class ExtractorDialog {
             }
 
             if (!unappliedAllowed.isEmpty()) {
-                enchantComponents.add(Component.text(EMPTY_MARKER));
+                enchantComponents.add(Component.empty());
                 String header = config.getString("settings.whitelist-header", "&8Allowed Enchantments:");
-                enchantComponents.add(ColorUtils.parse(header).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                enchantComponents.add(ColorUtils.parse(header).decoration(TextDecoration.ITALIC, false));
                 String format = config.getString("settings.whitelist-preview-format", "&8 - %enchant_name%");
                 for (String allowedId : unappliedAllowed) {
                     String eName = plugin.getEnchantManager().getEnchantName(allowedId);
                     String line = format.replace("%enchant_name%", eName);
-                    enchantComponents.add(ColorUtils.parse(line).decoration(TextDecoration.ITALIC, false).append(Component.text(MARKER)));
+                    enchantComponents.add(ColorUtils.parse(line).decoration(TextDecoration.ITALIC, false));
                 }
             }
+        }
+
+        if (enchantComponents.isEmpty()) {
+            if (targetIndex != -1) {
+                lore.add(targetIndex, ColorUtils.parse(config.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
+            }
+            meta.lore(lore);
+            item.setItemMeta(meta);
+            return item;
         }
 
         boolean addEmptyLineAbove = config.getBoolean("settings.add-empty-line-above", true);
         boolean addEmptyLineBelow = config.getBoolean("settings.add-empty-line-below", true);
+        boolean hadPlaceholder = (targetIndex != -1);
 
-        if (targetIndex != -1) {
+        if (hadPlaceholder) {
             if (addEmptyLineAbove && targetIndex > 0) {
                 String abovePlain = ColorUtils.toPlainText(lore.get(targetIndex - 1)).trim();
-                if (!abovePlain.isEmpty()) enchantComponents.add(0, Component.text(EMPTY_MARKER));
+                if (!abovePlain.isEmpty()) enchantComponents.add(0, Component.empty());
             }
             if (addEmptyLineBelow && targetIndex < lore.size()) {
                 String belowPlain = ColorUtils.toPlainText(lore.get(targetIndex)).trim();
-                if (!belowPlain.isEmpty()) enchantComponents.add(Component.text(EMPTY_MARKER));
+                if (!belowPlain.isEmpty()) enchantComponents.add(Component.empty());
             }
-            lore.addAll(targetIndex, enchantComponents);
         } else {
             if (!lore.isEmpty()) {
                 if (addEmptyLineAbove) {
-                    String abovePlain = ColorUtils.toPlainText(lore.get(0)).trim();
-                    if (!abovePlain.isEmpty()) enchantComponents.add(0, Component.text(EMPTY_MARKER));
+                    String abovePlain = ColorUtils.toPlainText(lore.get(lore.size() - 1)).trim();
+                    if (!abovePlain.isEmpty()) enchantComponents.add(0, Component.empty());
                 }
-                if (addEmptyLineBelow && lore.size() > 1) {
-                    String belowPlain = ColorUtils.toPlainText(lore.get(1)).trim();
-                    if (!belowPlain.isEmpty()) enchantComponents.add(Component.text(EMPTY_MARKER));
-                }
-                lore.addAll(1, enchantComponents);
-            } else {
-                lore.addAll(enchantComponents);
             }
         }
+
+        int startIdx;
+        if (hadPlaceholder) {
+            lore.addAll(targetIndex, enchantComponents);
+            startIdx = targetIndex;
+        } else {
+            startIdx = lore.size();
+            lore.addAll(enchantComponents);
+        }
+
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        pdc.set(new NamespacedKey(plugin, "lore_start"), PersistentDataType.INTEGER, startIdx);
+        pdc.set(new NamespacedKey(plugin, "lore_count"), PersistentDataType.INTEGER, enchantComponents.size());
+        pdc.set(new NamespacedKey(plugin, "lore_placeholder"), PersistentDataType.BYTE, (byte) (hadPlaceholder ? 1 : 0));
 
         meta.lore(lore);
         item.setItemMeta(meta);
