@@ -25,6 +25,7 @@ public class SinceEnchantments extends JavaPlugin {
     private ConfigUtils limitsFile;
     private ConfigUtils messagesFile;
     private ConfigUtils itemsFile;
+    private ConfigUtils guiFile;
 
     private EnchantManager enchantManager;
     private EnchantRegistry enchantRegistry;
@@ -50,6 +51,7 @@ public class SinceEnchantments extends JavaPlugin {
         this.limitsFile = new ConfigUtils(this, "limits.yml");
         this.messagesFile = new ConfigUtils(this, "messages.yml");
         this.itemsFile = new ConfigUtils(this, "items.yml");
+        this.guiFile = new ConfigUtils(this, "gui.yml");
 
         this.enchantManager = new EnchantManager(this);
         this.enchantRegistry = new EnchantRegistry(this);
@@ -105,6 +107,10 @@ public class SinceEnchantments extends JavaPlugin {
 
     public ConfigUtils getItemsFile() {
         return itemsFile;
+    }
+
+    public ConfigUtils getGUIFile() {
+        return guiFile;
     }
 
     public EnchantManager getEnchantManager() {

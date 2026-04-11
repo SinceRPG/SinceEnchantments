@@ -47,6 +47,7 @@ public class SinceCommand {
                             plugin.getLimitsFile().reload();
                             plugin.getMessagesFile().reload();
                             plugin.getItemsFile().reload();
+                            plugin.getGUIFile().reload();
                             plugin.getEnchantManager().loadEnchantsFromConfig();
                             sendMessage(context.getSource(), "reload");
                             return Command.SINGLE_SUCCESS;

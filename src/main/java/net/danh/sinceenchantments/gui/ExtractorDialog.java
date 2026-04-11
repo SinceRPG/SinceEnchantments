@@ -30,8 +30,8 @@ import java.util.Map;
 public class ExtractorDialog {
 
     public static void open(SinceEnchantments plugin, Player player, ItemStack weapon) {
-        String titleRaw = plugin.getSettingsFile().getString("dialog.extractor.title", "<dark_gray><bold>Extract Enchantment");
-        String bodyRaw = plugin.getSettingsFile().getString("dialog.extractor.body", "<gray>Choose an enchantment below:");
+        String titleRaw = plugin.getGUIFile().getString("dialog.extractor.title", "<dark_gray><bold>Extract Enchantment");
+        String bodyRaw = plugin.getGUIFile().getString("dialog.extractor.body", "<gray>Choose an enchantment below:");
 
         Component title = ColorUtils.parse(titleRaw);
         Component body = ColorUtils.parse(bodyRaw);
@@ -39,8 +39,8 @@ public class ExtractorDialog {
         Map<String, Integer> allEnchants = plugin.getEnchantManager().getAllEnchantsOnItem(weapon);
         List<ActionButton> buttons = new ArrayList<>();
 
-        String btnFormat = plugin.getSettingsFile().getString("dialog.extractor.enchant-button.name", "%rarity_color%%enchant_name% %level%");
-        String tooltipFormat = plugin.getSettingsFile().getString("dialog.extractor.enchant-button.tooltip", "&7Extract %enchant_name%");
+        String btnFormat = plugin.getGUIFile().getString("dialog.extractor.enchant-button.name", "%rarity_color%%enchant_name% %level%");
+        String tooltipFormat = plugin.getGUIFile().getString("dialog.extractor.enchant-button.tooltip", "&7Extract %enchant_name%");
 
         for (Map.Entry<String, Integer> entry : allEnchants.entrySet()) {
             String id = entry.getKey();
@@ -94,8 +94,8 @@ public class ExtractorDialog {
                     .build());
         }
 
-        String cancelName = plugin.getSettingsFile().getString("dialog.extractor.cancel-button.name", "&cCancel");
-        String cancelTooltip = plugin.getSettingsFile().getString("dialog.extractor.cancel-button.tooltip", "&7Refund extractor");
+        String cancelName = plugin.getGUIFile().getString("dialog.extractor.cancel-button.name", "&cCancel");
+        String cancelTooltip = plugin.getGUIFile().getString("dialog.extractor.cancel-button.tooltip", "&7Refund extractor");
 
         DialogAction cancelAction = DialogAction.customClick((view, audience) -> {
             audience.closeDialog();
@@ -116,7 +116,7 @@ public class ExtractorDialog {
                 .action(cancelAction)
                 .build();
 
-        int columns = plugin.getSettingsFile().getInt("dialog.extractor.columns", 3);
+        int columns = plugin.getGUIFile().getInt("dialog.extractor.columns", 3);
         ItemStack displayWeapon = formatDisplayWeapon(plugin, weapon.clone());
 
         Dialog dialog = Dialog.create(builder -> builder.empty()
@@ -142,6 +142,7 @@ public class ExtractorDialog {
         if (meta == null) return item;
 
         ConfigUtils config = plugin.getSettingsFile();
+        ConfigUtils enchantsConfig = plugin.getEnchantsFile();
         List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
 
         String placeholderStr = config.getString("settings.placeholder", "#enchants#").toLowerCase();
@@ -193,8 +194,8 @@ public class ExtractorDialog {
                 String keyName = entry.getKey().getKey().getKey();
                 String fullKey = namespace + ":" + keyName;
 
-                String cName = config.getString("vanilla-enchants." + fullKey + ".name", formatDefaultName(keyName));
-                String cColor = config.getString("vanilla-enchants." + fullKey + ".color", config.getString("settings.default-color", "&9"));
+                String cName = enchantsConfig.getString("vanilla-enchants." + fullKey + ".name", formatDefaultName(keyName));
+                String cColor = enchantsConfig.getString("vanilla-enchants." + fullKey + ".color", config.getString("settings.default-color", "&9"));
 
                 String formatted = cColor + cName + " " + (useRoman ? toRoman(entry.getValue()) : entry.getValue());
 
@@ -232,8 +233,8 @@ public class ExtractorDialog {
             String eId = entry.getKey();
             int eLvl = entry.getValue();
 
-            String eName = config.getString("custom-enchants." + eId + ".name", eId);
-            String rarityKey = config.getString("custom-enchants." + eId + ".rarity", "COMMON");
+            String eName = enchantsConfig.getString("custom-enchants." + eId + ".name", eId);
+            String rarityKey = enchantsConfig.getString("custom-enchants." + eId + ".rarity", "COMMON");
             String rarityColor = config.getString("rarities." + rarityKey, "&f");
 
             String formatted = rarityColor + eName + " " + (useRoman ? toRoman(eLvl) : eLvl);

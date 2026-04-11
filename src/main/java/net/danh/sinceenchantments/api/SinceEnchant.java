@@ -29,19 +29,19 @@ public abstract class SinceEnchant implements Listener {
     }
 
     protected int getInt(String key, int def) {
-        return SinceEnchantments.getInstance().getSettingsFile().getInt(configPath + ".settings." + key, def);
+        return SinceEnchantments.getInstance().getEnchantsFile().getInt(configPath + ".settings." + key, def);
     }
 
     protected double getDouble(String key, double def) {
-        return SinceEnchantments.getInstance().getSettingsFile().getDouble(configPath + ".settings." + key, def);
+        return SinceEnchantments.getInstance().getEnchantsFile().getDouble(configPath + ".settings." + key, def);
     }
 
     protected String getString(String key, String def) {
-        return SinceEnchantments.getInstance().getSettingsFile().getString(configPath + ".settings." + key, def);
+        return SinceEnchantments.getInstance().getEnchantsFile().getString(configPath + ".settings." + key, def);
     }
 
     protected boolean getBoolean(String key, boolean def) {
-        return SinceEnchantments.getInstance().getSettingsFile().getBoolean(configPath + ".settings." + key, def);
+        return SinceEnchantments.getInstance().getEnchantsFile().getBoolean(configPath + ".settings." + key, def);
     }
 
     /**
@@ -64,6 +64,7 @@ public abstract class SinceEnchant implements Listener {
     }
 
     /**
+     /**
      * Retrieves the level of this enchantment on the given item.
      *
      * @param item The ItemStack to check.

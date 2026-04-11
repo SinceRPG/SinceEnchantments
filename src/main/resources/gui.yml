@@ -1,0 +1,63 @@
+# ==========================================
+# DIALOG CONFIGURATIONS (PAPER 1.21.6+ ONLY)
+# ==========================================
+# Note: You can use MiniMessage tags here (e.g., <red>, <bold>, <gradient:blue:green>).
+dialog:
+  extractor:
+    # The large title displayed at the top of the Dialog screen.
+    title: "<dark_gray><bold>Extract Enchantment"
+
+    # The descriptive text displayed right above the item and buttons. Use \n for a new line.
+    body: "<gray>Choose an enchantment from your item below\n<gray>to extract it safely into a book."
+
+    # How many buttons (enchants) should be displayed per row? (Recommended: 3 or 4)
+    columns: 3
+
+    cancel-button:
+      # The name of the mandatory exit button.
+      name: "<red><bold>Cancel & Refund"
+      # The hover text (tooltip) for the cancel button.
+      tooltip: "<gray>Click to cancel extraction\n<gray>and get your extractor back."
+
+    enchant-button:
+      # The format of the buttons that represent the enchantments on the item.
+      # Available placeholders: %rarity_color%, %enchant_name%, %level%, %rarity_name%
+      name: "%rarity_color%%enchant_name% %level%"
+      # The hover text (tooltip) when hovering over a specific enchantment button.
+      tooltip: "<gray>Click to extract <yellow>%enchant_name%\n<gray>from your item and destroy the extractor."
+
+# ==========================================
+# GUI CONFIGURATIONS (LEGACY CHEST MENU)
+# ==========================================
+# Note: Uses legacy color codes (&a, &b, &c, etc.).
+gui:
+  extractor:
+    # The title of the chest inventory. %page% shows the current page number.
+    title: "&8Select Enchant (Page %page%)"
+
+    # The total number of slots in the chest. MUST be a multiple of 9 (27, 36, 45, or 54).
+    size: 54
+
+    border:
+      # The material used to fill empty slots around the edges.
+      material: "BLACK_STAINED_GLASS_PANE"
+      # Leave as " " for an invisible name.
+      name: " "
+
+    next-page:
+      material: "ARROW"
+      name: "&aNext Page"
+      slot: 53 # The specific slot for this button (0-53)
+
+    prev-page:
+      material: "ARROW"
+      name: "&cPrevious Page"
+      slot: 45 # The specific slot for this button (0-53)
+
+    display-item:
+      # The material representing the extractable enchantments.
+      material: "ENCHANTED_BOOK"
+      name: "%rarity_color%%enchant_name% %level%"
+      lore:
+        - "&7Click to safely extract"
+        - "&7this enchantment into a book!"
