@@ -28,6 +28,7 @@ public class ProtectionListener implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player p = event.getEntity();
         boolean savedItem = false;
+        boolean consumeOnDeath = plugin.getSettingsFile().getBoolean("settings.consume-protection-on-death", true);
 
         Iterator<ItemStack> iterator = event.getDrops().iterator();
         while (iterator.hasNext()) {
@@ -35,9 +36,12 @@ public class ProtectionListener implements Listener {
             if (item == null || !item.hasItemMeta()) continue;
 
             if (item.getItemMeta().getPersistentDataContainer().has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
-                ItemMeta meta = item.getItemMeta();
-                meta.getPersistentDataContainer().remove(manager.PROTECTED_ITEM_KEY);
-                item.setItemMeta(meta);
+
+                if (consumeOnDeath) {
+                    ItemMeta meta = item.getItemMeta();
+                    meta.getPersistentDataContainer().remove(manager.PROTECTED_ITEM_KEY);
+                    item.setItemMeta(meta);
+                }
 
                 event.getItemsToKeep().add(item);
                 iterator.remove();
@@ -47,7 +51,8 @@ public class ProtectionListener implements Listener {
 
         if (savedItem) {
             String prefix = plugin.getMessagesFile().getString("prefix", "");
-            String msg = plugin.getMessagesFile().getString("item-protected-consumed", "");
+            String msgKey = consumeOnDeath ? "item-protected-consumed" : "item-protected-saved";
+            String msg = plugin.getMessagesFile().getString(msgKey, "");
             p.sendMessage(ColorUtils.parse(prefix + msg));
         }
     }

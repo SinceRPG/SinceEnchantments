@@ -83,13 +83,61 @@ settings:
   # to a single item and creating completely broken, overpowered weapons.
   max-slot-modifiers-allowed: 5
 
-  # Format for newly added features
+  # ========================================================
+  # === PROTECTION GEM & STAT TRACKER ===
+  # ========================================================
+
+  # Should the protection status be consumed (removed) from the item when the player dies?
+  # true: One-time use (The protection is lost after preventing the item from dropping).
+  # false: Permanent (The item is permanently protected and will never drop on death).
+  consume-protection-on-death: true
+
+  # The text format displayed in the lore when an item is protected by a Protection Gem.
   protected-format: "&a&lProtected &7(Keeps on death)"
+
+  # Text formats for the Stat Tracker feature.
+  # %value% will be replaced by the tracked number.
   tracker-header: "&8&m      &r &6&lStat Tracker &8&m      "
   tracker-blocks: "&7Blocks Mined: &e%value%"
   tracker-mobs: "&7Mobs Killed: &e%value%"
   tracker-players: "&7Players Killed: &c%value%"
   tracker-fish: "&7Fish Caught: &b%value%"
+
+  # ========================================================
+  # === STAT TRACKER CATEGORIES ===
+  # Define which items are considered Tools, Weapons, or Rods.
+  # Supports Vanilla materials with wildcards (*) and MMOItems (Type:ID).
+  # ========================================================
+  stat-tracker-categories:
+    tools:
+      # Items that will track "Blocks Mined"
+      vanilla:
+        - "*_PICKAXE"
+        - "*_SHOVEL"
+        - "*_AXE"
+        - "*_HOE"
+      mmoitems:
+        - "TOOL:*"
+        - "PICKAXE:*"
+    weapons:
+      # Items that will track "Mobs/Players Killed"
+      vanilla:
+        - "*_SWORD"
+        - "*_AXE"
+        - "BOW"
+        - "CROSSBOW"
+        - "TRIDENT"
+        - "MACE"
+      mmoitems:
+        - "SWORD:*"
+        - "WARHAMMER:*"
+        - "BOW:*"
+    fishing-rods:
+      # Items that will track "Fish Caught"
+      vanilla:
+        - "FISHING_ROD"
+      mmoitems:
+        - "FISHING_ROD:*"
 
 # ==========================================
 # RARITY SYSTEM

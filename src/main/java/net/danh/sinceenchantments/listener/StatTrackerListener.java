@@ -26,7 +26,7 @@ public class StatTrackerListener implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         Player p = event.getPlayer();
         ItemStack item = p.getInventory().getItemInMainHand();
-        if (item == null || !item.hasItemMeta()) return;
+        if (!manager.isItemInCategory(item, "tools")) return;
 
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
@@ -43,7 +43,7 @@ public class StatTrackerListener implements Listener {
         if (event.getEntity().getKiller() != null) {
             Player p = event.getEntity().getKiller();
             ItemStack item = p.getInventory().getItemInMainHand();
-            if (item == null || !item.hasItemMeta()) return;
+            if (!manager.isItemInCategory(item, "weapons")) return;
 
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
@@ -66,7 +66,7 @@ public class StatTrackerListener implements Listener {
         if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH) {
             Player p = event.getPlayer();
             ItemStack item = p.getInventory().getItemInMainHand();
-            if (item == null || !item.hasItemMeta()) return;
+            if (!manager.isItemInCategory(item, "fishing-rods")) return;
 
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer pdc = meta.getPersistentDataContainer();

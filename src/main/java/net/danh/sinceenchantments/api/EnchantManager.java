@@ -4,6 +4,7 @@ import io.papermc.paper.registry.RegistryAccess;
 import io.papermc.paper.registry.RegistryKey;
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.utils.ColorUtils;
+import net.danh.sinceenchantments.utils.ConfigUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -193,7 +194,7 @@ public class EnchantManager {
         }
     }
 
-    private boolean isMatch(String text, String pattern) {
+    public boolean isMatch(String text, String pattern) {
         if (pattern.equals("*")) return true;
         if (pattern.startsWith("*") && pattern.endsWith("*") && pattern.length() >= 2) {
             return text.contains(pattern.substring(1, pattern.length() - 1));
@@ -205,6 +206,35 @@ public class EnchantManager {
             return text.startsWith(pattern.substring(0, pattern.length() - 1));
         }
         return text.equals(pattern);
+    }
+
+    /**
+     * Logic to check if an item belongs to a category defined in settings.yml
+     * Supports both Vanilla and MMOItems patterns.
+     */
+    public boolean isItemInCategory(ItemStack item, String category) {
+        if (item == null || item.getType() == Material.AIR) return false;
+
+        String configPath = "settings.stat-tracker-categories." + category;
+        ConfigUtils settings = plugin.getSettingsFile();
+
+        // 1. Check MMOItems
+        String mmoKey = getMMOItemKey(item); // Returns "TYPE:ID"
+        if (mmoKey != null) {
+            List<String> mmoPatterns = settings.getStringList(configPath + ".mmoitems");
+            for (String pattern : mmoPatterns) {
+                if (isMatch(mmoKey, pattern.toUpperCase())) return true;
+            }
+        }
+
+        // 2. Check Vanilla Materials
+        String matName = item.getType().name().toUpperCase();
+        List<String> vanillaPatterns = settings.getStringList(configPath + ".vanilla");
+        for (String pattern : vanillaPatterns) {
+            if (isMatch(matName, pattern.toUpperCase())) return true;
+        }
+
+        return false;
     }
 
     public String getMMOItemKey(ItemStack item) {

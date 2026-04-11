@@ -20,6 +20,9 @@ give-charm-success: "&aGave Success Charm (+%bonus%%) (x%amount%) to %player%."
 give-slotgem-success: "&aGave Slot Gem (%modifier%) (x%amount%) to %player%."
 give-lock-success: "&aGave Lock Scroll (x%amount%) to %player%."
 give-purge-success: "&aGave Purge Scroll (Return Books: %return%) (x%amount%) to %player%."
+give-randomizer-success: "&aGave Randomizer Stone (x%amount%) to %player%."
+give-protector-success: "&aGave Protection Gem (x%amount%) to %player%."
+give-tracker-success: "&aGave Stat Tracker (x%amount%) to %player%."
 
 item-need-unstack: "&cPlease unstack your items to 1 before modifying them!"
 item-locked: "&cThis item is locked! You cannot modify its enchantments."
@@ -47,14 +50,12 @@ extract-success: "&aSuccessfully extracted &e%enchant% %level% &afrom your item!
 extract-cancelled: "&cExtraction cancelled. The extractor has been refunded to your inventory."
 extract-error-gone: "&cError: This enchantment no longer exists on the item."
 
-give-randomizer-success: "&aGave Randomizer Stone (x%amount%) to %player%."
-give-protector-success: "&aGave Protection Gem (x%amount%) to %player%."
-give-tracker-success: "&aGave Stat Tracker (x%amount%) to %player%."
-
 randomizer-applied: "&aSuccessfully randomized the rates of the Enchantment Book!"
 protector-applied: "&aItem is now protected! It will not be lost on your next death."
 protector-already-applied: "&cThis item is already protected!"
 tracker-applied: "&aStat Tracker successfully attached to the item!"
 tracker-already-applied: "&cThis item already has a Stat Tracker!"
 tracker-invalid-item: "&cStat Trackers can only be applied to Weapons, Tools, or Fishing Rods."
+
 item-protected-consumed: "&eYour protected item was saved and the Protection Gem was consumed!"
+item-protected-saved: "&eYour protected item was saved!"
