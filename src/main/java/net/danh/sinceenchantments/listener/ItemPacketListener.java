@@ -123,10 +123,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
         if (((!overrideVanilla && customEnchants.isEmpty()) || (overrideVanilla && vanillaEnchants.isEmpty() && customEnchants.isEmpty()))
                 && !manager.isLocked(item) && manager.getWhitelistedEnchants(item).isEmpty() && !hasProtect && !hasTracker) {
-
-            if (targetIndex != -1) {
-                lore.add(targetIndex, ColorUtils.parse(settings.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
-            }
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;
@@ -272,8 +268,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         }
 
         if (injectComponents.isEmpty()) {
-            if (targetIndex != -1)
-                lore.add(targetIndex, ColorUtils.parse(settings.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;

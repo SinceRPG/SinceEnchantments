@@ -170,9 +170,6 @@ public class ExtractorDialog {
                 && plugin.getEnchantManager().getWhitelistedEnchants(item).isEmpty()
                 && !hasProtect && !hasTracker) {
 
-            if (targetIndex != -1) {
-                lore.add(targetIndex, ColorUtils.parse(settings.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
-            }
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;
@@ -337,9 +334,6 @@ public class ExtractorDialog {
         }
 
         if (enchantComponents.isEmpty()) {
-            if (targetIndex != -1) {
-                lore.add(targetIndex, ColorUtils.parse(settings.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
-            }
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;
