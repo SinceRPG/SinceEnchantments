@@ -51,8 +51,9 @@ public class AddonLoader {
     private void loadEnchantsFromJar(File file) throws Exception {
         URL[] urls = {file.toURI().toURL()};
 
-        try (URLClassLoader loader = new URLClassLoader(urls, plugin.getClass().getClassLoader());
-             JarFile jar = new JarFile(file)) {
+        URLClassLoader loader = new URLClassLoader(urls, plugin.getClass().getClassLoader());
+
+        try (JarFile jar = new JarFile(file)) {
 
             Enumeration<JarEntry> entries = jar.entries();
             int loadedCount = 0;

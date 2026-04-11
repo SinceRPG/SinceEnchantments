@@ -13,6 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Iterator;
+import java.util.List;
 
 public class ProtectionListener implements Listener {
 
@@ -29,23 +30,37 @@ public class ProtectionListener implements Listener {
         Player p = event.getEntity();
         boolean savedItem = false;
         boolean consumeOnDeath = plugin.getSettingsFile().getBoolean("settings.consume-protection-on-death", true);
+        boolean keepInventory = p.getWorld().getGameRuleValue(org.bukkit.GameRule.KEEP_INVENTORY) == Boolean.TRUE;
 
-        Iterator<ItemStack> iterator = event.getDrops().iterator();
-        while (iterator.hasNext()) {
-            ItemStack item = iterator.next();
-            if (item == null || !item.hasItemMeta()) continue;
-
-            if (item.getItemMeta().getPersistentDataContainer().has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
-
-                if (consumeOnDeath) {
-                    ItemMeta meta = item.getItemMeta();
-                    meta.getPersistentDataContainer().remove(manager.PROTECTED_ITEM_KEY);
-                    item.setItemMeta(meta);
+        if (keepInventory) {
+            if (consumeOnDeath) {
+                for (ItemStack item : event.getItemsToKeep()) {
+                    if (item != null && item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
+                        ItemMeta meta = item.getItemMeta();
+                        meta.getPersistentDataContainer().remove(manager.PROTECTED_ITEM_KEY);
+                        item.setItemMeta(meta);
+                        savedItem = true;
+                    }
                 }
+            }
+        } else {
+            Iterator<ItemStack> iterator = event.getDrops().iterator();
+            List<ItemStack> toKeep = event.getItemsToKeep();
 
-                event.getItemsToKeep().add(item);
-                iterator.remove();
-                savedItem = true;
+            while (iterator.hasNext()) {
+                ItemStack item = iterator.next();
+                if (item == null || !item.hasItemMeta()) continue;
+
+                if (item.getItemMeta().getPersistentDataContainer().has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
+                    if (consumeOnDeath) {
+                        ItemMeta meta = item.getItemMeta();
+                        meta.getPersistentDataContainer().remove(manager.PROTECTED_ITEM_KEY);
+                        item.setItemMeta(meta);
+                    }
+                    toKeep.add(item);
+                    iterator.remove();
+                    savedItem = true;
+                }
             }
         }
 

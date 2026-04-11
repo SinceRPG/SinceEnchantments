@@ -91,7 +91,7 @@ public class EnchantApplyListener implements Listener {
         }
 
         // 2. SLOT GEM
-        if (cursorMeta.getPersistentDataContainer().has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
+        if (cursorMeta.getPersistentDataContainer().has(manager.SLOT_GEM_KEY, PersistentDataType.INTEGER)) {
             event.setCancelled(true);
             if (current.getAmount() > 1) {
                 sendMsg(player, "item-need-unstack");
@@ -101,7 +101,7 @@ public class EnchantApplyListener implements Listener {
                 sendMsg(player, "item-locked");
                 return;
             }
-            int gemModifier = cursorMeta.getPersistentDataContainer().get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER);
+            int gemModifier = cursorMeta.getPersistentDataContainer().get(manager.SLOT_GEM_KEY, PersistentDataType.INTEGER);
             int currentModifier = currentMeta.getPersistentDataContainer().getOrDefault(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, 0);
             int maxAllowed = manager.getMaxSlotModifiersAllowed(current);
 
@@ -236,7 +236,7 @@ public class EnchantApplyListener implements Listener {
         }
 
         // 7. STAT TRACKER
-        if (cursorMeta.getPersistentDataContainer().has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
+        if (cursorMeta.getPersistentDataContainer().has(manager.TRACKER_ITEM_KEY, PersistentDataType.BYTE)) {
             event.setCancelled(true);
             if (current.getAmount() > 1) {
                 sendMsg(player, "item-need-unstack");

@@ -31,7 +31,10 @@ public class EnchantManager {
     public final NamespacedKey EXTRACTOR_TYPE_KEY;
     public final NamespacedKey CHARM_BONUS_KEY;
     public final NamespacedKey GUI_ACTION_KEY;
+
+    public final NamespacedKey SLOT_GEM_KEY;
     public final NamespacedKey SLOT_MODIFIER_KEY;
+
     public final NamespacedKey LOCKED_KEY;
     public final NamespacedKey LOCK_SCROLL_KEY;
     public final NamespacedKey PURGE_SCROLL_KEY;
@@ -40,7 +43,10 @@ public class EnchantManager {
     public final NamespacedKey RANDOMIZER_KEY;
     public final NamespacedKey PROTECTOR_KEY;
     public final NamespacedKey PROTECTED_ITEM_KEY;
+
+    public final NamespacedKey TRACKER_ITEM_KEY;
     public final NamespacedKey TRACKER_KEY;
+
     public final NamespacedKey STAT_BLOCKS_KEY;
     public final NamespacedKey STAT_MOBS_KEY;
     public final NamespacedKey STAT_PLAYERS_KEY;
@@ -78,7 +84,10 @@ public class EnchantManager {
         this.EXTRACTOR_TYPE_KEY = new NamespacedKey(plugin, "extractor_type");
         this.CHARM_BONUS_KEY = new NamespacedKey(plugin, "charm_bonus");
         this.GUI_ACTION_KEY = new NamespacedKey(plugin, "gui_action");
+
+        this.SLOT_GEM_KEY = new NamespacedKey(plugin, "slot_gem_item");
         this.SLOT_MODIFIER_KEY = new NamespacedKey(plugin, "slot_modifier");
+
         this.LOCKED_KEY = new NamespacedKey(plugin, "item_locked");
         this.LOCK_SCROLL_KEY = new NamespacedKey(plugin, "lock_scroll");
         this.PURGE_SCROLL_KEY = new NamespacedKey(plugin, "purge_scroll");
@@ -87,7 +96,10 @@ public class EnchantManager {
         this.RANDOMIZER_KEY = new NamespacedKey(plugin, "randomizer_stone");
         this.PROTECTOR_KEY = new NamespacedKey(plugin, "protection_gem");
         this.PROTECTED_ITEM_KEY = new NamespacedKey(plugin, "item_is_protected");
+
+        this.TRACKER_ITEM_KEY = new NamespacedKey(plugin, "stat_tracker_item");
         this.TRACKER_KEY = new NamespacedKey(plugin, "stat_tracker_applied");
+
         this.STAT_BLOCKS_KEY = new NamespacedKey(plugin, "stat_blocks_mined");
         this.STAT_MOBS_KEY = new NamespacedKey(plugin, "stat_mobs_killed");
         this.STAT_PLAYERS_KEY = new NamespacedKey(plugin, "stat_players_killed");
@@ -713,7 +725,7 @@ public class EnchantManager {
         applyItemMeta(item, "slot-gem", "Slot Gem", "%modifier%", modStr);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.getPersistentDataContainer().set(SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, modifier);
+            meta.getPersistentDataContainer().set(SLOT_GEM_KEY, PersistentDataType.INTEGER, modifier);
             item.setItemMeta(meta);
         }
         return item;
@@ -769,7 +781,7 @@ public class EnchantManager {
         applyItemMeta(item, "stat-tracker", "Stat Tracker");
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.getPersistentDataContainer().set(TRACKER_KEY, PersistentDataType.BYTE, (byte) 1);
+            meta.getPersistentDataContainer().set(TRACKER_ITEM_KEY, PersistentDataType.BYTE, (byte) 1);
             item.setItemMeta(meta);
         }
         return item;
