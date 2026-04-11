@@ -19,7 +19,6 @@ public class SinceEnchantments extends JavaPlugin {
 
     private static SinceEnchantments instance;
 
-    // Split Configs
     private ConfigUtils settingsFile;
     private ConfigUtils enchantsFile;
     private ConfigUtils limitsFile;
@@ -109,7 +108,7 @@ public class SinceEnchantments extends JavaPlugin {
         return itemsFile;
     }
 
-    public ConfigUtils getGUIFile() {
+    public ConfigUtils getGuiFile() {
         return guiFile;
     }
 

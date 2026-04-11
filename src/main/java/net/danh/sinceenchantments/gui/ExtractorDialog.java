@@ -30,8 +30,8 @@ import java.util.Map;
 public class ExtractorDialog {
 
     public static void open(SinceEnchantments plugin, Player player, ItemStack weapon) {
-        String titleRaw = plugin.getGUIFile().getString("dialog.extractor.title", "<dark_gray><bold>Extract Enchantment");
-        String bodyRaw = plugin.getGUIFile().getString("dialog.extractor.body", "<gray>Choose an enchantment below:");
+        String titleRaw = plugin.getGuiFile().getString("dialog.extractor.title", "<dark_gray><bold>Extract Enchantment");
+        String bodyRaw = plugin.getGuiFile().getString("dialog.extractor.body", "<gray>Choose an enchantment below:");
 
         Component title = ColorUtils.parse(titleRaw);
         Component body = ColorUtils.parse(bodyRaw);
@@ -39,8 +39,8 @@ public class ExtractorDialog {
         Map<String, Integer> allEnchants = plugin.getEnchantManager().getAllEnchantsOnItem(weapon);
         List<ActionButton> buttons = new ArrayList<>();
 
-        String btnFormat = plugin.getGUIFile().getString("dialog.extractor.enchant-button.name", "%rarity_color%%enchant_name% %level%");
-        String tooltipFormat = plugin.getGUIFile().getString("dialog.extractor.enchant-button.tooltip", "&7Extract %enchant_name%");
+        String btnFormat = plugin.getGuiFile().getString("dialog.extractor.enchant-button.name", "%rarity_color%%enchant_name% %level%");
+        String tooltipFormat = plugin.getGuiFile().getString("dialog.extractor.enchant-button.tooltip", "&7Extract %enchant_name%");
 
         for (Map.Entry<String, Integer> entry : allEnchants.entrySet()) {
             String id = entry.getKey();
@@ -94,8 +94,8 @@ public class ExtractorDialog {
                     .build());
         }
 
-        String cancelName = plugin.getGUIFile().getString("dialog.extractor.cancel-button.name", "&cCancel");
-        String cancelTooltip = plugin.getGUIFile().getString("dialog.extractor.cancel-button.tooltip", "&7Refund extractor");
+        String cancelName = plugin.getGuiFile().getString("dialog.extractor.cancel-button.name", "&cCancel");
+        String cancelTooltip = plugin.getGuiFile().getString("dialog.extractor.cancel-button.tooltip", "&7Refund extractor");
 
         DialogAction cancelAction = DialogAction.customClick((view, audience) -> {
             audience.closeDialog();
@@ -116,7 +116,7 @@ public class ExtractorDialog {
                 .action(cancelAction)
                 .build();
 
-        int columns = plugin.getGUIFile().getInt("dialog.extractor.columns", 3);
+        int columns = plugin.getGuiFile().getInt("dialog.extractor.columns", 3);
         ItemStack displayWeapon = formatDisplayWeapon(plugin, weapon.clone());
 
         Dialog dialog = Dialog.create(builder -> builder.empty()
@@ -141,11 +141,11 @@ public class ExtractorDialog {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
 
-        ConfigUtils config = plugin.getSettingsFile();
+        ConfigUtils settings = plugin.getSettingsFile();
         ConfigUtils enchantsConfig = plugin.getEnchantsFile();
         List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
 
-        String placeholderStr = config.getString("settings.placeholder", "#enchants#").toLowerCase();
+        String placeholderStr = settings.getString("settings.placeholder", "#enchants#").toLowerCase();
         int targetIndex = -1;
 
         for (int i = lore.size() - 1; i >= 0; i--) {
@@ -159,14 +159,19 @@ public class ExtractorDialog {
 
         Map<Enchantment, Integer> vanillaEnchants = meta.getEnchants();
         Map<String, Integer> customEnchants = plugin.getEnchantManager().getCustomEnchants(item);
-        boolean overrideVanilla = config.getBoolean("settings.override-vanilla-enchants", true);
+        boolean overrideVanilla = settings.getBoolean("settings.override-vanilla-enchants", true);
+
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        boolean hasProtect = pdc.has(plugin.getEnchantManager().PROTECTED_ITEM_KEY, PersistentDataType.BYTE);
+        boolean hasTracker = pdc.has(plugin.getEnchantManager().TRACKER_KEY, PersistentDataType.BYTE);
 
         if (((!overrideVanilla && customEnchants.isEmpty()) || (overrideVanilla && vanillaEnchants.isEmpty() && customEnchants.isEmpty()))
                 && !plugin.getEnchantManager().isLocked(item)
-                && plugin.getEnchantManager().getWhitelistedEnchants(item).isEmpty()) {
+                && plugin.getEnchantManager().getWhitelistedEnchants(item).isEmpty()
+                && !hasProtect && !hasTracker) {
 
             if (targetIndex != -1) {
-                lore.add(targetIndex, ColorUtils.parse(config.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
+                lore.add(targetIndex, ColorUtils.parse(settings.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
             }
             meta.lore(lore);
             item.setItemMeta(meta);
@@ -178,15 +183,38 @@ public class ExtractorDialog {
         }
 
         List<Component> enchantComponents = new ArrayList<>();
-        int detailedThreshold = config.getInt("settings.detailed-display-threshold", 5);
+
+        if (hasProtect) {
+            enchantComponents.add(ColorUtils.parse(settings.getString("settings.protected-format", "&a&lProtected &7(Keeps on death)")).decoration(TextDecoration.ITALIC, false));
+            enchantComponents.add(Component.empty());
+        }
+
+        if (hasTracker) {
+            enchantComponents.add(ColorUtils.parse(settings.getString("settings.tracker-header", "&8&m      &r &6&lStat Tracker &8&m      ")).decoration(TextDecoration.ITALIC, false));
+            if (pdc.has(plugin.getEnchantManager().STAT_BLOCKS_KEY, PersistentDataType.INTEGER)) {
+                enchantComponents.add(ColorUtils.parse(settings.getString("settings.tracker-blocks").replace("%value%", String.valueOf(pdc.get(plugin.getEnchantManager().STAT_BLOCKS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
+            }
+            if (pdc.has(plugin.getEnchantManager().STAT_MOBS_KEY, PersistentDataType.INTEGER)) {
+                enchantComponents.add(ColorUtils.parse(settings.getString("settings.tracker-mobs").replace("%value%", String.valueOf(pdc.get(plugin.getEnchantManager().STAT_MOBS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
+            }
+            if (pdc.has(plugin.getEnchantManager().STAT_PLAYERS_KEY, PersistentDataType.INTEGER)) {
+                enchantComponents.add(ColorUtils.parse(settings.getString("settings.tracker-players").replace("%value%", String.valueOf(pdc.get(plugin.getEnchantManager().STAT_PLAYERS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
+            }
+            if (pdc.has(plugin.getEnchantManager().STAT_FISH_KEY, PersistentDataType.INTEGER)) {
+                enchantComponents.add(ColorUtils.parse(settings.getString("settings.tracker-fish").replace("%value%", String.valueOf(pdc.get(plugin.getEnchantManager().STAT_FISH_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
+            }
+            enchantComponents.add(Component.empty());
+        }
+
+        int detailedThreshold = settings.getInt("settings.detailed-display-threshold", 5);
         int totalEnchantsApplied = (overrideVanilla ? vanillaEnchants.size() : 0) + customEnchants.size();
         boolean useDetailedDisplay = totalEnchantsApplied > 0 && totalEnchantsApplied <= detailedThreshold;
 
         int count = 0;
-        int maxPerLine = config.getInt("settings.enchants-per-line", 2);
-        String separator = config.getString("settings.separator", "&8 | ");
+        int maxPerLine = settings.getInt("settings.enchants-per-line", 2);
+        String separator = settings.getString("settings.separator", "&8 | ");
         StringBuilder currentLine = new StringBuilder();
-        boolean useRoman = config.getString("settings.level-format", "ROMAN").equalsIgnoreCase("ROMAN");
+        boolean useRoman = settings.getString("settings.level-format", "ROMAN").equalsIgnoreCase("ROMAN");
 
         if (overrideVanilla) {
             for (Map.Entry<Enchantment, Integer> entry : vanillaEnchants.entrySet()) {
@@ -195,7 +223,7 @@ public class ExtractorDialog {
                 String fullKey = namespace + ":" + keyName;
 
                 String cName = enchantsConfig.getString("vanilla-enchants." + fullKey + ".name", formatDefaultName(keyName));
-                String cColor = enchantsConfig.getString("vanilla-enchants." + fullKey + ".color", config.getString("settings.default-color", "&9"));
+                String cColor = enchantsConfig.getString("vanilla-enchants." + fullKey + ".color", settings.getString("settings.default-color", "&9"));
 
                 String formatted = cColor + cName + " " + (useRoman ? toRoman(entry.getValue()) : entry.getValue());
 
@@ -224,7 +252,7 @@ public class ExtractorDialog {
                     currentLine = new StringBuilder();
                     count = 0;
                 }
-                String divider = config.getString("settings.divider", "&7&m----------------------");
+                String divider = settings.getString("settings.divider", "&7&m----------------------");
                 enchantComponents.add(ColorUtils.parse(divider).decoration(TextDecoration.ITALIC, false));
             }
         }
@@ -235,7 +263,7 @@ public class ExtractorDialog {
 
             String eName = enchantsConfig.getString("custom-enchants." + eId + ".name", eId);
             String rarityKey = enchantsConfig.getString("custom-enchants." + eId + ".rarity", "COMMON");
-            String rarityColor = config.getString("rarities." + rarityKey, "&f");
+            String rarityColor = settings.getString("rarities." + rarityKey, "&f");
 
             String formatted = rarityColor + eName + " " + (useRoman ? toRoman(eLvl) : eLvl);
 
@@ -262,19 +290,19 @@ public class ExtractorDialog {
             enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
         }
 
-        if (config.getBoolean("settings.show-slots", true)) {
+        if (settings.getBoolean("settings.show-slots", true)) {
             int maxSlots = plugin.getEnchantManager().getMaxSlots(item);
-            String slotLine = config.getString("settings.slots-format", "&7Enchantment Slots: &e%current% / %max%");
+            String slotLine = settings.getString("settings.slots-format", "&7Enchantment Slots: &e%current% / %max%");
             slotLine = slotLine.replace("%current%", String.valueOf(totalEnchantsApplied)).replace("%max%", String.valueOf(maxSlots));
             enchantComponents.add(ColorUtils.parse(slotLine).decoration(TextDecoration.ITALIC, false));
         }
 
         if (plugin.getEnchantManager().isLocked(item)) {
-            String lockLine = config.getString("settings.locked-format", "&c&lLocked");
+            String lockLine = settings.getString("settings.locked-format", "&c&lLocked");
             enchantComponents.add(ColorUtils.parse(lockLine).decoration(TextDecoration.ITALIC, false));
         }
 
-        if (config.getBoolean("settings.show-whitelist-preview", true)) {
+        if (settings.getBoolean("settings.show-whitelist-preview", true)) {
             List<String> allowedEnchants = plugin.getEnchantManager().getWhitelistedEnchants(item);
             List<String> unappliedAllowed = new ArrayList<>();
             for (String allowedId : allowedEnchants) {
@@ -297,9 +325,9 @@ public class ExtractorDialog {
 
             if (!unappliedAllowed.isEmpty()) {
                 enchantComponents.add(Component.empty());
-                String header = config.getString("settings.whitelist-header", "&8Allowed Enchantments:");
+                String header = settings.getString("settings.whitelist-header", "&8Allowed Enchantments:");
                 enchantComponents.add(ColorUtils.parse(header).decoration(TextDecoration.ITALIC, false));
-                String format = config.getString("settings.whitelist-preview-format", "&8 - %enchant_name%");
+                String format = settings.getString("settings.whitelist-preview-format", "&8 - %enchant_name%");
                 for (String allowedId : unappliedAllowed) {
                     String eName = plugin.getEnchantManager().getEnchantName(allowedId);
                     String line = format.replace("%enchant_name%", eName);
@@ -310,15 +338,15 @@ public class ExtractorDialog {
 
         if (enchantComponents.isEmpty()) {
             if (targetIndex != -1) {
-                lore.add(targetIndex, ColorUtils.parse(config.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
+                lore.add(targetIndex, ColorUtils.parse(settings.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
             }
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;
         }
 
-        boolean addEmptyLineAbove = config.getBoolean("settings.add-empty-line-above", true);
-        boolean addEmptyLineBelow = config.getBoolean("settings.add-empty-line-below", true);
+        boolean addEmptyLineAbove = settings.getBoolean("settings.add-empty-line-above", true);
+        boolean addEmptyLineBelow = settings.getBoolean("settings.add-empty-line-below", true);
         boolean hadPlaceholder = (targetIndex != -1);
 
         if (hadPlaceholder) {
@@ -348,7 +376,6 @@ public class ExtractorDialog {
             lore.addAll(enchantComponents);
         }
 
-        PersistentDataContainer pdc = meta.getPersistentDataContainer();
         pdc.set(new NamespacedKey(plugin, "lore_start"), PersistentDataType.INTEGER, startIdx);
         pdc.set(new NamespacedKey(plugin, "lore_count"), PersistentDataType.INTEGER, enchantComponents.size());
         pdc.set(new NamespacedKey(plugin, "lore_placeholder"), PersistentDataType.BYTE, (byte) (hadPlaceholder ? 1 : 0));

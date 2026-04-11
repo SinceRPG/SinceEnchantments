@@ -138,7 +138,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
         List<Component> injectComponents = new ArrayList<>();
 
-        // --- 1. Inject Stats Tracker & Protection ---
         if (hasProtect) {
             injectComponents.add(ColorUtils.parse(settings.getString("settings.protected-format", "&a&lProtected &7(Keeps on death)")).decoration(TextDecoration.ITALIC, false));
             injectComponents.add(Component.empty());
@@ -161,7 +160,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             injectComponents.add(Component.empty());
         }
 
-        // --- 2. Inject Enchants ---
         int detailedThreshold = settings.getInt("settings.detailed-display-threshold", 5);
         int totalEnchantsApplied = (overrideVanilla ? vanillaEnchants.size() : 0) + customEnchants.size();
         boolean useDetailedDisplay = totalEnchantsApplied > 0 && totalEnchantsApplied <= detailedThreshold;

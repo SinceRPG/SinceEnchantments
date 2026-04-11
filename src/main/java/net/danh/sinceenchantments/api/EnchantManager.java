@@ -36,7 +36,6 @@ public class EnchantManager {
     public final NamespacedKey PURGE_SCROLL_KEY;
     public final NamespacedKey PURGE_RETURN_KEY;
 
-    // New Features Keys
     public final NamespacedKey RANDOMIZER_KEY;
     public final NamespacedKey PROTECTOR_KEY;
     public final NamespacedKey PROTECTED_ITEM_KEY;

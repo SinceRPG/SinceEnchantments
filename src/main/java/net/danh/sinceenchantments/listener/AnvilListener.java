@@ -107,12 +107,10 @@ public class AnvilListener implements Listener {
                             rPdc.set(manager.LOCKED_KEY, PersistentDataType.BYTE, (byte) 1);
                         }
 
-                        // Copy Protection Gem Tags
                         if (pdc1.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
                             rPdc.set(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE, pdc1.get(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE));
                         }
 
-                        // Copy Stat Tracker & Stats Tags
                         if (pdc1.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
                             rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc1.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
                             if (pdc1.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER))
