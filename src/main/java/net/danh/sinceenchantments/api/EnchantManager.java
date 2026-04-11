@@ -208,18 +208,13 @@ public class EnchantManager {
         return text.equals(pattern);
     }
 
-    /**
-     * Logic to check if an item belongs to a category defined in settings.yml
-     * Supports both Vanilla and MMOItems patterns.
-     */
     public boolean isItemInCategory(ItemStack item, String category) {
         if (item == null || item.getType() == Material.AIR) return false;
 
         String configPath = "settings.stat-tracker-categories." + category;
         ConfigUtils settings = plugin.getSettingsFile();
 
-        // 1. Check MMOItems
-        String mmoKey = getMMOItemKey(item); // Returns "TYPE:ID"
+        String mmoKey = getMMOItemKey(item);
         if (mmoKey != null) {
             List<String> mmoPatterns = settings.getStringList(configPath + ".mmoitems");
             for (String pattern : mmoPatterns) {
@@ -227,7 +222,6 @@ public class EnchantManager {
             }
         }
 
-        // 2. Check Vanilla Materials
         String matName = item.getType().name().toUpperCase();
         List<String> vanillaPatterns = settings.getStringList(configPath + ".vanilla");
         for (String pattern : vanillaPatterns) {

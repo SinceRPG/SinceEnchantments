@@ -231,14 +231,11 @@ public class EnchantApplyListener implements Listener {
                 return;
             }
 
-            String matName = current.getType().name();
-            boolean isApplicable = matName.endsWith("_SWORD") || matName.endsWith("_AXE") ||
-                    matName.endsWith("_PICKAXE") || matName.endsWith("_SHOVEL") ||
-                    matName.endsWith("_HOE") || matName.equals("BOW") ||
-                    matName.equals("CROSSBOW") || matName.equals("TRIDENT") ||
-                    matName.equals("MACE") || matName.equals("FISHING_ROD");
+            boolean isTool = manager.isItemInCategory(current, "tools");
+            boolean isWeapon = manager.isItemInCategory(current, "weapons");
+            boolean isRod = manager.isItemInCategory(current, "fishing-rods");
 
-            if (!isApplicable) {
+            if (!isTool && !isWeapon && !isRod) {
                 sendMsg(player, "tracker-invalid-item");
                 return;
             }
@@ -249,6 +246,17 @@ public class EnchantApplyListener implements Listener {
             }
 
             currentMeta.getPersistentDataContainer().set(manager.TRACKER_KEY, PersistentDataType.BYTE, (byte) 1);
+            if (isTool) {
+                currentMeta.getPersistentDataContainer().set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, 0);
+            }
+            if (isWeapon) {
+                currentMeta.getPersistentDataContainer().set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, 0);
+                currentMeta.getPersistentDataContainer().set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, 0);
+            }
+            if (isRod) {
+                currentMeta.getPersistentDataContainer().set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, 0);
+            }
+
             current.setItemMeta(currentMeta);
 
             consumeCursor(player, cursor);
