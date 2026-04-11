@@ -31,6 +31,18 @@ import java.util.Map;
 
 public class ItemPacketListener extends PacketListenerAbstract implements PacketListener {
 
+    private static boolean isEnchantableGear(org.bukkit.inventory.ItemStack item) {
+        if (item == null) return false;
+        String name = item.getType().name();
+        return name.endsWith("_SWORD") || name.endsWith("_AXE") || name.endsWith("_PICKAXE") ||
+                name.endsWith("_SHOVEL") || name.endsWith("_HOE") || name.endsWith("_HELMET") ||
+                name.endsWith("_CHESTPLATE") || name.endsWith("_LEGGINGS") || name.endsWith("_BOOTS") ||
+                name.equals("BOW") || name.equals("CROSSBOW") || name.equals("TRIDENT") ||
+                name.equals("MACE") || name.equals("FISHING_ROD") || name.equals("SHIELD") ||
+                name.equals("ELYTRA") || name.equals("SHEARS") || name.equals("FLINT_AND_STEEL") ||
+                name.equals("BRUSH") || name.equals("CARROT_ON_A_STICK") || name.equals("WARPED_FUNGUS_ON_A_STICK");
+    }
+
     @Override
     public void onPacketSend(@NonNull PacketSendEvent event) {
         try {
@@ -87,18 +99,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             item.setItemMeta(meta);
         }
         return item;
-    }
-
-    private static boolean isEnchantableGear(org.bukkit.inventory.ItemStack item) {
-        if (item == null) return false;
-        String name = item.getType().name();
-        return name.endsWith("_SWORD") || name.endsWith("_AXE") || name.endsWith("_PICKAXE") ||
-                name.endsWith("_SHOVEL") || name.endsWith("_HOE") || name.endsWith("_HELMET") ||
-                name.endsWith("_CHESTPLATE") || name.endsWith("_LEGGINGS") || name.endsWith("_BOOTS") ||
-                name.equals("BOW") || name.equals("CROSSBOW") || name.equals("TRIDENT") ||
-                name.equals("MACE") || name.equals("FISHING_ROD") || name.equals("SHIELD") ||
-                name.equals("ELYTRA") || name.equals("SHEARS") || name.equals("FLINT_AND_STEEL") ||
-                name.equals("BRUSH") || name.equals("CARROT_ON_A_STICK") || name.equals("WARPED_FUNGUS_ON_A_STICK");
     }
 
     private org.bukkit.inventory.ItemStack formatSkyblockItem(org.bukkit.inventory.ItemStack item) {

@@ -354,7 +354,7 @@ public class EnchantManager {
     }
 
     private int getMaxSlot(ItemStack item, int defaultAllowed, Map<String, Integer> mmoMap, Map<String, Integer> itemMap) {
-        if (item == null || !item.hasItemMeta()) return defaultAllowed;
+        if (item == null || item.getType() == Material.AIR) return defaultAllowed;
 
         int maxAllowed = 0;
         boolean matched = false;
@@ -383,10 +383,13 @@ public class EnchantManager {
     }
 
     public int getMaxSlots(ItemStack item) {
-        if (item == null || !item.hasItemMeta())
+        if (item == null || item.getType() == Material.AIR)
             return plugin.getSettingsFile().getInt("settings.default-max-custom-enchants-per-item", 5);
         int raw = getRawMaxSlots(item);
-        int modifier = item.getItemMeta().getPersistentDataContainer().getOrDefault(SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, 0);
+        int modifier = 0;
+        if (item.hasItemMeta()) {
+            modifier = item.getItemMeta().getPersistentDataContainer().getOrDefault(SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, 0);
+        }
         return Math.max(0, raw + modifier);
     }
 
@@ -415,7 +418,7 @@ public class EnchantManager {
 
     public List<String> getWhitelistedEnchants(ItemStack item) {
         List<String> allowed = new ArrayList<>();
-        if (item == null || !item.hasItemMeta()) return allowed;
+        if (item == null || item.getType() == Material.AIR) return allowed;
 
         Set<String> mergedWhitelist = new HashSet<>();
         boolean matched = false;
