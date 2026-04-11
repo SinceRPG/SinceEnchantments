@@ -30,8 +30,8 @@ import java.util.Map;
 public class ExtractorDialog {
 
     public static void open(SinceEnchantments plugin, Player player, ItemStack weapon) {
-        String titleRaw = plugin.getConfigFile().getString("dialog.extractor.title", "<dark_gray><bold>Extract Enchantment");
-        String bodyRaw = plugin.getConfigFile().getString("dialog.extractor.body", "<gray>Choose an enchantment below:");
+        String titleRaw = plugin.getSettingsFile().getString("dialog.extractor.title", "<dark_gray><bold>Extract Enchantment");
+        String bodyRaw = plugin.getSettingsFile().getString("dialog.extractor.body", "<gray>Choose an enchantment below:");
 
         Component title = ColorUtils.parse(titleRaw);
         Component body = ColorUtils.parse(bodyRaw);
@@ -39,8 +39,8 @@ public class ExtractorDialog {
         Map<String, Integer> allEnchants = plugin.getEnchantManager().getAllEnchantsOnItem(weapon);
         List<ActionButton> buttons = new ArrayList<>();
 
-        String btnFormat = plugin.getConfigFile().getString("dialog.extractor.enchant-button.name", "%rarity_color%%enchant_name% %level%");
-        String tooltipFormat = plugin.getConfigFile().getString("dialog.extractor.enchant-button.tooltip", "&7Extract %enchant_name%");
+        String btnFormat = plugin.getSettingsFile().getString("dialog.extractor.enchant-button.name", "%rarity_color%%enchant_name% %level%");
+        String tooltipFormat = plugin.getSettingsFile().getString("dialog.extractor.enchant-button.tooltip", "&7Extract %enchant_name%");
 
         for (Map.Entry<String, Integer> entry : allEnchants.entrySet()) {
             String id = entry.getKey();
@@ -48,7 +48,7 @@ public class ExtractorDialog {
 
             String name = plugin.getEnchantManager().getEnchantName(id);
             String rarity = plugin.getEnchantManager().getRarity(id);
-            String color = plugin.getConfigFile().getString("rarities." + rarity, "&f");
+            String color = plugin.getSettingsFile().getString("rarities." + rarity, "&f");
 
             String parsedName = btnFormat.replace("%enchant_name%", name)
                     .replace("%level%", String.valueOf(level))
@@ -94,8 +94,8 @@ public class ExtractorDialog {
                     .build());
         }
 
-        String cancelName = plugin.getConfigFile().getString("dialog.extractor.cancel-button.name", "&cCancel");
-        String cancelTooltip = plugin.getConfigFile().getString("dialog.extractor.cancel-button.tooltip", "&7Refund extractor");
+        String cancelName = plugin.getSettingsFile().getString("dialog.extractor.cancel-button.name", "&cCancel");
+        String cancelTooltip = plugin.getSettingsFile().getString("dialog.extractor.cancel-button.tooltip", "&7Refund extractor");
 
         DialogAction cancelAction = DialogAction.customClick((view, audience) -> {
             audience.closeDialog();
@@ -116,7 +116,7 @@ public class ExtractorDialog {
                 .action(cancelAction)
                 .build();
 
-        int columns = plugin.getConfigFile().getInt("dialog.extractor.columns", 3);
+        int columns = plugin.getSettingsFile().getInt("dialog.extractor.columns", 3);
         ItemStack displayWeapon = formatDisplayWeapon(plugin, weapon.clone());
 
         Dialog dialog = Dialog.create(builder -> builder.empty()
@@ -141,7 +141,7 @@ public class ExtractorDialog {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
 
-        ConfigUtils config = plugin.getConfigFile();
+        ConfigUtils config = plugin.getSettingsFile();
         List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
 
         String placeholderStr = config.getString("settings.placeholder", "#enchants#").toLowerCase();

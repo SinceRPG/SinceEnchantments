@@ -61,3 +61,27 @@ purge-scroll:
     - "&7Drag & Drop onto an item"
     - "&7to remove ALL enchantments."
     - "&7Returns books: &e%returns%"
+
+randomizer-stone:
+  material: "MAGMA_CREAM"
+  name: "&8[&d&lRandomizer Stone&8]"
+  lore:
+    - "&7Drag & Drop onto an Enchantment Book"
+    - "&7to completely randomize its"
+    - "&7Success and Destroy rates."
+
+protection-gem:
+  material: "NETHER_STAR"
+  name: "&8[&a&lProtection Gem&8]"
+  lore:
+    - "&7Drag & Drop onto an item."
+    - "&7If you die while holding this item,"
+    - "&7it will not be dropped or lost."
+    - "&c(Consumed upon death)"
+
+stat-tracker:
+  material: "CLOCK"
+  name: "&8[&6&lStat Tracker&8]"
+  lore:
+    - "&7Drag & Drop onto a Weapon, Tool, or Rod"
+    - "&7to permanently track its statistics."

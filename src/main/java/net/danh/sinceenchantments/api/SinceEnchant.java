@@ -29,19 +29,19 @@ public abstract class SinceEnchant implements Listener {
     }
 
     protected int getInt(String key, int def) {
-        return SinceEnchantments.getInstance().getConfigFile().getInt(configPath + ".settings." + key, def);
+        return SinceEnchantments.getInstance().getSettingsFile().getInt(configPath + ".settings." + key, def);
     }
 
     protected double getDouble(String key, double def) {
-        return SinceEnchantments.getInstance().getConfigFile().getDouble(configPath + ".settings." + key, def);
+        return SinceEnchantments.getInstance().getSettingsFile().getDouble(configPath + ".settings." + key, def);
     }
 
     protected String getString(String key, String def) {
-        return SinceEnchantments.getInstance().getConfigFile().getString(configPath + ".settings." + key, def);
+        return SinceEnchantments.getInstance().getSettingsFile().getString(configPath + ".settings." + key, def);
     }
 
     protected boolean getBoolean(String key, boolean def) {
-        return SinceEnchantments.getInstance().getConfigFile().getBoolean(configPath + ".settings." + key, def);
+        return SinceEnchantments.getInstance().getSettingsFile().getBoolean(configPath + ".settings." + key, def);
     }
 
     /**
@@ -52,7 +52,7 @@ public abstract class SinceEnchant implements Listener {
      * @param replacements Alternate key-value pairs for placeholders (e.g., "%amount%", "5").
      */
     protected void sendMessage(Player p, String messageKey, String... replacements) {
-        String rawMsg = SinceEnchantments.getInstance().getConfigFile().getString(configPath + ".messages." + messageKey);
+        String rawMsg = SinceEnchantments.getInstance().getEnchantsFile().getString(configPath + ".messages." + messageKey);
         if (rawMsg == null || rawMsg.isEmpty()) return;
 
         for (int i = 0; i < replacements.length; i += 2) {

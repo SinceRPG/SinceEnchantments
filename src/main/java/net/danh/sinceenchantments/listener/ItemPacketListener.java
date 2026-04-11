@@ -11,16 +11,17 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSe
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import net.danh.sinceenchantments.SinceEnchantments;
+import net.danh.sinceenchantments.api.EnchantManager;
 import net.danh.sinceenchantments.utils.ColorUtils;
 import net.danh.sinceenchantments.utils.ConfigUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.NamespacedKey;
 import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
@@ -88,16 +89,19 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
     }
 
     private org.bukkit.inventory.ItemStack formatSkyblockItem(org.bukkit.inventory.ItemStack item) {
-        SinceEnchantments.getInstance().getEnchantManager().cleanItemLore(item);
+        EnchantManager manager = SinceEnchantments.getInstance().getEnchantManager();
+        manager.cleanItemLore(item);
 
         if (item == null || !item.hasItemMeta()) return item;
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
 
-        ConfigUtils config = SinceEnchantments.getInstance().getConfigFile();
+        ConfigUtils settings = SinceEnchantments.getInstance().getSettingsFile();
+        ConfigUtils enchantsConfig = SinceEnchantments.getInstance().getEnchantsFile();
+
         List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
 
-        String placeholderStr = config.getString("settings.placeholder", "#enchants#").toLowerCase();
+        String placeholderStr = settings.getString("settings.placeholder", "#enchants#").toLowerCase();
         int targetIndex = -1;
 
         for (int i = lore.size() - 1; i >= 0; i--) {
@@ -110,15 +114,18 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         }
 
         Map<Enchantment, Integer> vanillaEnchants = meta.getEnchants();
-        Map<String, Integer> customEnchants = SinceEnchantments.getInstance().getEnchantManager().getCustomEnchants(item);
-        boolean overrideVanilla = config.getBoolean("settings.override-vanilla-enchants", true);
+        Map<String, Integer> customEnchants = manager.getCustomEnchants(item);
+        boolean overrideVanilla = settings.getBoolean("settings.override-vanilla-enchants", true);
+
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        boolean hasProtect = pdc.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE);
+        boolean hasTracker = pdc.has(manager.TRACKER_KEY, PersistentDataType.BYTE);
 
         if (((!overrideVanilla && customEnchants.isEmpty()) || (overrideVanilla && vanillaEnchants.isEmpty() && customEnchants.isEmpty()))
-                && !SinceEnchantments.getInstance().getEnchantManager().isLocked(item)
-                && SinceEnchantments.getInstance().getEnchantManager().getWhitelistedEnchants(item).isEmpty()) {
+                && !manager.isLocked(item) && manager.getWhitelistedEnchants(item).isEmpty() && !hasProtect && !hasTracker) {
 
             if (targetIndex != -1) {
-                lore.add(targetIndex, ColorUtils.parse(config.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
+                lore.add(targetIndex, ColorUtils.parse(settings.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
             }
             meta.lore(lore);
             item.setItemMeta(meta);
@@ -129,55 +136,72 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
 
-        List<Component> enchantComponents = new ArrayList<>();
-        int detailedThreshold = config.getInt("settings.detailed-display-threshold", 5);
+        List<Component> injectComponents = new ArrayList<>();
+
+        // --- 1. Inject Stats Tracker & Protection ---
+        if (hasProtect) {
+            injectComponents.add(ColorUtils.parse(settings.getString("settings.protected-format", "&a&lProtected &7(Keeps on death)")).decoration(TextDecoration.ITALIC, false));
+            injectComponents.add(Component.empty());
+        }
+
+        if (hasTracker) {
+            injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-header", "&8&m      &r &6&lStat Tracker &8&m      ")).decoration(TextDecoration.ITALIC, false));
+            if (pdc.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)) {
+                injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-blocks").replace("%value%", String.valueOf(pdc.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
+            }
+            if (pdc.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)) {
+                injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-mobs").replace("%value%", String.valueOf(pdc.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
+            }
+            if (pdc.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)) {
+                injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-players").replace("%value%", String.valueOf(pdc.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
+            }
+            if (pdc.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)) {
+                injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-fish").replace("%value%", String.valueOf(pdc.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
+            }
+            injectComponents.add(Component.empty());
+        }
+
+        // --- 2. Inject Enchants ---
+        int detailedThreshold = settings.getInt("settings.detailed-display-threshold", 5);
         int totalEnchantsApplied = (overrideVanilla ? vanillaEnchants.size() : 0) + customEnchants.size();
         boolean useDetailedDisplay = totalEnchantsApplied > 0 && totalEnchantsApplied <= detailedThreshold;
 
         int count = 0;
-        int maxPerLine = config.getInt("settings.enchants-per-line", 2);
-        String separator = config.getString("settings.separator", "&8 | ");
+        int maxPerLine = settings.getInt("settings.enchants-per-line", 2);
+        String separator = settings.getString("settings.separator", "&8 | ");
         StringBuilder currentLine = new StringBuilder();
-        boolean useRoman = config.getString("settings.level-format", "ROMAN").equalsIgnoreCase("ROMAN");
+        boolean useRoman = settings.getString("settings.level-format", "ROMAN").equalsIgnoreCase("ROMAN");
 
         if (overrideVanilla) {
             for (Map.Entry<Enchantment, Integer> entry : vanillaEnchants.entrySet()) {
-                String namespace = entry.getKey().getKey().getNamespace();
-                String keyName = entry.getKey().getKey().getKey();
-                String fullKey = namespace + ":" + keyName;
-
-                String cName = config.getString("vanilla-enchants." + fullKey + ".name", formatDefaultName(keyName));
-                String cColor = config.getString("vanilla-enchants." + fullKey + ".color", config.getString("settings.default-color", "&9"));
-
+                String fullKey = entry.getKey().getKey().getNamespace() + ":" + entry.getKey().getKey().getKey();
+                String cName = enchantsConfig.getString("vanilla-enchants." + fullKey + ".name", formatDefaultName(entry.getKey().getKey().getKey()));
+                String cColor = enchantsConfig.getString("vanilla-enchants." + fullKey + ".color", settings.getString("settings.default-color", "&9"));
                 String formatted = cColor + cName + " " + (useRoman ? toRoman(entry.getValue()) : entry.getValue());
 
                 if (useDetailedDisplay) {
-                    enchantComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false));
-                    List<String> descriptions = SinceEnchantments.getInstance().getEnchantManager().getDescription(fullKey);
-                    for (String dLine : descriptions) {
-                        enchantComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false));
+                    injectComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false));
+                    for (String dLine : manager.getDescription(fullKey)) {
+                        injectComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false));
                     }
                 } else {
                     if (count > 0) currentLine.append(separator);
                     currentLine.append(formatted);
                     count++;
-
                     if (count == maxPerLine) {
-                        enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
+                        injectComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
                         currentLine = new StringBuilder();
                         count = 0;
                     }
                 }
             }
-
             if (!vanillaEnchants.isEmpty() && !customEnchants.isEmpty() && !useDetailedDisplay) {
                 if (count > 0) {
-                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
+                    injectComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
                     currentLine = new StringBuilder();
                     count = 0;
                 }
-                String divider = config.getString("settings.divider", "&7&m----------------------");
-                enchantComponents.add(ColorUtils.parse(divider).decoration(TextDecoration.ITALIC, false));
+                injectComponents.add(ColorUtils.parse(settings.getString("settings.divider", "&7&m----------------------")).decoration(TextDecoration.ITALIC, false));
             }
         }
 
@@ -185,25 +209,23 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             String eId = entry.getKey();
             int eLvl = entry.getValue();
 
-            String eName = config.getString("custom-enchants." + eId + ".name", eId);
-            String rarityKey = config.getString("custom-enchants." + eId + ".rarity", "COMMON");
-            String rarityColor = config.getString("rarities." + rarityKey, "&f");
+            String eName = enchantsConfig.getString("custom-enchants." + eId + ".name", eId);
+            String rarityKey = enchantsConfig.getString("custom-enchants." + eId + ".rarity", "COMMON");
+            String rarityColor = settings.getString("rarities." + rarityKey, "&f");
 
             String formatted = rarityColor + eName + " " + (useRoman ? toRoman(eLvl) : eLvl);
 
             if (useDetailedDisplay) {
-                enchantComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false));
-                List<String> descriptions = SinceEnchantments.getInstance().getEnchantManager().getDescription(eId);
-                for (String dLine : descriptions) {
-                    enchantComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false));
+                injectComponents.add(ColorUtils.parse(formatted).decoration(TextDecoration.ITALIC, false));
+                for (String dLine : manager.getDescription(eId)) {
+                    injectComponents.add(ColorUtils.parse(dLine).decoration(TextDecoration.ITALIC, false));
                 }
             } else {
                 if (count > 0) currentLine.append(separator);
                 currentLine.append(formatted);
                 count++;
-
                 if (count == maxPerLine) {
-                    enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
+                    injectComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
                     currentLine = new StringBuilder();
                     count = 0;
                 }
@@ -211,98 +233,78 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         }
 
         if (!useDetailedDisplay && count > 0) {
-            enchantComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
+            injectComponents.add(ColorUtils.parse(currentLine.toString()).decoration(TextDecoration.ITALIC, false));
         }
 
-        if (config.getBoolean("settings.show-slots", true)) {
-            int maxSlots = SinceEnchantments.getInstance().getEnchantManager().getMaxSlots(item);
-            String slotLine = config.getString("settings.slots-format", "&7Enchantment Slots: &e%current% / %max%");
+        if (settings.getBoolean("settings.show-slots", true)) {
+            int maxSlots = manager.getMaxSlots(item);
+            String slotLine = settings.getString("settings.slots-format", "&7Enchantment Slots: &e%current% / %max%");
             slotLine = slotLine.replace("%current%", String.valueOf(totalEnchantsApplied)).replace("%max%", String.valueOf(maxSlots));
-            enchantComponents.add(ColorUtils.parse(slotLine).decoration(TextDecoration.ITALIC, false));
+            injectComponents.add(ColorUtils.parse(slotLine).decoration(TextDecoration.ITALIC, false));
         }
 
-        if (SinceEnchantments.getInstance().getEnchantManager().isLocked(item)) {
-            String lockLine = config.getString("settings.locked-format", "&c&lLocked");
-            enchantComponents.add(ColorUtils.parse(lockLine).decoration(TextDecoration.ITALIC, false));
+        if (manager.isLocked(item)) {
+            injectComponents.add(ColorUtils.parse(settings.getString("settings.locked-format", "&c&lLocked")).decoration(TextDecoration.ITALIC, false));
         }
 
-        if (config.getBoolean("settings.show-whitelist-preview", true)) {
-            List<String> allowedEnchants = SinceEnchantments.getInstance().getEnchantManager().getWhitelistedEnchants(item);
+        if (settings.getBoolean("settings.show-whitelist-preview", true)) {
+            List<String> allowedEnchants = manager.getWhitelistedEnchants(item);
             List<String> unappliedAllowed = new ArrayList<>();
             for (String allowedId : allowedEnchants) {
-                boolean applied = false;
-                if (customEnchants.containsKey(allowedId)) {
-                    applied = true;
-                } else {
+                boolean applied = customEnchants.containsKey(allowedId);
+                if (!applied) {
                     for (Enchantment vEnch : vanillaEnchants.keySet()) {
-                        String fullKey = vEnch.getKey().getNamespace() + ":" + vEnch.getKey().getKey();
-                        if (fullKey.equals(allowedId)) {
+                        if ((vEnch.getKey().getNamespace() + ":" + vEnch.getKey().getKey()).equals(allowedId)) {
                             applied = true;
                             break;
                         }
                     }
                 }
-                if (!applied) {
-                    unappliedAllowed.add(allowedId);
-                }
+                if (!applied) unappliedAllowed.add(allowedId);
             }
 
             if (!unappliedAllowed.isEmpty()) {
-                enchantComponents.add(Component.empty());
-                String header = config.getString("settings.whitelist-header", "&8Allowed Enchantments:");
-                enchantComponents.add(ColorUtils.parse(header).decoration(TextDecoration.ITALIC, false));
-                String format = config.getString("settings.whitelist-preview-format", "&8 - %enchant_name%");
+                injectComponents.add(Component.empty());
+                injectComponents.add(ColorUtils.parse(settings.getString("settings.whitelist-header", "&8Allowed:")).decoration(TextDecoration.ITALIC, false));
+                String format = settings.getString("settings.whitelist-preview-format", "&8 - %enchant_name%");
                 for (String allowedId : unappliedAllowed) {
-                    String eName = SinceEnchantments.getInstance().getEnchantManager().getEnchantName(allowedId);
-                    String line = format.replace("%enchant_name%", eName);
-                    enchantComponents.add(ColorUtils.parse(line).decoration(TextDecoration.ITALIC, false));
+                    injectComponents.add(ColorUtils.parse(format.replace("%enchant_name%", manager.getEnchantName(allowedId))).decoration(TextDecoration.ITALIC, false));
                 }
             }
         }
 
-        if (enchantComponents.isEmpty()) {
-            if (targetIndex != -1) {
-                lore.add(targetIndex, ColorUtils.parse(config.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
-            }
+        if (injectComponents.isEmpty()) {
+            if (targetIndex != -1)
+                lore.add(targetIndex, ColorUtils.parse(settings.getString("settings.placeholder", "#enchants#")).decoration(TextDecoration.ITALIC, false));
             meta.lore(lore);
             item.setItemMeta(meta);
             return item;
         }
 
-        boolean addEmptyLineAbove = config.getBoolean("settings.add-empty-line-above", true);
-        boolean addEmptyLineBelow = config.getBoolean("settings.add-empty-line-below", true);
+        boolean addEmptyLineAbove = settings.getBoolean("settings.add-empty-line-above", true);
+        boolean addEmptyLineBelow = settings.getBoolean("settings.add-empty-line-below", true);
         boolean hadPlaceholder = (targetIndex != -1);
 
         if (hadPlaceholder) {
             if (addEmptyLineAbove && targetIndex > 0) {
-                String abovePlain = ColorUtils.toPlainText(lore.get(targetIndex - 1)).trim();
-                if (!abovePlain.isEmpty()) enchantComponents.add(0, Component.empty());
+                if (!ColorUtils.toPlainText(lore.get(targetIndex - 1)).trim().isEmpty())
+                    injectComponents.add(0, Component.empty());
             }
             if (addEmptyLineBelow && targetIndex < lore.size()) {
-                String belowPlain = ColorUtils.toPlainText(lore.get(targetIndex)).trim();
-                if (!belowPlain.isEmpty()) enchantComponents.add(Component.empty());
+                if (!ColorUtils.toPlainText(lore.get(targetIndex)).trim().isEmpty())
+                    injectComponents.add(Component.empty());
             }
-        } else {
-            if (!lore.isEmpty()) {
-                if (addEmptyLineAbove) {
-                    String abovePlain = ColorUtils.toPlainText(lore.get(lore.size() - 1)).trim();
-                    if (!abovePlain.isEmpty()) enchantComponents.add(0, Component.empty());
-                }
-            }
+        } else if (addEmptyLineAbove && !lore.isEmpty()) {
+            if (!ColorUtils.toPlainText(lore.get(lore.size() - 1)).trim().isEmpty())
+                injectComponents.add(0, Component.empty());
         }
 
-        int startIdx;
-        if (hadPlaceholder) {
-            lore.addAll(targetIndex, enchantComponents);
-            startIdx = targetIndex;
-        } else {
-            startIdx = lore.size();
-            lore.addAll(enchantComponents);
-        }
+        int startIdx = hadPlaceholder ? targetIndex : lore.size();
+        if (hadPlaceholder) lore.addAll(targetIndex, injectComponents);
+        else lore.addAll(injectComponents);
 
-        PersistentDataContainer pdc = meta.getPersistentDataContainer();
         pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_start"), PersistentDataType.INTEGER, startIdx);
-        pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_count"), PersistentDataType.INTEGER, enchantComponents.size());
+        pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_count"), PersistentDataType.INTEGER, injectComponents.size());
         pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_placeholder"), PersistentDataType.BYTE, (byte) (hadPlaceholder ? 1 : 0));
 
         meta.lore(lore);
@@ -315,16 +317,14 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         String[] words = name.split(" ");
         StringBuilder sb = new StringBuilder();
         for (String w : words) {
-            if (!w.isEmpty()) {
+            if (!w.isEmpty())
                 sb.append(Character.toUpperCase(w.charAt(0))).append(w.substring(1).toLowerCase()).append(" ");
-            }
         }
         return sb.toString().trim();
     }
 
     private String toRoman(int number) {
         String[] roman = {"O", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX"};
-        if (number > 0 && number < roman.length) return roman[number];
-        return String.valueOf(number);
+        return (number > 0 && number < roman.length) ? roman[number] : String.valueOf(number);
     }
 }

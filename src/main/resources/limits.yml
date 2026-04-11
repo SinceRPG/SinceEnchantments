@@ -1,0 +1,61 @@
+# ============================================================================== #
+# MAX SLOTS CONFIGURATION
+# Defines the BASE number of custom enchantments an item can hold.
+# Supports Wildcards: *SUFFIX, PREFIX*, *CONTAINS*
+# If an item matches multiple, the slot values will be SUMMED.
+# MMOItems priority: If an MMOItem matches a rule, Vanilla rules are ignored.
+# ============================================================================== #
+item-max-slots:
+  "*_SWORD": 2
+  "*_CHESTPLATE": 3
+  "*DIAMOND*": 1
+
+mmoitems-max-slots:
+  "SWORD:*": 2
+  "*:LEGENDARY_*": 3
+  "ARMOR:MYTHIC_CHESTPLATE": 5
+
+# ============================================================================== #
+# MAX SLOT MODIFIERS CONFIGURATION (SLOT GEMS)
+# Defines the MAXIMUM number of EXTRA slots a player can add using Slot Gems.
+#
+# - Wildcards (*SUFFIX, PREFIX*, *CONTAINS*) are supported.
+# - If an item matches multiple lines, the extra slots are SUMMED together.
+#   (e.g., A DIAMOND_SWORD matching "*_SWORD" (+3) and "*DIAMOND*" (+2) gets +5 total).
+# - PRIORITY RULE: If an MMOItem matches a rule in 'mmoitems-max-slot-modifiers',
+#   the plugin will completely IGNORE the Vanilla 'item-max-slot-modifiers' list.
+# ============================================================================== #
+item-max-slot-modifiers:
+  "*_SWORD": 3
+  "*_CHESTPLATE": 5
+  "*DIAMOND*": 2
+
+mmoitems-max-slot-modifiers:
+  "SWORD:*": 4
+  "*:LEGENDARY_*": 5
+  "ARMOR:MYTHIC_CHESTPLATE": 8
+
+# ============================================================================== #
+# WHITELIST CONFIGURATION
+# Defines exactly which enchantments can be applied to specific items.
+# Supports Wildcards: *SUFFIX, PREFIX*, *CONTAINS*
+# If an item matches multiple, the allowed enchantments will be merged together.
+# MMOItems priority: If an MMOItem matches a rule, Vanilla rules are ignored.
+# ============================================================================== #
+item-whitelist:
+  "*_SWORD":
+    - "since:lifesteal"
+    - "minecraft:sharpness"
+    - "minecraft:fire_aspect"
+  "*_PICKAXE":
+    - "since:excavator"
+    - "minecraft:efficiency"
+    - "minecraft:fortune"
+  "BOW":
+    - "minecraft:power"
+
+mmoitems-whitelist:
+  "SWORD:*":
+    - "since:fireball"
+    - "since:thunder"
+    - "since:lifesteal"

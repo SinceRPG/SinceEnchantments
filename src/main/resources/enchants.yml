@@ -1,0 +1,328 @@
+# ==========================================
+# CUSTOM ENCHANTMENTS
+# ==========================================
+# Here you configure all custom enchantments loaded by internal modules or external addons.
+custom-enchants:
+
+  "since:lifesteal":
+    # The display name of the enchantment in the lore.
+    name: "Lifesteal"
+    # Ties into the 'rarities' section above to determine the color.
+    rarity: "EPIC"
+    # The absolute maximum level this enchantment can reach.
+    max-level: 5
+    # What items can this be applied to? (ALL, WEAPON, SWORD, BOW, TOOL, ARMOR)
+    target: "WEAPON"
+    # The 'requires' list defines enchantments that MUST already exist on the item
+    # before a player can apply this enchantment.
+    # Example: The weapon MUST have 'Sharpness' applied before you can add 'Lifesteal'.
+    requires:
+      - "minecraft:sharpness"
+    # The description shown on Enchantment Books.
+    description:
+      - "&7Heals you for a portion"
+      - "&7of your max health on hit."
+    # Module-specific variables that developers use in their code.
+    settings:
+      heal-multiplier: 1.0
+    # Module-specific chat messages sent to the player.
+    messages:
+      action: "&a+ %amount% HP (Lifesteal)!"
+
+  "since:fireball":
+    name: "Fireball"
+    rarity: "LEGENDARY"
+    max-level: 3
+    target: "SWORD"
+    # You can also require multiple custom or vanilla enchantments at the same time.
+    # Example: Fireball requires BOTH Vanilla Fire Aspect AND Custom Thunder Strike.
+    requires:
+      - "minecraft:fire_aspect"
+      - "since:thunder"
+    description:
+      - "&7Left-click the air to"
+      - "&7shoot a destructive fireball."
+    settings:
+      cooldown: 5000 # Cooldown in milliseconds (5000ms = 5 seconds)
+      explosion-power: 2.0
+    messages:
+      on-cooldown: "&cSkill is on cooldown for %time%s!"
+      launch: "&6Boom! Fireball launched!"
+
+  "since:thunder":
+    name: "Thunder Strike"
+    rarity: "RARE"
+    max-level: 5
+    target: "WEAPON"
+    description:
+      - "&7Chance to strike lightning"
+      - "&7on your enemies."
+    settings:
+      chance-per-level: 8 # 8% chance per level (Level 5 = 40%)
+      extra-damage: 3.0
+    messages:
+      activate: "&b⚡ Lightning struck the target!"
+
+  "since:excavator":
+    name: "Excavator"
+    rarity: "LEGENDARY"
+    max-level: 2
+    target: "TOOL"
+    # Example: Excavator requires Vanilla Efficiency to be on the tool first.
+    requires:
+      - "minecraft:efficiency"
+    description:
+      - "&7Mines a 3x3 area"
+      - "&7around the broken block."
+    settings:
+      radius: 1 # 1 = 3x3 area, 2 = 5x5 area
+    messages:
+      activate: "&eArea mining activated!"
+
+  "since:dodge":
+    name: "Dodge"
+    rarity: "EPIC"
+    max-level: 4
+    target: "ARMOR"
+    description:
+      - "&7Chance to completely"
+      - "&7evade incoming damage."
+    settings:
+      chance-per-level: 5 # 5% dodge chance per level
+    messages:
+      activate: "&fSuccessfully dodged an attack!"
+
+# ==========================================
+# VANILLA ENCHANTS
+# ==========================================
+vanilla-enchants:
+  # --- ARMOR ENCHANTMENTS ---
+  "minecraft:protection":
+    name: "Protection"
+    color: "<gradient:aqua:blue>"
+    description:
+      - "&7Reduces all incoming environmental damage."
+  "minecraft:fire_protection":
+    name: "Fire Protection"
+    color: "&6"
+    description:
+      - "&7Reduces fire damage and burn time."
+  "minecraft:feather_falling":
+    name: "Feather Falling"
+    color: "&b"
+    description:
+      - "&7Reduces fall damage."
+  "minecraft:blast_protection":
+    name: "Blast Protection"
+    color: "&4"
+    description:
+      - "&7Reduces explosion damage and knockback."
+  "minecraft:projectile_protection":
+    name: "Projectile Protection"
+    color: "&7"
+    description:
+      - "&7Reduces damage from projectiles."
+  "minecraft:respiration":
+    name: "Respiration"
+    color: "&3"
+    description:
+      - "&7Extends underwater breathing time."
+  "minecraft:aqua_affinity":
+    name: "Aqua Affinity"
+    color: "&9"
+    description:
+      - "&7Increases underwater mining speed."
+  "minecraft:thorns":
+    name: "Thorns"
+    color: "&2"
+    description:
+      - "&7Damages attackers when you are hit."
+  "minecraft:depth_strider":
+    name: "Depth Strider"
+    color: "&1"
+    description:
+      - "&7Increases underwater movement speed."
+  "minecraft:frost_walker":
+    name: "Frost Walker"
+    color: "&b"
+    description:
+      - "&7Creates frosted ice blocks when walking over water."
+
+  # --- MELEE WEAPON ENCHANTMENTS ---
+  "minecraft:sharpness":
+    name: "Sharpness"
+    color: "&c"
+    description:
+      - "&7Increases melee damage against all targets."
+  "minecraft:smite":
+    name: "Smite"
+    color: "&#e6d933"
+    description:
+      - "&7Increases damage against undead mobs."
+  "minecraft:bane_of_arthropods":
+    name: "Bane of Arthropods"
+    color: "&2"
+    description:
+      - "&7Increases damage and applies Slowness to arthropods."
+  "minecraft:knockback":
+    name: "Knockback"
+    color: "&7"
+    description:
+      - "&7Increases knockback dealt to enemies."
+  "minecraft:fire_aspect":
+    name: "Fire Aspect"
+    color: "&6"
+    description:
+      - "&7Sets the target on fire."
+  "minecraft:looting":
+    name: "Looting"
+    color: "&e"
+    description:
+      - "&7Increases the amount of loot dropped by mobs."
+  "minecraft:sweeping_edge":
+    name: "Sweeping Edge"
+    color: "&f"
+    description:
+      - "&7Increases sweeping attack damage."
+
+  # --- MACE ENCHANTMENTS (1.21+) ---
+  "minecraft:density":
+    name: "Density"
+    color: "&5"
+    description:
+      - "&7Increases damage dealt by the Mace per block fallen."
+  "minecraft:breach":
+    name: "Breach"
+    color: "&4"
+    description:
+      - "&7Reduces the effectiveness of the target's armor."
+  "minecraft:wind_burst":
+    name: "Wind Burst"
+    color: "&b&l"
+    description:
+      - "&7Emits a wind burst upon hitting an enemy."
+  "minecraft:lunge":
+    name: "Lunge"
+    color: "&3"
+    description:
+      - "&7Lunges further forward when attacking."
+
+  # --- TOOL ENCHANTMENTS ---
+  "minecraft:efficiency":
+    name: "Efficiency"
+    color: "&e"
+    description:
+      - "&7Increases mining and digging speed."
+  "minecraft:silk_touch":
+    name: "Silk Touch"
+    color: "&d"
+    description:
+      - "&7Mined blocks drop themselves instead of items."
+  "minecraft:unbreaking":
+    name: "Unbreaking"
+    color: "&a"
+    description:
+      - "&7Decreases the rate at which durability is lost."
+  "minecraft:fortune":
+    name: "Fortune"
+    color: "&6"
+    description:
+      - "&7Increases the amount of items dropped by blocks."
+
+  # --- BOW & CROSSBOW ENCHANTMENTS ---
+  "minecraft:power":
+    name: "Power"
+    color: "&c"
+    description:
+      - "&7Increases arrow damage."
+  "minecraft:punch":
+    name: "Punch"
+    color: "&7"
+    description:
+      - "&7Increases arrow knockback."
+  "minecraft:flame":
+    name: "Flame"
+    color: "&6"
+    description:
+      - "&7Arrows ignite entities on fire."
+  "minecraft:infinity":
+    name: "Infinity"
+    color: "<gradient:light_purple:dark_purple>"
+    description:
+      - "&7Shooting consumes no regular arrows."
+  "minecraft:multishot":
+    name: "Multishot"
+    color: "&e"
+    description:
+      - "&7Shoots 3 arrows at the cost of one."
+  "minecraft:quick_charge":
+    name: "Quick Charge"
+    color: "&a"
+    description:
+      - "&7Decreases crossbow charging time."
+  "minecraft:piercing":
+    name: "Piercing"
+    color: "&7"
+    description:
+      - "&7Arrows pass through multiple entities."
+
+  # --- TRIDENT ENCHANTMENTS ---
+  "minecraft:loyalty":
+    name: "Loyalty"
+    color: "&3"
+    description:
+      - "&7Trident returns after being thrown."
+  "minecraft:impaling":
+    name: "Impaling"
+    color: "&4"
+    description:
+      - "&7Increases damage against aquatic mobs."
+  "minecraft:riptide":
+    name: "Riptide"
+    color: "&b"
+    description:
+      - "&7Propels you forward when thrown in water or rain."
+  "minecraft:channeling":
+    name: "Channeling"
+    color: "&e"
+    description:
+      - "&7Summons a lightning bolt during a thunderstorm."
+
+  # --- FISHING ROD ENCHANTMENTS ---
+  "minecraft:luck_of_the_sea":
+    name: "Luck of the Sea"
+    color: "&b"
+    description:
+      - "&7Increases the chance of catching treasure."
+  "minecraft:lure":
+    name: "Lure"
+    color: "&a"
+    description:
+      - "&7Decreases the wait time for catching fish."
+
+  # --- SPECIAL & CURSE ENCHANTMENTS ---
+  "minecraft:mending":
+    name: "Mending"
+    color: "<gradient:green:yellow>"
+    description:
+      - "&7Repairs the item using experience orbs."
+  "minecraft:soul_speed":
+    name: "Soul Speed"
+    color: "&8"
+    description:
+      - "&7Increases walking speed on soul blocks."
+  "minecraft:swift_sneak":
+    name: "Swift Sneak"
+    color: "&8"
+    description:
+      - "&7Increases walking speed while sneaking."
+  "minecraft:vanishing_curse":
+    name: "Curse of Vanishing"
+    color: "&c"
+    description:
+      - "&7Item disappears instead of dropping upon death."
+  "minecraft:binding_curse":
+    name: "Curse of Binding"
+    color: "&c"
+    description:
+      - "&7Prevents removal of the item from armor slots."

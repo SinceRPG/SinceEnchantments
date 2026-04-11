@@ -108,7 +108,7 @@ public class ExtractorListener implements Listener {
                 }
             }
 
-            String mode = plugin.getConfigFile().getString("settings.extractor-mode", "DIALOG").toUpperCase();
+            String mode = plugin.getSettingsFile().getString("settings.extractor-mode", "DIALOG").toUpperCase();
 
             if (mode.equals("GUI")) {
                 ExtractorGUI gui = new ExtractorGUI(plugin, current, 0);

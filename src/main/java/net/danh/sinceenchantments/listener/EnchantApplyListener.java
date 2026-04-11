@@ -50,6 +50,7 @@ public class EnchantApplyListener implements Listener {
         ItemMeta currentMeta = current.getItemMeta();
         if (cursorMeta == null || currentMeta == null) return;
 
+        // 1. SUCCESS CHARM
         if (cursorMeta.getPersistentDataContainer().has(manager.CHARM_BONUS_KEY, PersistentDataType.INTEGER) &&
                 currentMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
             event.setCancelled(true);
@@ -81,6 +82,7 @@ public class EnchantApplyListener implements Listener {
             return;
         }
 
+        // 2. SLOT GEM
         if (cursorMeta.getPersistentDataContainer().has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
             event.setCancelled(true);
             if (current.getAmount() > 1) {
@@ -110,6 +112,7 @@ public class EnchantApplyListener implements Listener {
             return;
         }
 
+        // 3. LOCK SCROLL
         if (cursorMeta.getPersistentDataContainer().has(manager.LOCK_SCROLL_KEY, PersistentDataType.BYTE)) {
             event.setCancelled(true);
             if (current.getAmount() > 1) {
@@ -125,6 +128,7 @@ public class EnchantApplyListener implements Listener {
             return;
         }
 
+        // 4. PURGE SCROLL
         if (cursorMeta.getPersistentDataContainer().has(manager.PURGE_SCROLL_KEY, PersistentDataType.BYTE)) {
             event.setCancelled(true);
             if (current.getAmount() > 1) {
@@ -163,6 +167,90 @@ public class EnchantApplyListener implements Listener {
             return;
         }
 
+        // 5. RANDOMIZER STONE
+        if (cursorMeta.getPersistentDataContainer().has(manager.RANDOMIZER_KEY, PersistentDataType.BYTE)) {
+            if (!currentMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) return;
+            event.setCancelled(true);
+
+            if (current.getAmount() > 1) {
+                sendMsg(player, "item-need-unstack");
+                return;
+            }
+
+            int newSuccess = random.nextInt(101);
+            int newDestroy = random.nextInt(101);
+
+            String enchantId = currentMeta.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
+            int level = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
+
+            ItemStack newBook = manager.createEnchantBook(enchantId, level, newSuccess, newDestroy);
+            event.setCurrentItem(newBook);
+
+            cursor.setAmount(cursor.getAmount() - 1);
+            player.setItemOnCursor(cursor);
+            player.playSound(player.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
+            sendMsg(player, "randomizer-applied");
+            return;
+        }
+
+        // 6. PROTECTION GEM
+        if (cursorMeta.getPersistentDataContainer().has(manager.PROTECTOR_KEY, PersistentDataType.BYTE)) {
+            event.setCancelled(true);
+            if (current.getAmount() > 1) {
+                sendMsg(player, "item-need-unstack");
+                return;
+            }
+            if (currentMeta.getPersistentDataContainer().has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
+                sendMsg(player, "protector-already-applied");
+                return;
+            }
+
+            currentMeta.getPersistentDataContainer().set(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE, (byte) 1);
+            current.setItemMeta(currentMeta);
+
+            cursor.setAmount(cursor.getAmount() - 1);
+            player.setItemOnCursor(cursor);
+            player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 1f);
+            sendMsg(player, "protector-applied");
+            return;
+        }
+
+        // 7. STAT TRACKER
+        if (cursorMeta.getPersistentDataContainer().has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
+            event.setCancelled(true);
+            if (current.getAmount() > 1) {
+                sendMsg(player, "item-need-unstack");
+                return;
+            }
+
+            String matName = current.getType().name();
+            boolean isApplicable = matName.endsWith("_SWORD") || matName.endsWith("_AXE") ||
+                    matName.endsWith("_PICKAXE") || matName.endsWith("_SHOVEL") ||
+                    matName.endsWith("_HOE") || matName.equals("BOW") ||
+                    matName.equals("CROSSBOW") || matName.equals("TRIDENT") ||
+                    matName.equals("MACE") || matName.equals("FISHING_ROD");
+
+            if (!isApplicable) {
+                sendMsg(player, "tracker-invalid-item");
+                return;
+            }
+
+            if (currentMeta.getPersistentDataContainer().has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
+                sendMsg(player, "tracker-already-applied");
+                return;
+            }
+
+            currentMeta.getPersistentDataContainer().set(manager.TRACKER_KEY, PersistentDataType.BYTE, (byte) 1);
+            current.setItemMeta(currentMeta);
+
+            cursor.setAmount(cursor.getAmount() - 1);
+            player.setItemOnCursor(cursor);
+            player.playSound(player.getLocation(), Sound.BLOCK_SMITHING_TABLE_USE, 1f, 1f);
+            sendMsg(player, "tracker-applied");
+            return;
+        }
+
+        // 8. APPLY ENCHANTMENT BOOK
         if (!cursorMeta.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) return;
         event.setCancelled(true);
 

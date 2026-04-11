@@ -39,12 +39,12 @@ public class SinceCommand {
         return Commands.literal("sinceenchantments")
                 .requires(source -> source.getSender().hasPermission("sinceenchantments.admin"))
                 .executes(this::executeHelp)
-                .then(Commands.literal("help")
-                        .executes(this::executeHelp)
-                )
+                .then(Commands.literal("help").executes(this::executeHelp))
                 .then(Commands.literal("reload")
                         .executes(context -> {
-                            plugin.getConfigFile().reload();
+                            plugin.getSettingsFile().reload();
+                            plugin.getEnchantsFile().reload();
+                            plugin.getLimitsFile().reload();
                             plugin.getMessagesFile().reload();
                             plugin.getItemsFile().reload();
                             plugin.getEnchantManager().loadEnchantsFromConfig();
@@ -132,6 +132,30 @@ public class SinceCommand {
                                 )
                         )
                 )
+                .then(Commands.literal("giverandomizer")
+                        .then(Commands.argument("target", ArgumentTypes.player())
+                                .executes(context -> executeGiveRandomizer(context, 1))
+                                .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+                                        .executes(context -> executeGiveRandomizer(context, IntegerArgumentType.getInteger(context, "amount")))
+                                )
+                        )
+                )
+                .then(Commands.literal("giveprotector")
+                        .then(Commands.argument("target", ArgumentTypes.player())
+                                .executes(context -> executeGiveProtector(context, 1))
+                                .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+                                        .executes(context -> executeGiveProtector(context, IntegerArgumentType.getInteger(context, "amount")))
+                                )
+                        )
+                )
+                .then(Commands.literal("givetracker")
+                        .then(Commands.argument("target", ArgumentTypes.player())
+                                .executes(context -> executeGiveTracker(context, 1))
+                                .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+                                        .executes(context -> executeGiveTracker(context, IntegerArgumentType.getInteger(context, "amount")))
+                                )
+                        )
+                )
                 .build();
     }
 
@@ -157,10 +181,7 @@ public class SinceCommand {
         ItemStack book = plugin.getEnchantManager().createEnchantBook(enchantId, level, success, destroy);
         target.getInventory().addItem(book);
 
-        sendMessage(context.getSource(), "give-book-success",
-                "%enchant%", enchantId,
-                "%level%", String.valueOf(level),
-                "%player%", target.getName());
+        sendMessage(context.getSource(), "give-book-success", "%enchant%", enchantId, "%level%", String.valueOf(level), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
     }
 
@@ -178,11 +199,7 @@ public class SinceCommand {
 
         ItemStack extractor = plugin.getEnchantManager().createExtractor(type, amount);
         target.getInventory().addItem(extractor);
-
-        sendMessage(context.getSource(), "give-extractor-success",
-                "%type%", type.toUpperCase(),
-                "%amount%", String.valueOf(amount),
-                "%player%", target.getName());
+        sendMessage(context.getSource(), "give-extractor-success", "%type%", type.toUpperCase(), "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
     }
 
@@ -193,11 +210,7 @@ public class SinceCommand {
 
         ItemStack charm = plugin.getEnchantManager().createSuccessCharm(bonus, amount);
         target.getInventory().addItem(charm);
-
-        sendMessage(context.getSource(), "give-charm-success",
-                "%bonus%", String.valueOf(bonus),
-                "%amount%", String.valueOf(amount),
-                "%player%", target.getName());
+        sendMessage(context.getSource(), "give-charm-success", "%bonus%", String.valueOf(bonus), "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
     }
 
@@ -208,11 +221,7 @@ public class SinceCommand {
 
         ItemStack gem = plugin.getEnchantManager().createSlotGem(modifier, amount);
         target.getInventory().addItem(gem);
-
-        sendMessage(context.getSource(), "give-slotgem-success",
-                "%modifier%", String.valueOf(modifier),
-                "%amount%", String.valueOf(amount),
-                "%player%", target.getName());
+        sendMessage(context.getSource(), "give-slotgem-success", "%modifier%", String.valueOf(modifier), "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
     }
 
@@ -222,10 +231,7 @@ public class SinceCommand {
 
         ItemStack scroll = plugin.getEnchantManager().createLockScroll(amount);
         target.getInventory().addItem(scroll);
-
-        sendMessage(context.getSource(), "give-lock-success",
-                "%amount%", String.valueOf(amount),
-                "%player%", target.getName());
+        sendMessage(context.getSource(), "give-lock-success", "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
     }
 
@@ -236,11 +242,34 @@ public class SinceCommand {
 
         ItemStack scroll = plugin.getEnchantManager().createPurgeScroll(returnBooks, amount);
         target.getInventory().addItem(scroll);
+        sendMessage(context.getSource(), "give-purge-success", "%return%", returnBooks ? "True" : "False", "%amount%", String.valueOf(amount), "%player%", target.getName());
+        return Command.SINGLE_SUCCESS;
+    }
 
-        sendMessage(context.getSource(), "give-purge-success",
-                "%return%", returnBooks ? "True" : "False",
-                "%amount%", String.valueOf(amount),
-                "%player%", target.getName());
+    private int executeGiveRandomizer(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
+        Player target = targetResolver.resolve(context.getSource()).getFirst();
+        ItemStack item = plugin.getEnchantManager().createRandomizer(amount);
+        target.getInventory().addItem(item);
+        sendMessage(context.getSource(), "give-randomizer-success", "%amount%", String.valueOf(amount), "%player%", target.getName());
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int executeGiveProtector(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
+        Player target = targetResolver.resolve(context.getSource()).getFirst();
+        ItemStack item = plugin.getEnchantManager().createProtector(amount);
+        target.getInventory().addItem(item);
+        sendMessage(context.getSource(), "give-protector-success", "%amount%", String.valueOf(amount), "%player%", target.getName());
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int executeGiveTracker(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        PlayerSelectorArgumentResolver targetResolver = context.getArgument("target", PlayerSelectorArgumentResolver.class);
+        Player target = targetResolver.resolve(context.getSource()).getFirst();
+        ItemStack item = plugin.getEnchantManager().createTracker(amount);
+        target.getInventory().addItem(item);
+        sendMessage(context.getSource(), "give-tracker-success", "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
     }
 }

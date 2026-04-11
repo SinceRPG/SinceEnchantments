@@ -19,7 +19,10 @@ public class SinceEnchantments extends JavaPlugin {
 
     private static SinceEnchantments instance;
 
-    private ConfigUtils configFile;
+    // Split Configs
+    private ConfigUtils settingsFile;
+    private ConfigUtils enchantsFile;
+    private ConfigUtils limitsFile;
     private ConfigUtils messagesFile;
     private ConfigUtils itemsFile;
 
@@ -42,7 +45,9 @@ public class SinceEnchantments extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        this.configFile = new ConfigUtils(this, "config.yml");
+        this.settingsFile = new ConfigUtils(this, "settings.yml");
+        this.enchantsFile = new ConfigUtils(this, "enchants.yml");
+        this.limitsFile = new ConfigUtils(this, "limits.yml");
         this.messagesFile = new ConfigUtils(this, "messages.yml");
         this.itemsFile = new ConfigUtils(this, "items.yml");
 
@@ -73,6 +78,8 @@ public class SinceEnchantments extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new EnchantApplyListener(this), this);
         getServer().getPluginManager().registerEvents(new AnvilListener(this), this);
         getServer().getPluginManager().registerEvents(new ExtractorListener(this), this);
+        getServer().getPluginManager().registerEvents(new StatTrackerListener(this), this);
+        getServer().getPluginManager().registerEvents(new ProtectionListener(this), this);
     }
 
     @Override
@@ -80,8 +87,16 @@ public class SinceEnchantments extends JavaPlugin {
         PacketEvents.getAPI().terminate();
     }
 
-    public ConfigUtils getConfigFile() {
-        return configFile;
+    public ConfigUtils getSettingsFile() {
+        return settingsFile;
+    }
+
+    public ConfigUtils getEnchantsFile() {
+        return enchantsFile;
+    }
+
+    public ConfigUtils getLimitsFile() {
+        return limitsFile;
     }
 
     public ConfigUtils getMessagesFile() {

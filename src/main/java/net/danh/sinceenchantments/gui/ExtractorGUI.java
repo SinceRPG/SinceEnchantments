@@ -27,10 +27,10 @@ public class ExtractorGUI implements InventoryHolder {
         this.weapon = weapon;
         this.page = page;
 
-        int size = plugin.getConfigFile().getInt("gui.extractor.size", 54);
+        int size = plugin.getSettingsFile().getInt("gui.extractor.size", 54);
         if (size % 9 != 0 || size < 27 || size > 54) size = 54;
 
-        String titleRaw = plugin.getConfigFile().getString("gui.extractor.title", "&8Select Enchant (Page %page%)");
+        String titleRaw = plugin.getSettingsFile().getString("gui.extractor.title", "&8Select Enchant (Page %page%)");
         titleRaw = titleRaw.replace("%page%", String.valueOf(page + 1));
         Component title = ColorUtils.parse(titleRaw);
 
@@ -46,13 +46,13 @@ public class ExtractorGUI implements InventoryHolder {
             }
         }
 
-        String borderMatStr = plugin.getConfigFile().getString("gui.extractor.border.material", "BLACK_STAINED_GLASS_PANE");
+        String borderMatStr = plugin.getSettingsFile().getString("gui.extractor.border.material", "BLACK_STAINED_GLASS_PANE");
         Material borderMat = Material.matchMaterial(borderMatStr);
         if (borderMat == null) borderMat = Material.BLACK_STAINED_GLASS_PANE;
 
         ItemStack border = new ItemStack(borderMat);
         ItemMeta borderMeta = border.getItemMeta();
-        borderMeta.displayName(ColorUtils.parse(plugin.getConfigFile().getString("gui.extractor.border.name", " ")));
+        borderMeta.displayName(ColorUtils.parse(plugin.getSettingsFile().getString("gui.extractor.border.name", " ")));
         borderMeta.getPersistentDataContainer().set(plugin.getEnchantManager().GUI_ACTION_KEY, PersistentDataType.STRING, "BORDER");
         border.setItemMeta(borderMeta);
 
@@ -73,12 +73,12 @@ public class ExtractorGUI implements InventoryHolder {
         int endIndex = Math.min(startIndex + maxItems, allEnchants.size());
 
         int slotIndex = 0;
-        String matStr = plugin.getConfigFile().getString("gui.extractor.display-item.material", "ENCHANTED_BOOK");
+        String matStr = plugin.getSettingsFile().getString("gui.extractor.display-item.material", "ENCHANTED_BOOK");
         Material mat = Material.matchMaterial(matStr);
         if (mat == null) mat = Material.ENCHANTED_BOOK;
 
-        String rawName = plugin.getConfigFile().getString("gui.extractor.display-item.name", "%rarity_color%%enchant_name% %level%");
-        List<String> rawLore = plugin.getConfigFile().getStringList("gui.extractor.display-item.lore");
+        String rawName = plugin.getSettingsFile().getString("gui.extractor.display-item.name", "%rarity_color%%enchant_name% %level%");
+        List<String> rawLore = plugin.getSettingsFile().getStringList("gui.extractor.display-item.lore");
 
         for (int i = startIndex; i < endIndex; i++) {
             Map.Entry<String, Integer> entry = allEnchants.get(i);
@@ -90,7 +90,7 @@ public class ExtractorGUI implements InventoryHolder {
 
             String name = plugin.getEnchantManager().getEnchantName(id);
             String rarity = plugin.getEnchantManager().getRarity(id);
-            String color = plugin.getConfigFile().getString("rarities." + rarity, "&f");
+            String color = plugin.getSettingsFile().getString("rarities." + rarity, "&f");
 
             String parsedName = rawName.replace("%enchant_name%", name)
                     .replace("%level%", String.valueOf(level))
@@ -116,26 +116,26 @@ public class ExtractorGUI implements InventoryHolder {
         }
 
         if (page > 0) {
-            int prevSlot = plugin.getConfigFile().getInt("gui.extractor.prev-page.slot", size - 9);
-            Material pMat = Material.matchMaterial(plugin.getConfigFile().getString("gui.extractor.prev-page.material", "ARROW"));
+            int prevSlot = plugin.getSettingsFile().getInt("gui.extractor.prev-page.slot", size - 9);
+            Material pMat = Material.matchMaterial(plugin.getSettingsFile().getString("gui.extractor.prev-page.material", "ARROW"));
             if (pMat == null) pMat = Material.ARROW;
 
             ItemStack prev = new ItemStack(pMat);
             ItemMeta pMeta = prev.getItemMeta();
-            pMeta.displayName(ColorUtils.parse(plugin.getConfigFile().getString("gui.extractor.prev-page.name", "&cPrevious Page")).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+            pMeta.displayName(ColorUtils.parse(plugin.getSettingsFile().getString("gui.extractor.prev-page.name", "&cPrevious Page")).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
             pMeta.getPersistentDataContainer().set(plugin.getEnchantManager().GUI_ACTION_KEY, PersistentDataType.STRING, "PREV_PAGE");
             prev.setItemMeta(pMeta);
             inventory.setItem(prevSlot, prev);
         }
 
         if (page < totalPages - 1) {
-            int nextSlot = plugin.getConfigFile().getInt("gui.extractor.next-page.slot", size - 1);
-            Material nMat = Material.matchMaterial(plugin.getConfigFile().getString("gui.extractor.next-page.material", "ARROW"));
+            int nextSlot = plugin.getSettingsFile().getInt("gui.extractor.next-page.slot", size - 1);
+            Material nMat = Material.matchMaterial(plugin.getSettingsFile().getString("gui.extractor.next-page.material", "ARROW"));
             if (nMat == null) nMat = Material.ARROW;
 
             ItemStack next = new ItemStack(nMat);
             ItemMeta nMeta = next.getItemMeta();
-            nMeta.displayName(ColorUtils.parse(plugin.getConfigFile().getString("gui.extractor.next-page.name", "&aNext Page")).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+            nMeta.displayName(ColorUtils.parse(plugin.getSettingsFile().getString("gui.extractor.next-page.name", "&aNext Page")).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
             nMeta.getPersistentDataContainer().set(plugin.getEnchantManager().GUI_ACTION_KEY, PersistentDataType.STRING, "NEXT_PAGE");
             next.setItemMeta(nMeta);
             inventory.setItem(nextSlot, next);
