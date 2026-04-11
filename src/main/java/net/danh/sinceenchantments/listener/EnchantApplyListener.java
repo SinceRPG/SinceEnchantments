@@ -246,6 +246,7 @@ public class EnchantApplyListener implements Listener {
             }
 
             currentMeta.getPersistentDataContainer().set(manager.TRACKER_KEY, PersistentDataType.BYTE, (byte) 1);
+
             if (isTool) {
                 currentMeta.getPersistentDataContainer().set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, 0);
             }

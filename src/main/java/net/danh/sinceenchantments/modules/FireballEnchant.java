@@ -20,6 +20,8 @@ public class FireballEnchant extends SinceEnchant {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
+        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
+
         if (event.getAction() != Action.LEFT_CLICK_AIR && event.getAction() != Action.LEFT_CLICK_BLOCK) return;
 
         Player p = event.getPlayer();

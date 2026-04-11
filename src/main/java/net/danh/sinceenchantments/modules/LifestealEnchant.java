@@ -3,8 +3,10 @@ package net.danh.sinceenchantments.modules;
 import net.danh.sinceenchantments.api.SinceEnchant;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
 public class LifestealEnchant extends SinceEnchant {
@@ -13,9 +15,12 @@ public class LifestealEnchant extends SinceEnchant {
         super("since:lifesteal");
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onAttack(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player p)) return;
+        if (p.isDead()) return;
+        if (!(event.getEntity() instanceof LivingEntity target) || target.isDead()) return;
+
         int level = getLevel(p.getInventory().getItemInMainHand());
 
         if (level > 0) {

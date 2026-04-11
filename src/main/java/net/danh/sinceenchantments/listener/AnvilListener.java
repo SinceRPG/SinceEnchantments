@@ -96,35 +96,48 @@ public class AnvilListener implements Listener {
                     manager.setCustomEnchants(result, merged);
 
                     ItemMeta rMeta = result.getItemMeta();
-                    if (slot1.hasItemMeta()) {
-                        PersistentDataContainer pdc1 = slot1.getItemMeta().getPersistentDataContainer();
-                        PersistentDataContainer rPdc = rMeta.getPersistentDataContainer();
+                    PersistentDataContainer rPdc = rMeta.getPersistentDataContainer();
 
-                        if (pdc1.has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
-                            rPdc.set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, pdc1.get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER));
-                        }
-                        if (manager.isLocked(slot1)) {
-                            rPdc.set(manager.LOCKED_KEY, PersistentDataType.BYTE, (byte) 1);
-                        }
+                    PersistentDataContainer pdc1 = slot1.hasItemMeta() ? slot1.getItemMeta().getPersistentDataContainer() : null;
+                    PersistentDataContainer pdc2 = slot2.hasItemMeta() ? slot2.getItemMeta().getPersistentDataContainer() : null;
 
-                        if (pdc1.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
-                            rPdc.set(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE, pdc1.get(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE));
-                        }
-
-                        if (pdc1.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
-                            rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc1.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
-                            if (pdc1.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER))
-                                rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
-                            if (pdc1.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER))
-                                rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
-                            if (pdc1.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER))
-                                rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
-                            if (pdc1.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER))
-                                rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
-                        }
+                    // Copy Slot Modifiers
+                    if (pdc1 != null && pdc1.has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
+                        rPdc.set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, pdc1.get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER));
+                    } else if (pdc2 != null && pdc2.has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
+                        rPdc.set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, pdc2.get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER));
                     }
-                    result.setItemMeta(rMeta);
 
+                    // Copy Lock Status
+                    if (pdc1 != null && manager.isLocked(slot1)) {
+                        rPdc.set(manager.LOCKED_KEY, PersistentDataType.BYTE, (byte) 1);
+                    } else if (pdc2 != null && manager.isLocked(slot2)) {
+                        rPdc.set(manager.LOCKED_KEY, PersistentDataType.BYTE, (byte) 1);
+                    }
+
+                    // Copy Protection Gem Tags
+                    if (pdc1 != null && pdc1.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
+                        rPdc.set(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE, pdc1.get(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE));
+                    } else if (pdc2 != null && pdc2.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
+                        rPdc.set(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE, pdc2.get(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE));
+                    }
+
+                    // Copy Stat Tracker Tags
+                    if (pdc1 != null && pdc1.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
+                        rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc1.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
+                        if (pdc1.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
+                        if (pdc1.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
+                        if (pdc1.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
+                        if (pdc1.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
+                    } else if (pdc2 != null && pdc2.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
+                        rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc2.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
+                        if (pdc2.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
+                        if (pdc2.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
+                        if (pdc2.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
+                        if (pdc2.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
+                    }
+
+                    result.setItemMeta(rMeta);
                     event.setResult(result);
                     anvilView.setRepairCost(anvilView.getRepairCost() + costIncrease + (vanillaHasNoResult ? 1 : 0));
                 }

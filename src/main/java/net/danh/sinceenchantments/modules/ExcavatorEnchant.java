@@ -1,6 +1,7 @@
 package net.danh.sinceenchantments.modules;
 
 import net.danh.sinceenchantments.api.SinceEnchant;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public class ExcavatorEnchant extends SinceEnchant {
+
     private final Set<UUID> activePlayers = new HashSet<>();
 
     public ExcavatorEnchant() {
@@ -39,9 +41,14 @@ public class ExcavatorEnchant extends SinceEnchant {
                 for (int y = -radius; y <= radius; y++) {
                     for (int z = -radius; z <= radius; z++) {
                         Block b = center.getRelative(x, y, z);
-                        if (b.getType() != Material.AIR && b.getType().getHardness() >= 0 && !b.equals(center)) {
-                            if (b.breakNaturally(item)) {
-                                blocksBroken++;
+                        if (!b.getType().isAir() && b.getType().getHardness() >= 0 && !b.equals(center)) {
+                            BlockBreakEvent breakEvent = new BlockBreakEvent(b, p);
+                            Bukkit.getPluginManager().callEvent(breakEvent);
+
+                            if (!breakEvent.isCancelled()) {
+                                if (b.breakNaturally(item)) {
+                                    blocksBroken++;
+                                }
                             }
                         }
                     }

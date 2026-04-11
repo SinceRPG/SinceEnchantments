@@ -56,6 +56,5 @@ protector-already-applied: "&cThis item is already protected!"
 tracker-applied: "&aStat Tracker successfully attached to the item!"
 tracker-already-applied: "&cThis item already has a Stat Tracker!"
 tracker-invalid-item: "&cStat Trackers can only be applied to Weapons, Tools, or Fishing Rods."
-
 item-protected-consumed: "&eYour protected item was saved and the Protection Gem was consumed!"
 item-protected-saved: "&eYour protected item was saved!"
