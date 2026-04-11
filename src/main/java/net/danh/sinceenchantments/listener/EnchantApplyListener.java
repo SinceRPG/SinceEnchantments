@@ -216,6 +216,10 @@ public class EnchantApplyListener implements Listener {
                 sendMsg(player, "item-need-unstack");
                 return;
             }
+            if (manager.isLocked(current)) {
+                sendMsg(player, "item-locked");
+                return;
+            }
             if (currentMeta.getPersistentDataContainer().has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
                 sendMsg(player, "protector-already-applied");
                 return;
@@ -236,6 +240,10 @@ public class EnchantApplyListener implements Listener {
             event.setCancelled(true);
             if (current.getAmount() > 1) {
                 sendMsg(player, "item-need-unstack");
+                return;
+            }
+            if (manager.isLocked(current)) {
+                sendMsg(player, "item-locked");
                 return;
             }
 
