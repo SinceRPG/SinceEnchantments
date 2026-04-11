@@ -163,16 +163,24 @@ public class AnvilListener implements Listener {
 
         if (pdc1 != null && pdc1.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
             rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc1.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
-            if (pdc1.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
-            if (pdc1.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
-            if (pdc1.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
-            if (pdc1.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
+            if (pdc1.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER))
+                rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
+            if (pdc1.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER))
+                rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
+            if (pdc1.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER))
+                rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
+            if (pdc1.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER))
+                rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
         } else if (pdc2 != null && pdc2.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
             rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc2.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
-            if (pdc2.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
-            if (pdc2.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
-            if (pdc2.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
-            if (pdc2.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
+            if (pdc2.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER))
+                rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
+            if (pdc2.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER))
+                rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
+            if (pdc2.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER))
+                rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
+            if (pdc2.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER))
+                rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
         }
 
         result.setItemMeta(rMeta);
