@@ -10,6 +10,7 @@ import net.danh.sinceenchantments.api.InternalModuleLoader;
 import net.danh.sinceenchantments.command.SinceCommand;
 import net.danh.sinceenchantments.listener.*;
 import net.danh.sinceenchantments.utils.ConfigUtils;
+import net.danh.sinceenchantments.utils.ServerVersion;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
@@ -38,6 +39,12 @@ public class SinceEnchantments extends JavaPlugin {
     @Override
     public void onLoad() {
         instance = this;
+        if (ServerVersion.isAtMost(1, 21, 11))
+            getLogger().info("Running natively for Paper 1.21+ | NMS Version: " + ServerVersion.getNmsVersion());
+        else {
+            getLogger().info("Running natively for Paper 26.1+ | Version: v" + ServerVersion.getMajor() + "_" + ServerVersion.getMinor() + "_" + ServerVersion.getPatch());
+            getLogger().info("Running natively for Paper 26.1+ | NMS Version: v" + ServerVersion.getMajor() + "_" + ServerVersion.getMinor() + "_R" + ServerVersion.getRevisionNumber());
+        }
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
         PacketEvents.getAPI().getSettings().reEncodeByDefault(true).checkForUpdates(true);
         PacketEvents.getAPI().load();
@@ -81,6 +88,10 @@ public class SinceEnchantments extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ExtractorListener(this), this);
         getServer().getPluginManager().registerEvents(new StatTrackerListener(this), this);
         getServer().getPluginManager().registerEvents(new ProtectionListener(this), this);
+        if (ServerVersion.isOlderThan(1, 21, 11))
+            getLogger().warning("Warning: Your server version is below 1.21.11! If it have any error, join discord and report to author: https://discord.gg/zbMPtcM3wq");
+        else if (ServerVersion.isAtLeast(26, 1))
+            getLogger().warning("Warning: Your server version is below 26.1+! If it have any error, join discord and report to author: https://discord.gg/zbMPtcM3wq");
     }
 
     @Override

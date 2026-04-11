@@ -3,6 +3,8 @@ package net.danh.sinceenchantments.listener;
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.api.EnchantManager;
 import net.danh.sinceenchantments.utils.ColorUtils;
+import net.danh.sinceenchantments.utils.ServerVersion;
+import org.bukkit.GameRules;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -30,7 +32,7 @@ public class ProtectionListener implements Listener {
         Player p = event.getEntity();
         boolean savedItem = false;
         boolean consumeOnDeath = plugin.getSettingsFile().getBoolean("settings.consume-protection-on-death", true);
-        boolean keepInventory = p.getWorld().getGameRuleValue(org.bukkit.GameRule.KEEP_INVENTORY) == Boolean.TRUE;
+        boolean keepInventory = ((ServerVersion.isAtMost(1, 21, 10)) ? p.getWorld().getGameRuleValue(org.bukkit.GameRule.KEEP_INVENTORY) : p.getWorld().getGameRuleValue(GameRules.KEEP_INVENTORY)) == Boolean.TRUE;
 
         if (keepInventory) {
             if (consumeOnDeath) {
