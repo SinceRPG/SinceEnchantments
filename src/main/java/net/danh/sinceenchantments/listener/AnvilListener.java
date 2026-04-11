@@ -45,162 +45,145 @@ public class AnvilListener implements Listener {
         ItemMeta meta2 = slot2.getItemMeta();
         boolean isBook2 = meta2 != null && meta2.getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING);
 
-        if (!isBook2) {
-            ItemStack result = event.getResult();
-            boolean vanillaHasNoResult = (result == null || result.getType() == Material.AIR);
+        if (isBook2) {
+            if (slot1.hasItemMeta() && slot1.getItemMeta().getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
+                String enchantId = meta2.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
+                int bookLvl = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
+                int successRate2 = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);
+                int destroyRate2 = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
 
-            if (vanillaHasNoResult) {
-                if (slot1.getType() == slot2.getType() && slot1.getType() != Material.ENCHANTED_BOOK) {
-                    result = slot1.clone();
-                } else {
-                    return;
+                String id1 = slot1.getItemMeta().getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
+                int lvl1 = slot1.getItemMeta().getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
+                int successRate1 = slot1.getItemMeta().getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);
+                int destroyRate1 = slot1.getItemMeta().getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
+
+                if (id1.equals(enchantId) && lvl1 == bookLvl) {
+                    int nextLvl = lvl1 + 1;
+                    if (nextLvl <= manager.getMaxLevel(enchantId)) {
+                        int avgSuccess = (successRate1 + successRate2) / 2;
+                        int avgDestroy = (destroyRate1 + destroyRate2) / 2;
+
+                        ItemStack resultBook = manager.createEnchantBook(enchantId, nextLvl, avgSuccess, avgDestroy);
+                        event.setResult(resultBook);
+                        anvilView.setRepairCost(nextLvl * costCombine);
+                    }
                 }
             } else {
-                result = result.clone();
+                event.setResult(null);
+            }
+            return;
+        }
+
+        ItemStack result = event.getResult();
+        boolean vanillaHasNoResult = (result == null || result.getType() == Material.AIR);
+
+        if (vanillaHasNoResult) {
+            if (slot1.getType() == slot2.getType() && slot1.getType() != Material.ENCHANTED_BOOK) {
+                result = slot1.clone();
+            } else {
+                return;
+            }
+        } else {
+            result = result.clone();
+        }
+
+        Map<String, Integer> enchants1 = manager.getCustomEnchants(slot1);
+        Map<String, Integer> enchants2 = manager.getCustomEnchants(slot2);
+
+        if (!enchants1.isEmpty() || !enchants2.isEmpty() || vanillaHasNoResult) {
+            Map<String, Integer> merged = new HashMap<>(enchants1);
+            int costIncrease = 0;
+            boolean changed = false;
+            int vanillaCount = 0;
+            if (config.getBoolean("settings.override-vanilla-enchants", true) && result.hasItemMeta() && result.getItemMeta().hasEnchants()) {
+                vanillaCount = result.getItemMeta().getEnchants().size();
             }
 
-            Map<String, Integer> enchants1 = manager.getCustomEnchants(slot1);
-            Map<String, Integer> enchants2 = manager.getCustomEnchants(slot2);
+            for (Map.Entry<String, Integer> e2 : enchants2.entrySet()) {
+                String id = e2.getKey();
+                int lvl2 = e2.getValue();
+                int lvl1 = merged.getOrDefault(id, 0);
 
-            if (!enchants1.isEmpty() || !enchants2.isEmpty() || vanillaHasNoResult) {
-                Map<String, Integer> merged = new HashMap<>(enchants1);
-                int costIncrease = 0;
-                boolean changed = false;
-
-                for (Map.Entry<String, Integer> e2 : enchants2.entrySet()) {
-                    String id = e2.getKey();
-                    int lvl2 = e2.getValue();
-                    int lvl1 = merged.getOrDefault(id, 0);
-
-                    if (lvl1 == 0) {
-                        if (merged.size() < manager.getMaxSlots(result)) {
-                            merged.put(id, lvl2);
-                            costIncrease += lvl2 * costApply;
-                            changed = true;
-                        }
-                    } else if (lvl1 == lvl2) {
-                        int nextLvl = lvl1 + 1;
-                        if (nextLvl <= manager.getMaxLevel(id)) {
-                            merged.put(id, nextLvl);
-                            costIncrease += nextLvl * costCombine;
-                            changed = true;
-                        }
-                    } else if (lvl2 > lvl1) {
-                        merged.put(id, lvl2);
-                        costIncrease += (lvl2 - lvl1) * costApply;
-                        changed = true;
-                    }
-                }
-
-                if (changed || vanillaHasNoResult) {
+                if (lvl1 == 0) {
                     manager.setCustomEnchants(result, merged);
 
-                    ItemMeta rMeta = result.getItemMeta();
-                    PersistentDataContainer rPdc = rMeta.getPersistentDataContainer();
+                    if (!manager.isApplicable(id, result.getType())) continue;
+                    if (!manager.isWhitelisted(result, id)) continue;
+                    if (manager.hasConflict(id, result)) continue;
+                    if (!manager.getMissingRequirements(id, result).isEmpty()) continue;
 
-                    PersistentDataContainer pdc1 = slot1.hasItemMeta() ? slot1.getItemMeta().getPersistentDataContainer() : null;
-                    PersistentDataContainer pdc2 = slot2.hasItemMeta() ? slot2.getItemMeta().getPersistentDataContainer() : null;
-
-                    // Copy Slot Modifiers
-                    if (pdc1 != null && pdc1.has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
-                        rPdc.set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, pdc1.get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER));
-                    } else if (pdc2 != null && pdc2.has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
-                        rPdc.set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, pdc2.get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER));
+                    if ((merged.size() + vanillaCount) < manager.getMaxSlots(result)) {
+                        merged.put(id, lvl2);
+                        costIncrease += lvl2 * costApply;
+                        changed = true;
                     }
-
-                    // Copy Lock Status
-                    if (pdc1 != null && manager.isLocked(slot1)) {
-                        rPdc.set(manager.LOCKED_KEY, PersistentDataType.BYTE, (byte) 1);
-                    } else if (pdc2 != null && manager.isLocked(slot2)) {
-                        rPdc.set(manager.LOCKED_KEY, PersistentDataType.BYTE, (byte) 1);
+                } else if (lvl1 == lvl2) {
+                    int nextLvl = lvl1 + 1;
+                    if (nextLvl <= manager.getMaxLevel(id)) {
+                        merged.put(id, nextLvl);
+                        costIncrease += nextLvl * costCombine;
+                        changed = true;
                     }
-
-                    // Copy Protection Gem Tags
-                    if (pdc1 != null && pdc1.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
-                        rPdc.set(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE, pdc1.get(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE));
-                    } else if (pdc2 != null && pdc2.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
-                        rPdc.set(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE, pdc2.get(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE));
-                    }
-
-                    // Copy Stat Tracker Tags
-                    if (pdc1 != null && pdc1.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
-                        rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc1.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
-                        if (pdc1.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
-                        if (pdc1.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
-                        if (pdc1.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
-                        if (pdc1.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
-                    } else if (pdc2 != null && pdc2.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
-                        rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc2.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
-                        if (pdc2.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
-                        if (pdc2.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
-                        if (pdc2.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
-                        if (pdc2.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
-                    }
-
-                    result.setItemMeta(rMeta);
-                    event.setResult(result);
-                    anvilView.setRepairCost(anvilView.getRepairCost() + costIncrease + (vanillaHasNoResult ? 1 : 0));
+                } else if (lvl2 > lvl1) {
+                    merged.put(id, lvl2);
+                    costIncrease += (lvl2 - lvl1) * costApply;
+                    changed = true;
                 }
             }
-            return;
-        }
 
-        String enchantId = meta2.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
-        int bookLvl = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
-        int successRate2 = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);
-        int destroyRate2 = meta2.getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
+            if (changed || vanillaHasNoResult) {
+                manager.setCustomEnchants(result, merged);
 
-        if (slot1.hasItemMeta() && slot1.getItemMeta().getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
-            String id1 = slot1.getItemMeta().getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
-            int lvl1 = slot1.getItemMeta().getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
-            int successRate1 = slot1.getItemMeta().getPersistentDataContainer().getOrDefault(manager.BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, 100);
-            int destroyRate1 = slot1.getItemMeta().getPersistentDataContainer().getOrDefault(manager.BOOK_DESTROY_KEY, PersistentDataType.INTEGER, 0);
+                ItemMeta rMeta = result.getItemMeta();
+                PersistentDataContainer rPdc = rMeta.getPersistentDataContainer();
 
-            if (id1.equals(enchantId) && lvl1 == bookLvl) {
-                int nextLvl = lvl1 + 1;
-                if (nextLvl <= manager.getMaxLevel(enchantId)) {
-                    int avgSuccess = (successRate1 + successRate2) / 2;
-                    int avgDestroy = (destroyRate1 + destroyRate2) / 2;
+                PersistentDataContainer pdc1 = slot1.hasItemMeta() ? slot1.getItemMeta().getPersistentDataContainer() : null;
+                PersistentDataContainer pdc2 = slot2.hasItemMeta() ? slot2.getItemMeta().getPersistentDataContainer() : null;
 
-                    ItemStack resultBook = manager.createEnchantBook(enchantId, nextLvl, avgSuccess, avgDestroy);
-                    event.setResult(resultBook);
-                    anvilView.setRepairCost(nextLvl * costCombine);
+                if (pdc1 != null && pdc1.has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
+                    rPdc.set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, pdc1.get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER));
+                } else if (pdc2 != null && pdc2.has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
+                    rPdc.set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, pdc2.get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER));
                 }
+
+                if (pdc1 != null && manager.isLocked(slot1)) {
+                    rPdc.set(manager.LOCKED_KEY, PersistentDataType.BYTE, (byte) 1);
+                } else if (pdc2 != null && manager.isLocked(slot2)) {
+                    rPdc.set(manager.LOCKED_KEY, PersistentDataType.BYTE, (byte) 1);
+                }
+
+                if (pdc1 != null && pdc1.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
+                    rPdc.set(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE, pdc1.get(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE));
+                } else if (pdc2 != null && pdc2.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
+                    rPdc.set(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE, pdc2.get(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE));
+                }
+
+                if (pdc1 != null && pdc1.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
+                    rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc1.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
+                    if (pdc1.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER))
+                        rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
+                    if (pdc1.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER))
+                        rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
+                    if (pdc1.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER))
+                        rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
+                    if (pdc1.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER))
+                        rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
+                } else if (pdc2 != null && pdc2.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
+                    rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc2.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
+                    if (pdc2.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER))
+                        rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
+                    if (pdc2.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER))
+                        rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
+                    if (pdc2.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER))
+                        rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
+                    if (pdc2.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER))
+                        rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
+                }
+
+                result.setItemMeta(rMeta);
+                event.setResult(result);
+                anvilView.setRepairCost(anvilView.getRepairCost() + costIncrease + (vanillaHasNoResult ? 1 : 0));
             }
-            return;
-        }
-
-        if (manager.isLocked(slot1)) return;
-        if (!manager.isApplicable(enchantId, slot1.getType())) return;
-        if (!manager.isWhitelisted(slot1, enchantId)) return;
-        if (!manager.getMissingRequirements(enchantId, slot1).isEmpty()) return;
-        if (manager.hasConflict(enchantId, slot1)) return;
-
-        int limit = manager.getMaxSlots(slot1);
-        boolean isUpgrading = manager.getEnchantLevel(slot1, enchantId) > 0;
-
-        if (!isUpgrading && manager.getAppliedEnchantsCount(slot1) >= limit) {
-            return;
-        }
-
-        int currentLvl = manager.getEnchantLevel(slot1, enchantId);
-        int newLvl = currentLvl;
-
-        if (currentLvl == 0) {
-            newLvl = bookLvl;
-        } else if (currentLvl == bookLvl) {
-            newLvl = currentLvl + 1;
-        } else if (bookLvl > currentLvl) {
-            newLvl = bookLvl;
-        }
-
-        if (newLvl > manager.getMaxLevel(enchantId)) newLvl = manager.getMaxLevel(enchantId);
-
-        if (newLvl > currentLvl) {
-            ItemStack resultItem = slot1.clone();
-            manager.addEnchant(resultItem, enchantId, newLvl);
-            event.setResult(resultItem);
-            anvilView.setRepairCost(newLvl * costApply);
         }
     }
 }
