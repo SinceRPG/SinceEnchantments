@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -19,7 +20,8 @@ public class FireballEnchant extends SinceEnchant {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (event.getAction() != Action.LEFT_CLICK_AIR) return;
+        if (event.getAction() != Action.LEFT_CLICK_AIR && event.getAction() != Action.LEFT_CLICK_BLOCK) return;
+
         Player p = event.getPlayer();
         int level = getLevel(p.getInventory().getItemInMainHand());
 
@@ -38,5 +40,10 @@ public class FireballEnchant extends SinceEnchant {
             cd.put(p.getUniqueId(), now + cooldown);
             sendMessage(p, "launch");
         }
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        cd.remove(event.getPlayer().getUniqueId());
     }
 }

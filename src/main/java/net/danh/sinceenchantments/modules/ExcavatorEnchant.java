@@ -3,33 +3,74 @@ package net.danh.sinceenchantments.modules;
 import net.danh.sinceenchantments.api.SinceEnchant;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 public class ExcavatorEnchant extends SinceEnchant {
-    private boolean processing = false;
+    private final Set<UUID> activePlayers = new HashSet<>();
 
     public ExcavatorEnchant() {
         super("since:excavator");
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBreak(BlockBreakEvent event) {
-        if (processing) return;
-        int level = getLevel(event.getPlayer().getInventory().getItemInMainHand());
+        Player p = event.getPlayer();
+        if (activePlayers.contains(p.getUniqueId())) return;
+
+        ItemStack item = p.getInventory().getItemInMainHand();
+        int level = getLevel(item);
+
         if (level > 0) {
-            processing = true;
+            activePlayers.add(p.getUniqueId());
             int radius = getInt("radius", 1);
             Block center = event.getBlock();
-            for (int x = -radius; x <= radius; x++)
-                for (int y = -radius; y <= radius; y++)
+            int blocksBroken = 0;
+
+            for (int x = -radius; x <= radius; x++) {
+                for (int y = -radius; y <= radius; y++) {
                     for (int z = -radius; z <= radius; z++) {
                         Block b = center.getRelative(x, y, z);
-                        if (b.getType() != Material.AIR && b.getType().getHardness() > 0)
-                            b.breakNaturally(event.getPlayer().getInventory().getItemInMainHand());
+                        if (b.getType() != Material.AIR && b.getType().getHardness() >= 0 && !b.equals(center)) {
+                            if (b.breakNaturally(item)) {
+                                blocksBroken++;
+                            }
+                        }
                     }
-            processing = false;
-            sendMessage(event.getPlayer(), "activate");
+                }
+            }
+
+            if (blocksBroken > 0 && item.getItemMeta() instanceof Damageable damageable) {
+                int unbreakingLvl = item.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.UNBREAKING);
+                int effectiveDamage = 0;
+
+                for (int i = 0; i < blocksBroken; i++) {
+                    if (unbreakingLvl == 0 || (100.0 / (unbreakingLvl + 1)) > Math.random() * 100) {
+                        effectiveDamage++;
+                    }
+                }
+
+                if (effectiveDamage > 0) {
+                    damageable.setDamage(damageable.getDamage() + effectiveDamage);
+                    item.setItemMeta(damageable);
+
+                    if (damageable.getDamage() >= item.getType().getMaxDurability()) {
+                        p.getInventory().setItemInMainHand(null);
+                        p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_ITEM_BREAK, 1f, 1f);
+                    }
+                }
+            }
+
+            activePlayers.remove(p.getUniqueId());
+            sendMessage(p, "activate");
         }
     }
 }
