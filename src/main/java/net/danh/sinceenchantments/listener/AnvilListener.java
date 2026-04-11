@@ -90,100 +90,96 @@ public class AnvilListener implements Listener {
         Map<String, Integer> enchants1 = manager.getCustomEnchants(slot1);
         Map<String, Integer> enchants2 = manager.getCustomEnchants(slot2);
 
-        if (!enchants1.isEmpty() || !enchants2.isEmpty() || vanillaHasNoResult) {
-            Map<String, Integer> merged = new HashMap<>(enchants1);
-            int costIncrease = 0;
-            boolean changed = false;
-            int vanillaCount = 0;
-            if (config.getBoolean("settings.override-vanilla-enchants", true) && result.hasItemMeta() && result.getItemMeta().hasEnchants()) {
-                vanillaCount = result.getItemMeta().getEnchants().size();
-            }
+        Map<String, Integer> merged = new HashMap<>(enchants1);
+        int costIncrease = 0;
+        boolean customMerged = false;
 
-            for (Map.Entry<String, Integer> e2 : enchants2.entrySet()) {
-                String id = e2.getKey();
-                int lvl2 = e2.getValue();
-                int lvl1 = merged.getOrDefault(id, 0);
+        int vanillaCount = 0;
+        if (config.getBoolean("settings.override-vanilla-enchants", true) && result.hasItemMeta() && result.getItemMeta().hasEnchants()) {
+            vanillaCount = result.getItemMeta().getEnchants().size();
+        }
 
-                if (lvl1 == 0) {
-                    manager.setCustomEnchants(result, merged);
+        for (Map.Entry<String, Integer> e2 : enchants2.entrySet()) {
+            String id = e2.getKey();
+            int lvl2 = e2.getValue();
+            int lvl1 = merged.getOrDefault(id, 0);
 
-                    if (!manager.isApplicable(id, result.getType())) continue;
-                    if (!manager.isWhitelisted(result, id)) continue;
-                    if (manager.hasConflict(id, result)) continue;
-                    if (!manager.getMissingRequirements(id, result).isEmpty()) continue;
-
-                    if ((merged.size() + vanillaCount) < manager.getMaxSlots(result)) {
-                        merged.put(id, lvl2);
-                        costIncrease += lvl2 * costApply;
-                        changed = true;
-                    }
-                } else if (lvl1 == lvl2) {
-                    int nextLvl = lvl1 + 1;
-                    if (nextLvl <= manager.getMaxLevel(id)) {
-                        merged.put(id, nextLvl);
-                        costIncrease += nextLvl * costCombine;
-                        changed = true;
-                    }
-                } else if (lvl2 > lvl1) {
-                    merged.put(id, lvl2);
-                    costIncrease += (lvl2 - lvl1) * costApply;
-                    changed = true;
-                }
-            }
-
-            if (changed || vanillaHasNoResult) {
+            if (lvl1 == 0) {
                 manager.setCustomEnchants(result, merged);
+                if (!manager.isApplicable(id, result.getType())) continue;
+                if (!manager.isWhitelisted(result, id)) continue;
+                if (manager.hasConflict(id, result)) continue;
+                if (!manager.getMissingRequirements(id, result).isEmpty()) continue;
 
-                ItemMeta rMeta = result.getItemMeta();
-                PersistentDataContainer rPdc = rMeta.getPersistentDataContainer();
-
-                PersistentDataContainer pdc1 = slot1.hasItemMeta() ? slot1.getItemMeta().getPersistentDataContainer() : null;
-                PersistentDataContainer pdc2 = slot2.hasItemMeta() ? slot2.getItemMeta().getPersistentDataContainer() : null;
-
-                if (pdc1 != null && pdc1.has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
-                    rPdc.set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, pdc1.get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER));
-                } else if (pdc2 != null && pdc2.has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
-                    rPdc.set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, pdc2.get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER));
+                if ((merged.size() + vanillaCount) < manager.getMaxSlots(result)) {
+                    merged.put(id, lvl2);
+                    costIncrease += lvl2 * costApply;
+                    customMerged = true;
                 }
-
-                if (pdc1 != null && manager.isLocked(slot1)) {
-                    rPdc.set(manager.LOCKED_KEY, PersistentDataType.BYTE, (byte) 1);
-                } else if (pdc2 != null && manager.isLocked(slot2)) {
-                    rPdc.set(manager.LOCKED_KEY, PersistentDataType.BYTE, (byte) 1);
+            } else if (lvl1 == lvl2) {
+                int nextLvl = lvl1 + 1;
+                if (nextLvl <= manager.getMaxLevel(id)) {
+                    merged.put(id, nextLvl);
+                    costIncrease += nextLvl * costCombine;
+                    customMerged = true;
                 }
-
-                if (pdc1 != null && pdc1.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
-                    rPdc.set(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE, pdc1.get(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE));
-                } else if (pdc2 != null && pdc2.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
-                    rPdc.set(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE, pdc2.get(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE));
-                }
-
-                if (pdc1 != null && pdc1.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
-                    rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc1.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
-                    if (pdc1.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER))
-                        rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
-                    if (pdc1.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER))
-                        rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
-                    if (pdc1.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER))
-                        rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
-                    if (pdc1.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER))
-                        rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
-                } else if (pdc2 != null && pdc2.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
-                    rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc2.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
-                    if (pdc2.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER))
-                        rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
-                    if (pdc2.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER))
-                        rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
-                    if (pdc2.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER))
-                        rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
-                    if (pdc2.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER))
-                        rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
-                }
-
-                result.setItemMeta(rMeta);
-                event.setResult(result);
-                anvilView.setRepairCost(anvilView.getRepairCost() + costIncrease + (vanillaHasNoResult ? 1 : 0));
+            } else if (lvl2 > lvl1) {
+                merged.put(id, lvl2);
+                costIncrease += (lvl2 - lvl1) * costApply;
+                customMerged = true;
             }
         }
+
+        if (vanillaHasNoResult && !customMerged) {
+            event.setResult(null);
+            return;
+        }
+
+        manager.setCustomEnchants(result, merged);
+
+        ItemMeta rMeta = result.getItemMeta();
+        PersistentDataContainer rPdc = rMeta.getPersistentDataContainer();
+
+        PersistentDataContainer pdc1 = slot1.hasItemMeta() ? slot1.getItemMeta().getPersistentDataContainer() : null;
+        PersistentDataContainer pdc2 = slot2.hasItemMeta() ? slot2.getItemMeta().getPersistentDataContainer() : null;
+
+        if (pdc1 != null && pdc1.has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
+            rPdc.set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, pdc1.get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER));
+        } else if (pdc2 != null && pdc2.has(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER)) {
+            rPdc.set(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, pdc2.get(manager.SLOT_MODIFIER_KEY, PersistentDataType.INTEGER));
+        }
+
+        if (pdc1 != null && manager.isLocked(slot1)) {
+            rPdc.set(manager.LOCKED_KEY, PersistentDataType.BYTE, (byte) 1);
+        } else if (pdc2 != null && manager.isLocked(slot2)) {
+            rPdc.set(manager.LOCKED_KEY, PersistentDataType.BYTE, (byte) 1);
+        }
+
+        if (pdc1 != null && pdc1.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
+            rPdc.set(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE, pdc1.get(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE));
+        } else if (pdc2 != null && pdc2.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
+            rPdc.set(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE, pdc2.get(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE));
+        }
+
+        if (pdc1 != null && pdc1.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
+            rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc1.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
+            if (pdc1.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
+            if (pdc1.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
+            if (pdc1.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
+            if (pdc1.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc1.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
+        } else if (pdc2 != null && pdc2.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
+            rPdc.set(manager.TRACKER_KEY, PersistentDataType.BYTE, pdc2.get(manager.TRACKER_KEY, PersistentDataType.BYTE));
+            if (pdc2.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER));
+            if (pdc2.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER));
+            if (pdc2.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER));
+            if (pdc2.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)) rPdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, pdc2.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER));
+        }
+
+        result.setItemMeta(rMeta);
+        event.setResult(result);
+
+        int finalCost = anvilView.getRepairCost() + costIncrease;
+        if (vanillaHasNoResult) finalCost += 1;
+        anvilView.setRepairCost(finalCost);
     }
 }

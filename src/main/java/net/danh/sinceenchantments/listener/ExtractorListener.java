@@ -44,6 +44,15 @@ public class ExtractorListener implements Listener {
         p.sendMessage(ColorUtils.parse(prefix + msg));
     }
 
+    private void consumeCursor(Player player, ItemStack cursor) {
+        if (cursor.getAmount() - 1 <= 0) {
+            player.setItemOnCursor(null);
+        } else {
+            cursor.setAmount(cursor.getAmount() - 1);
+            player.setItemOnCursor(cursor);
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onDragExtractor(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player p)) return;
@@ -80,8 +89,7 @@ public class ExtractorListener implements Listener {
         }
 
         if (extractorType.equals("RANDOM")) {
-            cursor.setAmount(cursor.getAmount() - 1);
-            p.setItemOnCursor(cursor);
+            consumeCursor(p, cursor);
 
             List<String> keys = new ArrayList<>(allEnchants.keySet());
             String removedId = keys.get(random.nextInt(keys.size()));

@@ -147,6 +147,14 @@ public class EnchantApplyListener implements Listener {
                 sendMsg(player, "item-locked");
                 return;
             }
+
+            boolean hasCustom = !manager.getCustomEnchants(current).isEmpty();
+            boolean hasVanilla = current.hasItemMeta() && current.getItemMeta().hasEnchants();
+            if (!hasCustom && !hasVanilla) {
+                sendMsg(player, "extract-no-enchants");
+                return;
+            }
+
             boolean returnBooks = cursorMeta.getPersistentDataContainer().getOrDefault(manager.PURGE_RETURN_KEY, PersistentDataType.BYTE, (byte) 0) == 1;
 
             if (returnBooks) {
