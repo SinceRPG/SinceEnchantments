@@ -16,6 +16,7 @@ import net.danh.sinceenchantments.utils.ColorUtils;
 import net.danh.sinceenchantments.utils.ConfigUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
@@ -88,12 +89,25 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         return item;
     }
 
+    private static boolean isEnchantableGear(org.bukkit.inventory.ItemStack item) {
+        if (item == null) return false;
+        String name = item.getType().name();
+        return name.endsWith("_SWORD") || name.endsWith("_AXE") || name.endsWith("_PICKAXE") ||
+                name.endsWith("_SHOVEL") || name.endsWith("_HOE") || name.endsWith("_HELMET") ||
+                name.endsWith("_CHESTPLATE") || name.endsWith("_LEGGINGS") || name.endsWith("_BOOTS") ||
+                name.equals("BOW") || name.equals("CROSSBOW") || name.equals("TRIDENT") ||
+                name.equals("MACE") || name.equals("FISHING_ROD") || name.equals("SHIELD") ||
+                name.equals("ELYTRA") || name.equals("SHEARS") || name.equals("FLINT_AND_STEEL") ||
+                name.equals("BRUSH") || name.equals("CARROT_ON_A_STICK") || name.equals("WARPED_FUNGUS_ON_A_STICK");
+    }
+
     private org.bukkit.inventory.ItemStack formatSkyblockItem(org.bukkit.inventory.ItemStack item) {
         EnchantManager manager = SinceEnchantments.getInstance().getEnchantManager();
         manager.cleanItemLore(item);
 
-        if (item == null || !item.hasItemMeta()) return item;
-        ItemMeta meta = item.getItemMeta();
+        if (item == null || item.getType().isAir()) return item;
+        boolean hadMetaInitially = item.hasItemMeta();
+        ItemMeta meta = hadMetaInitially ? item.getItemMeta() : Bukkit.getItemFactory().getItemMeta(item.getType());
         if (meta == null) return item;
 
         ConfigUtils settings = SinceEnchantments.getInstance().getSettingsFile();
@@ -120,11 +134,18 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         boolean hasProtect = pdc.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE);
         boolean hasTracker = pdc.has(manager.TRACKER_KEY, PersistentDataType.BYTE);
+        boolean isLocked = manager.isLocked(item);
 
-        if (((!overrideVanilla && customEnchants.isEmpty()) || (overrideVanilla && vanillaEnchants.isEmpty() && customEnchants.isEmpty()))
-                && !manager.isLocked(item) && manager.getWhitelistedEnchants(item).isEmpty() && !hasProtect && !hasTracker) {
-            meta.lore(lore);
-            item.setItemMeta(meta);
+        boolean isGear = isEnchantableGear(item);
+        boolean hasPlaceholder = (targetIndex != -1);
+        boolean hasCustom = !customEnchants.isEmpty();
+        boolean hasVanilla = !vanillaEnchants.isEmpty();
+        boolean hasWhitelist = !manager.getWhitelistedEnchants(item).isEmpty();
+        if (!isGear && !hasPlaceholder && !hasCustom && (!hasVanilla || !overrideVanilla) && !hasWhitelist && !hasProtect && !hasTracker && !isLocked) {
+            if (hadMetaInitially) {
+                meta.lore(lore);
+                item.setItemMeta(meta);
+            }
             return item;
         }
 
@@ -237,7 +258,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             injectComponents.add(ColorUtils.parse(slotLine).decoration(TextDecoration.ITALIC, false));
         }
 
-        if (manager.isLocked(item)) {
+        if (isLocked) {
             injectComponents.add(ColorUtils.parse(settings.getString("settings.locked-format", "&c&lLocked")).decoration(TextDecoration.ITALIC, false));
         }
 
@@ -266,18 +287,18 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
                 }
             }
         }
-
         if (injectComponents.isEmpty()) {
-            meta.lore(lore);
-            item.setItemMeta(meta);
+            if (hadMetaInitially) {
+                meta.lore(lore);
+                item.setItemMeta(meta);
+            }
             return item;
         }
 
         boolean addEmptyLineAbove = settings.getBoolean("settings.add-empty-line-above", true);
         boolean addEmptyLineBelow = settings.getBoolean("settings.add-empty-line-below", true);
-        boolean hadPlaceholder = (targetIndex != -1);
 
-        if (hadPlaceholder) {
+        if (hasPlaceholder) {
             if (addEmptyLineAbove && targetIndex > 0) {
                 if (!ColorUtils.toPlainText(lore.get(targetIndex - 1)).trim().isEmpty())
                     injectComponents.add(0, Component.empty());
@@ -291,13 +312,13 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
                 injectComponents.add(0, Component.empty());
         }
 
-        int startIdx = hadPlaceholder ? targetIndex : lore.size();
-        if (hadPlaceholder) lore.addAll(targetIndex, injectComponents);
+        int startIdx = hasPlaceholder ? targetIndex : lore.size();
+        if (hasPlaceholder) lore.addAll(targetIndex, injectComponents);
         else lore.addAll(injectComponents);
 
         pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_start"), PersistentDataType.INTEGER, startIdx);
         pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_count"), PersistentDataType.INTEGER, injectComponents.size());
-        pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_placeholder"), PersistentDataType.BYTE, (byte) (hadPlaceholder ? 1 : 0));
+        pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_placeholder"), PersistentDataType.BYTE, (byte) (hasPlaceholder ? 1 : 0));
 
         meta.lore(lore);
         item.setItemMeta(meta);

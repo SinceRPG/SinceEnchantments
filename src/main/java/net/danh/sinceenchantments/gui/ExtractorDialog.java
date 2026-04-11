@@ -12,6 +12,7 @@ import net.danh.sinceenchantments.utils.ConfigUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
@@ -134,11 +135,25 @@ public class ExtractorDialog {
         player.showDialog(dialog);
     }
 
+    private static boolean isEnchantableGear(org.bukkit.inventory.ItemStack item) {
+        if (item == null) return false;
+        String name = item.getType().name();
+        return name.endsWith("_SWORD") || name.endsWith("_AXE") || name.endsWith("_PICKAXE") ||
+                name.endsWith("_SHOVEL") || name.endsWith("_HOE") || name.endsWith("_HELMET") ||
+                name.endsWith("_CHESTPLATE") || name.endsWith("_LEGGINGS") || name.endsWith("_BOOTS") ||
+                name.equals("BOW") || name.equals("CROSSBOW") || name.equals("TRIDENT") ||
+                name.equals("MACE") || name.equals("FISHING_ROD") || name.equals("SHIELD") ||
+                name.equals("ELYTRA") || name.equals("SHEARS") || name.equals("FLINT_AND_STEEL") ||
+                name.equals("BRUSH") || name.equals("CARROT_ON_A_STICK") || name.equals("WARPED_FUNGUS_ON_A_STICK");
+    }
+
     private static ItemStack formatDisplayWeapon(SinceEnchantments plugin, ItemStack item) {
         plugin.getEnchantManager().cleanItemLore(item);
 
-        if (item == null || !item.hasItemMeta()) return item;
-        ItemMeta meta = item.getItemMeta();
+        if (item == null || item.getType().isAir()) return item;
+
+        boolean hadMetaInitially = item.hasItemMeta();
+        ItemMeta meta = hadMetaInitially ? item.getItemMeta() : Bukkit.getItemFactory().getItemMeta(item.getType());
         if (meta == null) return item;
 
         ConfigUtils settings = plugin.getSettingsFile();
@@ -164,14 +179,19 @@ public class ExtractorDialog {
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         boolean hasProtect = pdc.has(plugin.getEnchantManager().PROTECTED_ITEM_KEY, PersistentDataType.BYTE);
         boolean hasTracker = pdc.has(plugin.getEnchantManager().TRACKER_KEY, PersistentDataType.BYTE);
+        boolean isLocked = plugin.getEnchantManager().isLocked(item);
 
-        if (((!overrideVanilla && customEnchants.isEmpty()) || (overrideVanilla && vanillaEnchants.isEmpty() && customEnchants.isEmpty()))
-                && !plugin.getEnchantManager().isLocked(item)
-                && plugin.getEnchantManager().getWhitelistedEnchants(item).isEmpty()
-                && !hasProtect && !hasTracker) {
+        boolean isGear = isEnchantableGear(item);
+        boolean hasPlaceholder = (targetIndex != -1);
+        boolean hasCustom = !customEnchants.isEmpty();
+        boolean hasVanilla = !vanillaEnchants.isEmpty();
+        boolean hasWhitelist = !plugin.getEnchantManager().getWhitelistedEnchants(item).isEmpty();
 
-            meta.lore(lore);
-            item.setItemMeta(meta);
+        if (!isGear && !hasPlaceholder && !hasCustom && (!hasVanilla || !overrideVanilla) && !hasWhitelist && !hasProtect && !hasTracker && !isLocked) {
+            if (hadMetaInitially) {
+                meta.lore(lore);
+                item.setItemMeta(meta);
+            }
             return item;
         }
 
@@ -334,16 +354,17 @@ public class ExtractorDialog {
         }
 
         if (enchantComponents.isEmpty()) {
-            meta.lore(lore);
-            item.setItemMeta(meta);
+            if (hadMetaInitially) {
+                meta.lore(lore);
+                item.setItemMeta(meta);
+            }
             return item;
         }
 
         boolean addEmptyLineAbove = settings.getBoolean("settings.add-empty-line-above", true);
         boolean addEmptyLineBelow = settings.getBoolean("settings.add-empty-line-below", true);
-        boolean hadPlaceholder = (targetIndex != -1);
 
-        if (hadPlaceholder) {
+        if (hasPlaceholder) {
             if (addEmptyLineAbove && targetIndex > 0) {
                 String abovePlain = ColorUtils.toPlainText(lore.get(targetIndex - 1)).trim();
                 if (!abovePlain.isEmpty()) enchantComponents.add(0, Component.empty());
@@ -362,7 +383,7 @@ public class ExtractorDialog {
         }
 
         int startIdx;
-        if (hadPlaceholder) {
+        if (hasPlaceholder) {
             lore.addAll(targetIndex, enchantComponents);
             startIdx = targetIndex;
         } else {
@@ -372,7 +393,7 @@ public class ExtractorDialog {
 
         pdc.set(new NamespacedKey(plugin, "lore_start"), PersistentDataType.INTEGER, startIdx);
         pdc.set(new NamespacedKey(plugin, "lore_count"), PersistentDataType.INTEGER, enchantComponents.size());
-        pdc.set(new NamespacedKey(plugin, "lore_placeholder"), PersistentDataType.BYTE, (byte) (hadPlaceholder ? 1 : 0));
+        pdc.set(new NamespacedKey(plugin, "lore_placeholder"), PersistentDataType.BYTE, (byte) (hasPlaceholder ? 1 : 0));
 
         meta.lore(lore);
         item.setItemMeta(meta);
