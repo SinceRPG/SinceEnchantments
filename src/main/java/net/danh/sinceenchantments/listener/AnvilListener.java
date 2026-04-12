@@ -3,10 +3,13 @@ package net.danh.sinceenchantments.listener;
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.api.EnchantManager;
 import net.danh.sinceenchantments.utils.ConfigUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
+import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.view.AnvilView;
@@ -189,5 +192,36 @@ public class AnvilListener implements Listener {
         int finalCost = anvilView.getRepairCost() + costIncrease;
         if (vanillaHasNoResult) finalCost += 1;
         anvilView.setRepairCost(finalCost);
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
+    public void onAnvilTakeResult(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof org.bukkit.entity.Player p)) return;
+        if (!(event.getInventory() instanceof AnvilInventory anvil)) return;
+
+        if (event.getRawSlot() != 2) return;
+
+        ItemStack result = event.getCurrentItem();
+        if (result == null || result.getType() == Material.AIR) return;
+
+        boolean isOurOperation = false;
+        ItemStack slot1 = anvil.getItem(0);
+        ItemStack slot2 = anvil.getItem(1);
+
+        if (slot2 != null && slot2.hasItemMeta() && slot2.getItemMeta().getPersistentDataContainer().has(manager.BOOK_ID_KEY, PersistentDataType.STRING)) {
+            isOurOperation = true;
+        } else if (result.hasItemMeta() && result.getItemMeta().getPersistentDataContainer().has(manager.ENCHANT_KEY, PersistentDataType.STRING)) {
+            isOurOperation = true;
+        }
+
+        if (!isOurOperation) return;
+
+        if (plugin.getMMOCoreHook().isHooked()) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (p.isOnline()) {
+                    plugin.getMMOCoreHook().syncLevelFromVanilla(p);
+                }
+            }, 1L);
+        }
     }
 }

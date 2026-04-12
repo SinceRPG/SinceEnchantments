@@ -3,10 +3,7 @@ package net.danh.sinceenchantments;
 import com.github.retrooper.packetevents.PacketEvents;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import net.danh.sinceenchantments.api.AddonLoader;
-import net.danh.sinceenchantments.api.EnchantManager;
-import net.danh.sinceenchantments.api.EnchantRegistry;
-import net.danh.sinceenchantments.api.InternalModuleLoader;
+import net.danh.sinceenchantments.api.*;
 import net.danh.sinceenchantments.command.SinceCommand;
 import net.danh.sinceenchantments.listener.*;
 import net.danh.sinceenchantments.utils.ConfigUtils;
@@ -31,6 +28,8 @@ public class SinceEnchantments extends JavaPlugin {
     private EnchantRegistry enchantRegistry;
     private AddonLoader addonLoader;
     private InternalModuleLoader internalModuleLoader;
+    private MMOCoreHook mmoCoreHook;
+    private MythicLibHook mythicLibHook;
 
     public static SinceEnchantments getInstance() {
         return instance;
@@ -59,8 +58,10 @@ public class SinceEnchantments extends JavaPlugin {
         this.itemsFile = new ConfigUtils(this, "items.yml");
         this.guiFile = new ConfigUtils(this, "gui.yml");
 
+        this.mythicLibHook = new MythicLibHook(this);
         this.enchantManager = new EnchantManager(this);
         this.enchantRegistry = new EnchantRegistry(this);
+        this.mmoCoreHook = new MMOCoreHook(this);
 
         this.internalModuleLoader = new InternalModuleLoader(this);
         this.internalModuleLoader.loadInternalModules();
@@ -137,5 +138,13 @@ public class SinceEnchantments extends JavaPlugin {
 
     public InternalModuleLoader getInternalModuleLoader() {
         return internalModuleLoader;
+    }
+
+    public MMOCoreHook getMMOCoreHook() {
+        return mmoCoreHook;
+    }
+
+    public MythicLibHook getMythicLibHook() {
+        return mythicLibHook;
     }
 }

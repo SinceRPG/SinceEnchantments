@@ -6,7 +6,6 @@ import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.utils.ColorUtils;
 import net.danh.sinceenchantments.utils.ConfigUtils;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
@@ -17,7 +16,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.lang.reflect.Method;
 import java.util.*;
 
 @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "unused", "UnusedReturnValue"})
@@ -68,12 +66,6 @@ public class EnchantManager {
     private final Map<String, Integer> itemMaxSlotModifiers = new HashMap<>();
     private final Map<String, Integer> mmoItemsMaxSlotModifiers = new HashMap<>();
 
-    private Method nbtItemGetMethod;
-    private Method nbtItemHasTypeMethod;
-    private Method nbtItemGetTypeMethod;
-    private Method nbtItemGetStringMethod;
-    private boolean mmoItemsHooked = false;
-
     public EnchantManager(SinceEnchantments plugin) {
         this.plugin = plugin;
         this.ENCHANT_KEY = new NamespacedKey(plugin, "custom_enchants");
@@ -105,24 +97,7 @@ public class EnchantManager {
         this.STAT_PLAYERS_KEY = new NamespacedKey(plugin, "stat_players_killed");
         this.STAT_FISH_KEY = new NamespacedKey(plugin, "stat_fish_caught");
 
-        setupMMOItemsHook();
         loadEnchantsFromConfig();
-    }
-
-    private void setupMMOItemsHook() {
-        if (Bukkit.getPluginManager().isPluginEnabled("MMOItems")) {
-            try {
-                Class<?> nbtItemClass = Class.forName("io.lumine.mythic.lib.api.item.NBTItem");
-                nbtItemGetMethod = nbtItemClass.getMethod("get", ItemStack.class);
-                nbtItemHasTypeMethod = nbtItemClass.getMethod("hasType");
-                nbtItemGetTypeMethod = nbtItemClass.getMethod("getType");
-                nbtItemGetStringMethod = nbtItemClass.getMethod("getString", String.class);
-                mmoItemsHooked = true;
-                plugin.getLogger().info("Successfully hooked into MMOItems NBT API!");
-            } catch (Exception e) {
-                plugin.getLogger().warning("MMOItems detected, but failed to hook into MythicLib API.");
-            }
-        }
     }
 
     public void loadEnchantsFromConfig() {
@@ -245,6 +220,7 @@ public class EnchantManager {
 
     public String getMMOItemKey(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return null;
+
         PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
         NamespacedKey typeKey = new NamespacedKey("mmoitems", "type");
         NamespacedKey idKey = new NamespacedKey("mmoitems", "id");
@@ -255,19 +231,7 @@ public class EnchantManager {
             if (type != null && id != null) return (type + ":" + id).toUpperCase();
         }
 
-        if (!mmoItemsHooked) return null;
-        try {
-            Object nbtItem = nbtItemGetMethod.invoke(null, item);
-            if ((boolean) nbtItemHasTypeMethod.invoke(nbtItem)) {
-                String type = (String) nbtItemGetTypeMethod.invoke(nbtItem);
-                String id = (String) nbtItemGetStringMethod.invoke(nbtItem, "MMOITEMS_ITEM_ID");
-                if (type != null && id != null && !type.isEmpty() && !id.isEmpty()) {
-                    return (type + ":" + id).toUpperCase();
-                }
-            }
-        } catch (Exception ignored) {
-        }
-        return null;
+        return plugin.getMythicLibHook().isHooked() ? plugin.getMythicLibHook().getMMOItemKey(item) : null;
     }
 
     public void cleanItemLore(ItemStack item) {

@@ -13,3 +13,6 @@ dependencies:
     MythicLib:
       load: BEFORE
       required: false
+    MMOCore:
+      load: BEFORE
+      required: false
