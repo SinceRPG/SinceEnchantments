@@ -1,6 +1,39 @@
+# ==============================================================================
+# ITEMS CONFIGURATION (SUPERCHARGED ITEMMETA)
+# ==============================================================================
+# You can now configure ALMOST EVERYTHING about these items via config.
+#
+# Supported tags (All optional except 'material'):
+# - material: The Bukkit Material Name (e.g., IRON_SWORD, PAPER).
+# - name: Display Name (Supports MiniMessage <red>, <bold>, etc.).
+# - item-name: The core 1.21 item name (no italics, unchangeable via anvil).
+# - item-model: NamespacedKey to override the model (e.g., "minecraft:stick").
+# - tooltip-style: Custom UI frame for tooltips (e.g., "minecraft:enchantment_table").
+# - lore: List of lore strings.
+# - custom-model-data: Can be a simple Integer OR a Component map (floats, strings, flags, colors).
+# - unbreakable: true/false.
+# - hide-tooltip: true/false (Completely hides the UI box when hovered).
+# - glint-override: true/false (Forces the item to glow like an enchanted item).
+# - glider: true/false (Makes the item act like an Elytra).
+# - enchantable: Integer (Overrides the enchantment power capability).
+# - max-stack-size: Integer (1-99).
+# - rarity: "COMMON", "UNCOMMON", "RARE", "EPIC".
+# - damage: Integer (Sets how much durability the item has lost).
+# - flags: List of ItemFlags (e.g., HIDE_ENCHANTS, HIDE_ATTRIBUTES).
+# - enchants: Map of vanilla enchants and levels.
+# - attributes: Map of Bukkit attributes (amount, operation, slot).
+# ==============================================================================
+
 enchant-book:
   material: "ENCHANTED_BOOK"
   name: "<gradient:light_purple:dark_purple><bold>Enchantment Book: %enchant_name%"
+  item-name: "<light_purple>Enchantment Book"
+  glint-override: true
+  max-stack-size: 16
+  rarity: "UNCOMMON"
+  flags:
+    - "HIDE_ENCHANTS"
+    - "HIDE_ATTRIBUTES"
   lore:
     - "&7Rarity: %rarity_color%%rarity_name%"
     - "&7Level: &e%level%"
@@ -15,6 +48,15 @@ enchant-book:
 random-extractor:
   material: "PAPER"
   name: "&8[&d&lRandom Extractor&8]"
+  item-name: "<dark_gray>[<light_purple><bold>Random Extractor</bold><dark_gray>]"
+  glint-override: true
+  max-stack-size: 64
+  rarity: "RARE"
+  # Support for Paper 1.21.5+ CustomModelDataComponent
+  custom-model-data:
+    value: 101 # Fallback for old versions (<1.21.5)
+    floats: [ 101.0 ]
+    strings: [ "sinceenchant:extractor_random" ]
   lore:
     - "&7Drag & Drop onto an item"
     - "&7to extract a random enchantment"
@@ -23,6 +65,13 @@ random-extractor:
 specific-extractor:
   material: "PAPER"
   name: "&8[&b&lSpecific Extractor&8]"
+  glint-override: true
+  max-stack-size: 64
+  rarity: "EPIC"
+  custom-model-data:
+    value: 102
+    floats: [ 102.0 ]
+    strings: [ "sinceenchant:extractor_specific" ]
   lore:
     - "&7Drag & Drop onto an item"
     - "&7to open a menu and choose"
@@ -31,6 +80,9 @@ specific-extractor:
 success-charm:
   material: "GLOWSTONE_DUST"
   name: "&8[&e&lSuccess Charm&8]"
+  glint-override: true
+  max-stack-size: 64
+  custom-model-data: 103 # Simple integer legacy way still works perfectly!
   lore:
     - "&7Increases the success rate"
     - "&7of an Enchantment Book by &a+%bonus%%&7."
@@ -40,6 +92,11 @@ success-charm:
 slot-gem:
   material: "EMERALD"
   name: "&8[&b&lSlot Gem&8]"
+  unbreakable: true
+  glint-override: true
+  max-stack-size: 64
+  flags:
+    - "HIDE_UNBREAKABLE"
   lore:
     - "&7Drag & Drop onto an item"
     - "&7to modify its maximum"
@@ -48,6 +105,8 @@ slot-gem:
 lock-scroll:
   material: "PAPER"
   name: "&8[&c&lLock Scroll&8]"
+  glint-override: true
+  max-stack-size: 64
   lore:
     - "&7Drag & Drop onto an item"
     - "&7to toggle its lock status."
@@ -57,6 +116,8 @@ lock-scroll:
 purge-scroll:
   material: "PAPER"
   name: "&8[&a&lPurge Scroll&8]"
+  glint-override: true
+  max-stack-size: 64
   lore:
     - "&7Drag & Drop onto an item"
     - "&7to remove ALL enchantments."
@@ -65,6 +126,8 @@ purge-scroll:
 randomizer-stone:
   material: "MAGMA_CREAM"
   name: "&8[&d&lRandomizer Stone&8]"
+  glint-override: true
+  max-stack-size: 64
   lore:
     - "&7Drag & Drop onto an Enchantment Book"
     - "&7to completely randomize its"
@@ -73,6 +136,9 @@ randomizer-stone:
 protection-gem:
   material: "NETHER_STAR"
   name: "&8[&a&lProtection Gem&8]"
+  glint-override: true
+  max-stack-size: 64
+  rarity: "EPIC"
   lore:
     - "&7Drag & Drop onto an item."
     - "&7If you die while holding this item,"
@@ -82,6 +148,42 @@ protection-gem:
 stat-tracker:
   material: "CLOCK"
   name: "&8[&6&lStat Tracker&8]"
+  glint-override: true
+  max-stack-size: 64
   lore:
     - "&7Drag & Drop onto a Weapon, Tool, or Rod"
     - "&7to permanently track its statistics."
+
+# ==============================================================================
+# DEMO ADVANCED ITEM (YOU CAN ADD CUSTOM ITEMS LIKE THIS)
+# This is an example to show you how powerful the new ItemFactory is.
+# ==============================================================================
+# demo-god-sword:
+#   material: "DIAMOND_SWORD"
+#   name: "<gradient:gold:red><bold>God Slayer"
+#   item-name: "<gold>God Slayer"
+#   unbreakable: true
+#   glint-override: true
+#   max-stack-size: 1
+#   rarity: "EPIC"
+#   damage: 0
+#   custom-model-data: 999
+#   flags:
+#     - "HIDE_ENCHANTS"
+#     - "HIDE_ATTRIBUTES"
+#     - "HIDE_UNBREAKABLE"
+#   lore:
+#     - "&7A sword forged by the gods."
+#   enchants:
+#     "minecraft:sharpness": 10
+#     "minecraft:unbreaking": 5
+#     "minecraft:looting": 3
+#   attributes:
+#     "minecraft:generic.attack_damage":
+#       amount: 150.0
+#       operation: "ADD_NUMBER"
+#       slot: "MAINHAND"
+#     "minecraft:generic.movement_speed":
+#       amount: 0.15
+#       operation: "ADD_SCALAR"
+#       slot: "ANY"
