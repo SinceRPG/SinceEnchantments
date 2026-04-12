@@ -103,7 +103,7 @@ public class SinceCommand {
             return Command.SINGLE_SUCCESS;
         }
         int level = IntegerArgumentType.getInteger(context, "level");
-        ItemStack book = plugin.getEnchantManager().createEnchantBook(enchantId, level, success, destroy);
+        ItemStack book = plugin.getItemFactory().createEnchantBook(enchantId, level, success, destroy);
         target.getInventory().addItem(book);
         sendMessage(context.getSource(), "give-book-success", "%enchant%", enchantId, "%level%", String.valueOf(level), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
@@ -117,7 +117,7 @@ public class SinceCommand {
             sendMessage(context.getSource(), "invalid-extractor-type");
             return Command.SINGLE_SUCCESS;
         }
-        ItemStack extractor = plugin.getEnchantManager().createExtractor(type, amount);
+        ItemStack extractor = plugin.getItemFactory().createExtractor(type, amount);
         target.getInventory().addItem(extractor);
         sendMessage(context.getSource(), "give-extractor-success", "%type%", type.toUpperCase(), "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
@@ -126,7 +126,7 @@ public class SinceCommand {
     private int executeGiveCharm(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         Player target = context.getArgument("target", PlayerSelectorArgumentResolver.class).resolve(context.getSource()).getFirst();
         int bonus = IntegerArgumentType.getInteger(context, "bonus");
-        ItemStack charm = plugin.getEnchantManager().createSuccessCharm(bonus, amount);
+        ItemStack charm = plugin.getItemFactory().createSuccessCharm(bonus, amount);
         target.getInventory().addItem(charm);
         sendMessage(context.getSource(), "give-charm-success", "%bonus%", String.valueOf(bonus), "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
@@ -135,7 +135,7 @@ public class SinceCommand {
     private int executeGiveSlotGem(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         Player target = context.getArgument("target", PlayerSelectorArgumentResolver.class).resolve(context.getSource()).getFirst();
         int modifier = IntegerArgumentType.getInteger(context, "modifier");
-        ItemStack gem = plugin.getEnchantManager().createSlotGem(modifier, amount);
+        ItemStack gem = plugin.getItemFactory().createSlotGem(modifier, amount);
         target.getInventory().addItem(gem);
         sendMessage(context.getSource(), "give-slotgem-success", "%modifier%", String.valueOf(modifier), "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
@@ -143,7 +143,7 @@ public class SinceCommand {
 
     private int executeGiveLock(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         Player target = context.getArgument("target", PlayerSelectorArgumentResolver.class).resolve(context.getSource()).getFirst();
-        ItemStack scroll = plugin.getEnchantManager().createLockScroll(amount);
+        ItemStack scroll = plugin.getItemFactory().createLockScroll(amount);
         target.getInventory().addItem(scroll);
         sendMessage(context.getSource(), "give-lock-success", "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
@@ -152,7 +152,7 @@ public class SinceCommand {
     private int executeGivePurge(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         Player target = context.getArgument("target", PlayerSelectorArgumentResolver.class).resolve(context.getSource()).getFirst();
         boolean returnBooks = BoolArgumentType.getBool(context, "return_books");
-        ItemStack scroll = plugin.getEnchantManager().createPurgeScroll(returnBooks, amount);
+        ItemStack scroll = plugin.getItemFactory().createPurgeScroll(returnBooks, amount);
         target.getInventory().addItem(scroll);
         sendMessage(context.getSource(), "give-purge-success", "%return%", returnBooks ? "True" : "False", "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
@@ -160,7 +160,7 @@ public class SinceCommand {
 
     private int executeGiveRandomizer(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         Player target = context.getArgument("target", PlayerSelectorArgumentResolver.class).resolve(context.getSource()).getFirst();
-        ItemStack item = plugin.getEnchantManager().createRandomizer(amount);
+        ItemStack item = plugin.getItemFactory().createRandomizer(amount);
         target.getInventory().addItem(item);
         sendMessage(context.getSource(), "give-randomizer-success", "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
@@ -168,7 +168,7 @@ public class SinceCommand {
 
     private int executeGiveProtector(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         Player target = context.getArgument("target", PlayerSelectorArgumentResolver.class).resolve(context.getSource()).getFirst();
-        ItemStack item = plugin.getEnchantManager().createProtector(amount);
+        ItemStack item = plugin.getItemFactory().createProtector(amount);
         target.getInventory().addItem(item);
         sendMessage(context.getSource(), "give-protector-success", "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
@@ -176,7 +176,7 @@ public class SinceCommand {
 
     private int executeGiveTracker(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context, int amount) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         Player target = context.getArgument("target", PlayerSelectorArgumentResolver.class).resolve(context.getSource()).getFirst();
-        ItemStack item = plugin.getEnchantManager().createTracker(amount);
+        ItemStack item = plugin.getItemFactory().createTracker(amount);
         target.getInventory().addItem(item);
         sendMessage(context.getSource(), "give-tracker-success", "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;

@@ -2,6 +2,7 @@ package net.danh.sinceenchantments.listener;
 
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.api.EnchantManager;
+import net.danh.sinceenchantments.api.ItemFactory;
 import net.danh.sinceenchantments.utils.ConfigUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -24,10 +25,12 @@ import java.util.Map;
 public class AnvilListener implements Listener {
     private final SinceEnchantments plugin;
     private final EnchantManager manager;
+    private final ItemFactory itemFactory;
 
     public AnvilListener(SinceEnchantments plugin) {
         this.plugin = plugin;
         this.manager = plugin.getEnchantManager();
+        this.itemFactory = plugin.getItemFactory();
     }
 
     @EventHandler
@@ -66,7 +69,7 @@ public class AnvilListener implements Listener {
                     if (nextLvl <= manager.getMaxLevel(enchantId)) {
                         int avgSuccess = (successRate1 + successRate2) / 2;
                         int avgDestroy = (destroyRate1 + destroyRate2) / 2;
-                        ItemStack resultBook = manager.createEnchantBook(enchantId, nextLvl, avgSuccess, avgDestroy);
+                        ItemStack resultBook = itemFactory.createEnchantBook(enchantId, nextLvl, avgSuccess, avgDestroy);
                         event.setResult(resultBook);
                         anvilView.setRepairCost(nextLvl * costCombine);
                     }

@@ -2,6 +2,7 @@ package net.danh.sinceenchantments.listener;
 
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.api.EnchantManager;
+import net.danh.sinceenchantments.api.ItemFactory;
 import net.danh.sinceenchantments.gui.ExtractorDialog;
 import net.danh.sinceenchantments.gui.ExtractorGUI;
 import net.danh.sinceenchantments.utils.ColorUtils;
@@ -27,11 +28,13 @@ import java.util.Random;
 public class ExtractorListener implements Listener {
     private final SinceEnchantments plugin;
     private final EnchantManager manager;
+    private final ItemFactory itemFactory;
     private final Random random = new Random();
 
     public ExtractorListener(SinceEnchantments plugin) {
         this.plugin = plugin;
         this.manager = plugin.getEnchantManager();
+        this.itemFactory = plugin.getItemFactory();
     }
 
     private void sendMsg(Player p, String path, String... replacements) {
@@ -92,7 +95,7 @@ public class ExtractorListener implements Listener {
             int removedLevel = allEnchants.get(removedId);
 
             manager.removeEnchant(current, removedId);
-            ItemStack book = manager.createEnchantBook(removedId, removedLevel, 100, 0);
+            ItemStack book = itemFactory.createEnchantBook(removedId, removedLevel, 100, 0);
             if (!p.getInventory().addItem(book).isEmpty()) {
                 p.getWorld().dropItem(p.getLocation(), book);
             }
@@ -170,7 +173,7 @@ public class ExtractorListener implements Listener {
         }
 
         manager.removeEnchant(weapon, enchantId);
-        ItemStack book = manager.createEnchantBook(enchantId, level, 100, 0);
+        ItemStack book = itemFactory.createEnchantBook(enchantId, level, 100, 0);
 
         if (!p.getInventory().addItem(book).isEmpty()) {
             p.getWorld().dropItem(p.getLocation(), book);
@@ -187,7 +190,7 @@ public class ExtractorListener implements Listener {
         if (event.getInventory().getHolder() instanceof ExtractorGUI gui) {
             if (!gui.isCompleted()) {
                 Player p = (Player) event.getPlayer();
-                ItemStack refund = manager.createExtractor("specific", 1);
+                ItemStack refund = itemFactory.createExtractor("specific", 1);
                 if (!p.getInventory().addItem(refund).isEmpty()) {
                     p.getWorld().dropItem(p.getLocation(), refund);
                 }

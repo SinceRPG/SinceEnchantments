@@ -56,7 +56,7 @@ public class ExtractorDialog {
                     }
 
                     plugin.getEnchantManager().removeEnchant(weapon, id);
-                    ItemStack book = plugin.getEnchantManager().createEnchantBook(id, level, 100, 0);
+                    ItemStack book = plugin.getItemFactory().createEnchantBook(id, level, 100, 0);
 
                     if (!p.getInventory().addItem(book).isEmpty()) p.getWorld().dropItem(p.getLocation(), book);
                     p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
@@ -76,7 +76,7 @@ public class ExtractorDialog {
         DialogAction cancelAction = DialogAction.customClick((view, audience) -> {
             audience.closeDialog();
             if (audience instanceof Player p) {
-                ItemStack refund = plugin.getEnchantManager().createExtractor("specific", 1);
+                ItemStack refund = plugin.getItemFactory().createExtractor("specific", 1);
                 if (!p.getInventory().addItem(refund).isEmpty()) p.getWorld().dropItem(p.getLocation(), refund);
                 String prefix = plugin.getMessagesFile().getString("prefix", "");
                 String msg = plugin.getMessagesFile().getString("extract-cancelled", "");

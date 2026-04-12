@@ -24,6 +24,7 @@ public class SinceEnchantments extends JavaPlugin {
     private ConfigUtils guiFile;
 
     private EnchantManager enchantManager;
+    private ItemFactory itemFactory;
     private EnchantRegistry enchantRegistry;
     private AddonLoader addonLoader;
     private InternalModuleLoader internalModuleLoader;
@@ -59,6 +60,7 @@ public class SinceEnchantments extends JavaPlugin {
 
         this.mythicLibHook = new MythicLibHook(this);
         this.enchantManager = new EnchantManager(this);
+        this.itemFactory = new ItemFactory(this);
         this.enchantRegistry = new EnchantRegistry(this);
         this.mmoCoreHook = new MMOCoreHook(this);
 
@@ -119,6 +121,10 @@ public class SinceEnchantments extends JavaPlugin {
 
     public EnchantManager getEnchantManager() {
         return enchantManager;
+    }
+
+    public ItemFactory getItemFactory() {
+        return itemFactory;
     }
 
     public EnchantRegistry getEnchantRegistry() {

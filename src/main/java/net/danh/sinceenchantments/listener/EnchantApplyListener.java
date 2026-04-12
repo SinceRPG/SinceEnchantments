@@ -2,6 +2,7 @@ package net.danh.sinceenchantments.listener;
 
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.api.EnchantManager;
+import net.danh.sinceenchantments.api.ItemFactory;
 import net.danh.sinceenchantments.utils.ColorUtils;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -19,11 +20,13 @@ import java.util.*;
 public class EnchantApplyListener implements Listener {
     private final SinceEnchantments plugin;
     private final EnchantManager manager;
+    private final ItemFactory itemFactory;
     private final Random random = new Random();
 
     public EnchantApplyListener(SinceEnchantments plugin) {
         this.plugin = plugin;
         this.manager = plugin.getEnchantManager();
+        this.itemFactory = plugin.getItemFactory();
     }
 
     private void sendMsg(Player p, String path, String... replacements) {
@@ -78,7 +81,7 @@ public class EnchantApplyListener implements Listener {
             String enchantId = currentMeta.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
             int level = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
 
-            ItemStack newBook = manager.createEnchantBook(enchantId, level, newSuccess, newDestroy);
+            ItemStack newBook = itemFactory.createEnchantBook(enchantId, level, newSuccess, newDestroy);
             event.setCurrentItem(newBook);
 
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
@@ -153,7 +156,7 @@ public class EnchantApplyListener implements Listener {
             if (returnBooks) {
                 Map<String, Integer> allEnchants = manager.getAllEnchantsOnItem(current);
                 for (Map.Entry<String, Integer> entry : allEnchants.entrySet()) {
-                    ItemStack book = manager.createEnchantBook(entry.getKey(), entry.getValue(), 100, 0);
+                    ItemStack book = itemFactory.createEnchantBook(entry.getKey(), entry.getValue(), 100, 0);
                     if (!player.getInventory().addItem(book).isEmpty()) {
                         player.getWorld().dropItem(player.getLocation(), book);
                     }
@@ -191,7 +194,7 @@ public class EnchantApplyListener implements Listener {
             String enchantId = currentMeta.getPersistentDataContainer().get(manager.BOOK_ID_KEY, PersistentDataType.STRING);
             int level = currentMeta.getPersistentDataContainer().getOrDefault(manager.BOOK_LEVEL_KEY, PersistentDataType.INTEGER, 1);
 
-            ItemStack newBook = manager.createEnchantBook(enchantId, level, newSuccess, newDestroy);
+            ItemStack newBook = itemFactory.createEnchantBook(enchantId, level, newSuccess, newDestroy);
             event.setCurrentItem(newBook);
 
             consumeCursor(player, cursor);
