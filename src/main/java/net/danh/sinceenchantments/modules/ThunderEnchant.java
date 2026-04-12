@@ -1,6 +1,5 @@
 package net.danh.sinceenchantments.modules;
 
-import net.danh.sinceenchantments.api.SinceEnchant;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -23,17 +22,12 @@ public class ThunderEnchant extends SinceEnchant {
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onHit(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player p && event.getEntity() instanceof LivingEntity target) {
-
             if (isStriking.contains(p.getUniqueId())) return;
-
             int level = getLevel(p.getInventory().getItemInMainHand());
             if (level > 0 && r.nextInt(100) < (level * getInt("chance-per-level", 8))) {
-
                 isStriking.add(p.getUniqueId());
-
                 target.getWorld().strikeLightningEffect(target.getLocation());
                 target.damage(getDouble("extra-damage", 3.0), p);
-
                 isStriking.remove(p.getUniqueId());
                 sendMessage(p, "activate");
             }

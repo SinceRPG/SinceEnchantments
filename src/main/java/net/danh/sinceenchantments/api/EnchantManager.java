@@ -29,22 +29,17 @@ public class EnchantManager {
     public final NamespacedKey EXTRACTOR_TYPE_KEY;
     public final NamespacedKey CHARM_BONUS_KEY;
     public final NamespacedKey GUI_ACTION_KEY;
-
     public final NamespacedKey SLOT_GEM_KEY;
     public final NamespacedKey SLOT_MODIFIER_KEY;
-
     public final NamespacedKey LOCKED_KEY;
     public final NamespacedKey LOCK_SCROLL_KEY;
     public final NamespacedKey PURGE_SCROLL_KEY;
     public final NamespacedKey PURGE_RETURN_KEY;
-
     public final NamespacedKey RANDOMIZER_KEY;
     public final NamespacedKey PROTECTOR_KEY;
     public final NamespacedKey PROTECTED_ITEM_KEY;
-
     public final NamespacedKey TRACKER_ITEM_KEY;
     public final NamespacedKey TRACKER_KEY;
-
     public final NamespacedKey STAT_BLOCKS_KEY;
     public final NamespacedKey STAT_MOBS_KEY;
     public final NamespacedKey STAT_PLAYERS_KEY;
@@ -58,7 +53,6 @@ public class EnchantManager {
     private final Map<String, List<String>> conflicts = new HashMap<>();
     private final Map<String, List<String>> requires = new HashMap<>();
     private final Map<String, List<String>> descriptions = new HashMap<>();
-
     private final Map<String, List<String>> itemWhitelist = new HashMap<>();
     private final Map<String, List<String>> mmoItemsWhitelist = new HashMap<>();
     private final Map<String, Integer> itemMaxSlots = new HashMap<>();
@@ -76,22 +70,17 @@ public class EnchantManager {
         this.EXTRACTOR_TYPE_KEY = new NamespacedKey(plugin, "extractor_type");
         this.CHARM_BONUS_KEY = new NamespacedKey(plugin, "charm_bonus");
         this.GUI_ACTION_KEY = new NamespacedKey(plugin, "gui_action");
-
         this.SLOT_GEM_KEY = new NamespacedKey(plugin, "slot_gem_item");
         this.SLOT_MODIFIER_KEY = new NamespacedKey(plugin, "slot_modifier");
-
         this.LOCKED_KEY = new NamespacedKey(plugin, "item_locked");
         this.LOCK_SCROLL_KEY = new NamespacedKey(plugin, "lock_scroll");
         this.PURGE_SCROLL_KEY = new NamespacedKey(plugin, "purge_scroll");
         this.PURGE_RETURN_KEY = new NamespacedKey(plugin, "purge_return_books");
-
         this.RANDOMIZER_KEY = new NamespacedKey(plugin, "randomizer_stone");
         this.PROTECTOR_KEY = new NamespacedKey(plugin, "protection_gem");
         this.PROTECTED_ITEM_KEY = new NamespacedKey(plugin, "item_is_protected");
-
         this.TRACKER_ITEM_KEY = new NamespacedKey(plugin, "stat_tracker_item");
         this.TRACKER_KEY = new NamespacedKey(plugin, "stat_tracker_applied");
-
         this.STAT_BLOCKS_KEY = new NamespacedKey(plugin, "stat_blocks_mined");
         this.STAT_MOBS_KEY = new NamespacedKey(plugin, "stat_mobs_killed");
         this.STAT_PLAYERS_KEY = new NamespacedKey(plugin, "stat_players_killed");
@@ -186,21 +175,15 @@ public class EnchantManager {
         if (pattern.startsWith("*") && pattern.endsWith("*") && pattern.length() >= 2) {
             return text.contains(pattern.substring(1, pattern.length() - 1));
         }
-        if (pattern.startsWith("*")) {
-            return text.endsWith(pattern.substring(1));
-        }
-        if (pattern.endsWith("*")) {
-            return text.startsWith(pattern.substring(0, pattern.length() - 1));
-        }
+        if (pattern.startsWith("*")) return text.endsWith(pattern.substring(1));
+        if (pattern.endsWith("*")) return text.startsWith(pattern.substring(0, pattern.length() - 1));
         return text.equals(pattern);
     }
 
     public boolean isItemInCategory(ItemStack item, String category) {
         if (item == null || item.getType() == Material.AIR) return false;
-
         String configPath = "settings.stat-tracker-categories." + category;
         ConfigUtils settings = plugin.getSettingsFile();
-
         String mmoKey = getMMOItemKey(item);
         if (mmoKey != null) {
             List<String> mmoPatterns = settings.getStringList(configPath + ".mmoitems");
@@ -208,30 +191,25 @@ public class EnchantManager {
                 if (isMatch(mmoKey, pattern.toUpperCase())) return true;
             }
         }
-
         String matName = item.getType().name().toUpperCase();
         List<String> vanillaPatterns = settings.getStringList(configPath + ".vanilla");
         for (String pattern : vanillaPatterns) {
             if (isMatch(matName, pattern.toUpperCase())) return true;
         }
-
         return false;
     }
 
     public String getMMOItemKey(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return null;
-
         PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
         NamespacedKey typeKey = new NamespacedKey("mmoitems", "type");
         NamespacedKey idKey = new NamespacedKey("mmoitems", "id");
-
         if (pdc.has(typeKey, PersistentDataType.STRING) && pdc.has(idKey, PersistentDataType.STRING)) {
             String type = pdc.get(typeKey, PersistentDataType.STRING);
             String id = pdc.get(idKey, PersistentDataType.STRING);
             if (type != null && id != null) return (type + ":" + id).toUpperCase();
         }
-
-        return plugin.getMythicLibHook().isHooked() ? plugin.getMythicLibHook().getMMOItemKey(item) : null;
+        return plugin.getMythicLibHook().getMMOItemKey(item);
     }
 
     public void cleanItemLore(ItemStack item) {
@@ -250,11 +228,8 @@ public class EnchantManager {
             if (start != -1 && count > 0) {
                 List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
                 for (int i = 0; i < count; i++) {
-                    if (start < lore.size()) {
-                        lore.remove(start);
-                    }
+                    if (start < lore.size()) lore.remove(start);
                 }
-
                 if (hadPlaceholder) {
                     String placeholderStr = plugin.getSettingsFile().getString("settings.placeholder", "#enchants#");
                     if (start <= lore.size()) {
@@ -319,10 +294,8 @@ public class EnchantManager {
 
     private int getMaxSlot(ItemStack item, int defaultAllowed, Map<String, Integer> mmoMap, Map<String, Integer> itemMap) {
         if (item == null || item.getType() == Material.AIR) return defaultAllowed;
-
         int maxAllowed = 0;
         boolean matched = false;
-
         String fullMmoKey = getMMOItemKey(item);
         if (fullMmoKey != null) {
             for (Map.Entry<String, Integer> entry : mmoMap.entrySet()) {
@@ -332,9 +305,7 @@ public class EnchantManager {
                 }
             }
         }
-
         if (matched) return maxAllowed;
-
         String matName = item.getType().name().toUpperCase();
         for (Map.Entry<String, Integer> entry : itemMap.entrySet()) {
             if (isMatch(matName, entry.getKey())) {
@@ -342,7 +313,6 @@ public class EnchantManager {
                 matched = true;
             }
         }
-
         return matched ? maxAllowed : defaultAllowed;
     }
 
@@ -383,10 +353,8 @@ public class EnchantManager {
     public List<String> getWhitelistedEnchants(ItemStack item) {
         List<String> allowed = new ArrayList<>();
         if (item == null || item.getType() == Material.AIR) return allowed;
-
         Set<String> mergedWhitelist = new HashSet<>();
         boolean matched = false;
-
         String fullMmoKey = getMMOItemKey(item);
         if (fullMmoKey != null) {
             for (Map.Entry<String, List<String>> entry : mmoItemsWhitelist.entrySet()) {
@@ -396,12 +364,10 @@ public class EnchantManager {
                 }
             }
         }
-
         if (matched) {
             allowed.addAll(mergedWhitelist);
             return allowed;
         }
-
         String matName = item.getType().name().toUpperCase();
         for (Map.Entry<String, List<String>> entry : itemWhitelist.entrySet()) {
             if (isMatch(matName, entry.getKey())) {
@@ -409,7 +375,6 @@ public class EnchantManager {
                 matched = true;
             }
         }
-
         if (matched) {
             allowed.addAll(mergedWhitelist);
         }
@@ -426,7 +391,6 @@ public class EnchantManager {
         List<String> missing = new ArrayList<>();
         List<String> reqs = requires.getOrDefault(enchantId, new ArrayList<>());
         if (reqs.isEmpty()) return missing;
-
         Map<String, Integer> currentCustoms = getCustomEnchants(item);
         for (String req : reqs) {
             NamespacedKey key = NamespacedKey.fromString(req.toLowerCase());
@@ -474,15 +438,12 @@ public class EnchantManager {
                 return false;
             }
         }
-
         List<String> conflictList = conflicts.getOrDefault(enchantId, new ArrayList<>());
         if (conflictList.isEmpty()) return false;
-
         Map<String, Integer> currentCustoms = getCustomEnchants(item);
         for (String conf : conflictList) {
             if (currentCustoms.containsKey(conf)) return true;
         }
-
         if (item.hasItemMeta() && item.getItemMeta().hasEnchants()) {
             for (Enchantment vanilla : item.getItemMeta().getEnchants().keySet()) {
                 String vId = vanilla.getKey().toString();
@@ -495,7 +456,6 @@ public class EnchantManager {
     public Map<String, Integer> getCustomEnchants(ItemStack item) {
         Map<String, Integer> enchants = new HashMap<>();
         if (item == null || !item.hasItemMeta()) return enchants;
-
         String rawData = item.getItemMeta().getPersistentDataContainer().get(ENCHANT_KEY, PersistentDataType.STRING);
         if (rawData != null && !rawData.isEmpty()) {
             for (String pair : rawData.split(";")) {
@@ -514,7 +474,6 @@ public class EnchantManager {
     public void setCustomEnchants(ItemStack item, Map<String, Integer> enchants) {
         if (item == null || !item.hasItemMeta()) return;
         ItemMeta meta = item.getItemMeta();
-
         if (enchants.isEmpty()) {
             meta.getPersistentDataContainer().remove(ENCHANT_KEY);
         } else {
@@ -540,7 +499,6 @@ public class EnchantManager {
     public boolean addEnchant(ItemStack item, String enchantId, int level) {
         int maxLvl = getMaxLevel(enchantId);
         int finalLevel = Math.min(level, maxLvl);
-
         NamespacedKey key = NamespacedKey.fromString(enchantId.toLowerCase());
         if (key != null) {
             Enchantment bukkitEnc = getBukkitRegistry().get(key);
@@ -549,16 +507,13 @@ public class EnchantManager {
                 if (meta == null) return false;
                 int currentLvl = meta.getEnchantLevel(bukkitEnc);
                 if (currentLvl >= maxLvl && level <= maxLvl) return false;
-
                 meta.addEnchant(bukkitEnc, finalLevel, true);
                 item.setItemMeta(meta);
                 return true;
             }
         }
-
         Map<String, Integer> current = getCustomEnchants(item);
         int currentLevel = current.getOrDefault(enchantId, 0);
-
         if (currentLevel >= maxLvl && level <= maxLvl) return false;
         current.put(enchantId, finalLevel);
         setCustomEnchants(item, current);
@@ -602,13 +557,11 @@ public class EnchantManager {
     private void applyItemMeta(ItemStack item, String configPath, String defName, String... replacements) {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return;
-
         String name = plugin.getItemsFile().getString(configPath + ".name", defName);
         for (int i = 0; i < replacements.length; i += 2) {
             name = name.replace(replacements[i], replacements[i + 1]);
         }
         meta.displayName(ColorUtils.parse(name).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
-
         List<String> rawLore = plugin.getItemsFile().getStringList(configPath + ".lore");
         List<Component> compLore = new ArrayList<>();
         for (String line : rawLore) {
@@ -627,13 +580,10 @@ public class EnchantManager {
         String rName = getRarity(enchantId);
         String rColor = plugin.getSettingsFile().getString("rarities." + rName, "&f");
         List<String> description = getDescription(enchantId);
-
         ItemMeta meta = book.getItemMeta();
         String rawName = plugin.getItemsFile().getString("enchant-book.name", "Book: %enchant_name%");
-        rawName = rawName.replace("%enchant_name%", eName)
-                .replace("%level%", String.valueOf(level))
-                .replace("%rarity_name%", rName)
-                .replace("%rarity_color%", rColor);
+        rawName = rawName.replace("%enchant_name%", eName).replace("%level%", String.valueOf(level))
+                .replace("%rarity_name%", rName).replace("%rarity_color%", rColor);
         meta.displayName(ColorUtils.parse(rawName).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
 
         List<String> rawLore = plugin.getItemsFile().getStringList("enchant-book.lore");
@@ -645,16 +595,12 @@ public class EnchantManager {
                 }
                 continue;
             }
-            String parsedLine = line.replace("%enchant_name%", eName)
-                    .replace("%level%", String.valueOf(level))
-                    .replace("%success%", String.valueOf(successRate))
-                    .replace("%destroy%", String.valueOf(destroyRate))
-                    .replace("%rarity_name%", rName)
-                    .replace("%rarity_color%", rColor);
+            String parsedLine = line.replace("%enchant_name%", eName).replace("%level%", String.valueOf(level))
+                    .replace("%success%", String.valueOf(successRate)).replace("%destroy%", String.valueOf(destroyRate))
+                    .replace("%rarity_name%", rName).replace("%rarity_color%", rColor);
             finalLore.add(ColorUtils.parse(parsedLine).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
         }
         meta.lore(finalLore);
-
         meta.getPersistentDataContainer().set(BOOK_ID_KEY, PersistentDataType.STRING, enchantId);
         meta.getPersistentDataContainer().set(BOOK_LEVEL_KEY, PersistentDataType.INTEGER, level);
         meta.getPersistentDataContainer().set(BOOK_SUCCESS_KEY, PersistentDataType.INTEGER, successRate);

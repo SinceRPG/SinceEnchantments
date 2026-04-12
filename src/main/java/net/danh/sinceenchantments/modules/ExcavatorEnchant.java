@@ -1,6 +1,5 @@
 package net.danh.sinceenchantments.modules;
 
-import net.danh.sinceenchantments.api.SinceEnchant;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -15,7 +14,6 @@ import java.util.Set;
 import java.util.UUID;
 
 public class ExcavatorEnchant extends SinceEnchant {
-
     private final Set<UUID> activePlayers = new HashSet<>();
 
     public ExcavatorEnchant() {
@@ -26,7 +24,6 @@ public class ExcavatorEnchant extends SinceEnchant {
     public void onBreak(BlockBreakEvent event) {
         Player p = event.getPlayer();
         if (activePlayers.contains(p.getUniqueId())) return;
-
         ItemStack item = p.getInventory().getItemInMainHand();
         int level = getLevel(item);
 
@@ -43,11 +40,8 @@ public class ExcavatorEnchant extends SinceEnchant {
                         if (!b.getType().isAir() && b.getType().getHardness() >= 0 && !b.equals(center)) {
                             BlockBreakEvent breakEvent = new BlockBreakEvent(b, p);
                             Bukkit.getPluginManager().callEvent(breakEvent);
-
                             if (!breakEvent.isCancelled()) {
-                                if (b.breakNaturally(item)) {
-                                    blocksBroken++;
-                                }
+                                if (b.breakNaturally(item)) blocksBroken++;
                             }
                         }
                     }
@@ -57,24 +51,20 @@ public class ExcavatorEnchant extends SinceEnchant {
             if (blocksBroken > 0 && item.getItemMeta() instanceof Damageable damageable) {
                 int unbreakingLvl = item.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.UNBREAKING);
                 int effectiveDamage = 0;
-
                 for (int i = 0; i < blocksBroken; i++) {
                     if (unbreakingLvl == 0 || (100.0 / (unbreakingLvl + 1)) > Math.random() * 100) {
                         effectiveDamage++;
                     }
                 }
-
                 if (effectiveDamage > 0) {
                     damageable.setDamage(damageable.getDamage() + effectiveDamage);
                     item.setItemMeta(damageable);
-
                     if (damageable.getDamage() >= item.getType().getMaxDurability()) {
                         p.getInventory().setItemInMainHand(null);
                         p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_ITEM_BREAK, 1f, 1f);
                     }
                 }
             }
-
             activePlayers.remove(p.getUniqueId());
             sendMessage(p, "activate");
         }

@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Random;
 
 public class ExtractorListener implements Listener {
-
     private final SinceEnchantments plugin;
     private final EnchantManager manager;
     private final Random random = new Random();
@@ -45,9 +44,8 @@ public class ExtractorListener implements Listener {
     }
 
     private void consumeCursor(Player player, ItemStack cursor) {
-        if (cursor.getAmount() - 1 <= 0) {
-            player.setItemOnCursor(null);
-        } else {
+        if (cursor.getAmount() - 1 <= 0) player.setItemOnCursor(null);
+        else {
             cursor.setAmount(cursor.getAmount() - 1);
             player.setItemOnCursor(cursor);
         }
@@ -76,7 +74,6 @@ public class ExtractorListener implements Listener {
             sendMsg(p, "item-need-unstack");
             return;
         }
-
         if (manager.isLocked(current)) {
             sendMsg(p, "item-locked");
             return;
@@ -90,13 +87,11 @@ public class ExtractorListener implements Listener {
 
         if (extractorType.equals("RANDOM")) {
             consumeCursor(p, cursor);
-
             List<String> keys = new ArrayList<>(allEnchants.keySet());
             String removedId = keys.get(random.nextInt(keys.size()));
             int removedLevel = allEnchants.get(removedId);
 
             manager.removeEnchant(current, removedId);
-
             ItemStack book = manager.createEnchantBook(removedId, removedLevel, 100, 0);
             if (!p.getInventory().addItem(book).isEmpty()) {
                 p.getWorld().dropItem(p.getLocation(), book);
@@ -117,7 +112,6 @@ public class ExtractorListener implements Listener {
             }
 
             String mode = plugin.getSettingsFile().getString("settings.extractor-mode", "DIALOG").toUpperCase();
-
             if (mode.equals("GUI")) {
                 ExtractorGUI gui = new ExtractorGUI(plugin, current, 0);
                 Bukkit.getScheduler().runTask(plugin, () -> p.openInventory(gui.getInventory()));
@@ -143,8 +137,7 @@ public class ExtractorListener implements Listener {
         if (event.getClickedInventory() == null || !event.getClickedInventory().equals(gui.getInventory())) return;
 
         ItemStack clicked = event.getCurrentItem();
-        if (clicked == null || clicked.getType() == Material.AIR) return;
-        if (!clicked.hasItemMeta()) return;
+        if (clicked == null || clicked.getType() == Material.AIR || !clicked.hasItemMeta()) return;
 
         ItemMeta meta = clicked.getItemMeta();
 

@@ -2,6 +2,7 @@ package net.danh.sinceenchantments.api;
 
 import com.google.common.reflect.ClassPath;
 import net.danh.sinceenchantments.SinceEnchantments;
+import net.danh.sinceenchantments.modules.SinceEnchant;
 
 import java.lang.reflect.Modifier;
 

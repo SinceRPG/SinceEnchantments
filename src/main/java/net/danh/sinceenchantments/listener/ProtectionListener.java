@@ -15,7 +15,6 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.Iterator;
 
 public class ProtectionListener implements Listener {
-
     private final SinceEnchantments plugin;
     private final EnchantManager manager;
 
@@ -29,11 +28,11 @@ public class ProtectionListener implements Listener {
         Player p = event.getEntity();
         boolean savedItem = false;
         boolean consumeOnDeath = plugin.getSettingsFile().getBoolean("settings.consume-protection-on-death", true);
+
         if (event.getKeepInventory()) {
             if (consumeOnDeath) {
                 for (ItemStack item : p.getInventory().getContents()) {
                     if (item == null || item.getType().isAir() || !item.hasItemMeta()) continue;
-
                     if (item.getItemMeta().getPersistentDataContainer().has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
                         ItemMeta meta = item.getItemMeta();
                         meta.getPersistentDataContainer().remove(manager.PROTECTED_ITEM_KEY);
@@ -44,20 +43,16 @@ public class ProtectionListener implements Listener {
             }
         } else {
             Iterator<ItemStack> iterator = event.getDrops().iterator();
-
             while (iterator.hasNext()) {
                 ItemStack item = iterator.next();
                 if (item == null || item.getType().isAir() || !item.hasItemMeta()) continue;
-
                 if (item.getItemMeta().getPersistentDataContainer().has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) {
                     iterator.remove();
-
                     if (consumeOnDeath) {
                         ItemMeta meta = item.getItemMeta();
                         meta.getPersistentDataContainer().remove(manager.PROTECTED_ITEM_KEY);
                         item.setItemMeta(meta);
                     }
-
                     event.getItemsToKeep().add(item);
                     savedItem = true;
                 }
@@ -68,10 +63,7 @@ public class ProtectionListener implements Listener {
             String prefix = plugin.getMessagesFile().getString("prefix", "");
             String msgKey = consumeOnDeath ? "item-protected-consumed" : "item-protected-saved";
             String msg = plugin.getMessagesFile().getString(msgKey, "");
-
-            if (msg != null && !msg.isEmpty()) {
-                p.sendMessage(ColorUtils.parse(prefix + msg));
-            }
+            if (msg != null && !msg.isEmpty()) p.sendMessage(ColorUtils.parse(prefix + msg));
         }
     }
 }

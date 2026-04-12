@@ -1,4 +1,4 @@
-package net.danh.sinceenchantments.api;
+package net.danh.sinceenchantments.modules;
 
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.utils.ColorUtils;

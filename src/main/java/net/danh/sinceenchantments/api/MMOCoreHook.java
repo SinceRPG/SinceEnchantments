@@ -7,14 +7,9 @@ import org.bukkit.entity.Player;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
-/**
- * Handles soft-depend hooking into MMOCore to prevent EXP desyncs.
- */
 public class MMOCoreHook {
-
     private final SinceEnchantments plugin;
     private boolean hooked = false;
-
     private Method getPlayerDataMethod;
     private Method setLevelMethod;
     private Object unknownReason;
@@ -29,21 +24,16 @@ public class MMOCoreHook {
             try {
                 Class<?> playerDataClass = Class.forName("net.Indyuce.mmocore.api.player.PlayerData");
                 getPlayerDataMethod = playerDataClass.getMethod("get", UUID.class);
-
                 Class<?> reasonEnumClass = Class.forName("net.Indyuce.mmocore.api.event.PlayerLevelChangeEvent$Reason");
-
                 for (Object obj : reasonEnumClass.getEnumConstants()) {
                     if (obj.toString().equals("UNKNOWN")) {
                         unknownReason = obj;
                         break;
                     }
                 }
-
                 setLevelMethod = playerDataClass.getMethod("setLevel", int.class, reasonEnumClass);
-
                 hooked = true;
                 plugin.getLogger().info("Successfully hooked into MMOCore API (Latest Version) for Anvil EXP sync!");
-
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to hook into latest MMOCore API. Attempting legacy hook...");
                 try {
@@ -63,17 +53,13 @@ public class MMOCoreHook {
         return hooked;
     }
 
-
     public void syncLevelFromVanilla(Player player) {
         if (!hooked) return;
         try {
             Object playerData = getPlayerDataMethod.invoke(null, player.getUniqueId());
             int currentVanillaLevel = player.getLevel();
-
             if (setLevelMethod.getParameterCount() == 2) {
-                if (unknownReason != null) {
-                    setLevelMethod.invoke(playerData, currentVanillaLevel, unknownReason);
-                }
+                if (unknownReason != null) setLevelMethod.invoke(playerData, currentVanillaLevel, unknownReason);
             } else {
                 setLevelMethod.invoke(playerData, currentVanillaLevel);
             }

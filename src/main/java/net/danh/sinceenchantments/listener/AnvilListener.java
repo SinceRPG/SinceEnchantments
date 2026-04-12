@@ -5,7 +5,9 @@ import net.danh.sinceenchantments.api.EnchantManager;
 import net.danh.sinceenchantments.utils.ConfigUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
@@ -20,7 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AnvilListener implements Listener {
-
     private final SinceEnchantments plugin;
     private final EnchantManager manager;
 
@@ -65,7 +66,6 @@ public class AnvilListener implements Listener {
                     if (nextLvl <= manager.getMaxLevel(enchantId)) {
                         int avgSuccess = (successRate1 + successRate2) / 2;
                         int avgDestroy = (destroyRate1 + destroyRate2) / 2;
-
                         ItemStack resultBook = manager.createEnchantBook(enchantId, nextLvl, avgSuccess, avgDestroy);
                         event.setResult(resultBook);
                         anvilView.setRepairCost(nextLvl * costCombine);
@@ -83,21 +83,18 @@ public class AnvilListener implements Listener {
         if (vanillaHasNoResult) {
             if (slot1.getType() == slot2.getType() && slot1.getType() != Material.ENCHANTED_BOOK) {
                 result = slot1.clone();
-            } else {
-                return;
-            }
+            } else return;
         } else {
             result = result.clone();
         }
 
         Map<String, Integer> enchants1 = manager.getCustomEnchants(slot1);
         Map<String, Integer> enchants2 = manager.getCustomEnchants(slot2);
-
         Map<String, Integer> merged = new HashMap<>(enchants1);
         int costIncrease = 0;
         boolean customMerged = false;
-
         int vanillaCount = 0;
+
         if (config.getBoolean("settings.override-vanilla-enchants", true) && result.hasItemMeta() && result.getItemMeta().hasEnchants()) {
             vanillaCount = result.getItemMeta().getEnchants().size();
         }
@@ -139,10 +136,8 @@ public class AnvilListener implements Listener {
         }
 
         manager.setCustomEnchants(result, merged);
-
         ItemMeta rMeta = result.getItemMeta();
         PersistentDataContainer rPdc = rMeta.getPersistentDataContainer();
-
         PersistentDataContainer pdc1 = slot1.hasItemMeta() ? slot1.getItemMeta().getPersistentDataContainer() : null;
         PersistentDataContainer pdc2 = slot2.hasItemMeta() ? slot2.getItemMeta().getPersistentDataContainer() : null;
 
@@ -194,11 +189,10 @@ public class AnvilListener implements Listener {
         anvilView.setRepairCost(finalCost);
     }
 
-    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onAnvilTakeResult(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof org.bukkit.entity.Player p)) return;
+        if (!(event.getWhoClicked() instanceof Player p)) return;
         if (!(event.getInventory() instanceof AnvilInventory anvil)) return;
-
         if (event.getRawSlot() != 2) return;
 
         ItemStack result = event.getCurrentItem();
@@ -218,9 +212,7 @@ public class AnvilListener implements Listener {
 
         if (plugin.getMMOCoreHook().isHooked()) {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                if (p.isOnline()) {
-                    plugin.getMMOCoreHook().syncLevelFromVanilla(p);
-                }
+                if (p.isOnline()) plugin.getMMOCoreHook().syncLevelFromVanilla(p);
             }, 1L);
         }
     }

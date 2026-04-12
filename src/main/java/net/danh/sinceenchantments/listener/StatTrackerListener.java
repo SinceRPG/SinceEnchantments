@@ -15,7 +15,6 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 public class StatTrackerListener implements Listener {
-
     private final EnchantManager manager;
 
     public StatTrackerListener(SinceEnchantments plugin) {
@@ -26,14 +25,11 @@ public class StatTrackerListener implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         Player p = event.getPlayer();
         ItemStack item = p.getInventory().getItemInMainHand();
-
         if (item == null || !item.hasItemMeta()) return;
-
         if (!manager.isItemInCategory(item, "tools")) return;
 
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
-
         if (pdc.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
             int blocks = pdc.getOrDefault(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, 0);
             pdc.set(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER, blocks + 1);
@@ -46,14 +42,11 @@ public class StatTrackerListener implements Listener {
         if (event.getEntity().getKiller() != null) {
             Player p = event.getEntity().getKiller();
             ItemStack item = p.getInventory().getItemInMainHand();
-
             if (item == null || !item.hasItemMeta()) return;
-
             if (!manager.isItemInCategory(item, "weapons")) return;
 
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
-
             if (pdc.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
                 if (event.getEntity() instanceof Player) {
                     int players = pdc.getOrDefault(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER, 0);
@@ -72,14 +65,11 @@ public class StatTrackerListener implements Listener {
         if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH) {
             Player p = event.getPlayer();
             ItemStack item = p.getInventory().getItemInMainHand();
-
             if (item == null || !item.hasItemMeta()) return;
-
             if (!manager.isItemInCategory(item, "fishing-rods")) return;
 
             ItemMeta meta = item.getItemMeta();
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
-
             if (pdc.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) {
                 int fish = pdc.getOrDefault(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, 0);
                 pdc.set(manager.STAT_FISH_KEY, PersistentDataType.INTEGER, fish + 1);

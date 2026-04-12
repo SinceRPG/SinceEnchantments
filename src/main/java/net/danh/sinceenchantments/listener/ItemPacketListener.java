@@ -67,9 +67,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
                         modified = true;
                     }
                 }
-                if (modified) {
-                    wrapper.setItems(items);
-                }
+                if (modified) wrapper.setItems(items);
             }
         } catch (Exception ignored) {
         }
@@ -112,9 +110,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
         ConfigUtils settings = SinceEnchantments.getInstance().getSettingsFile();
         ConfigUtils enchantsConfig = SinceEnchantments.getInstance().getEnchantsFile();
-
         List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
-
         String placeholderStr = settings.getString("settings.placeholder", "#enchants#").toLowerCase();
         int targetIndex = -1;
 
@@ -130,7 +126,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         Map<Enchantment, Integer> vanillaEnchants = meta.getEnchants();
         Map<String, Integer> customEnchants = manager.getCustomEnchants(item);
         boolean overrideVanilla = settings.getBoolean("settings.override-vanilla-enchants", true);
-
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         boolean hasProtect = pdc.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE);
         boolean hasTracker = pdc.has(manager.TRACKER_KEY, PersistentDataType.BYTE);
@@ -141,6 +136,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         boolean hasCustom = !customEnchants.isEmpty();
         boolean hasVanilla = !vanillaEnchants.isEmpty();
         boolean hasWhitelist = !manager.getWhitelistedEnchants(item).isEmpty();
+
         if (!isGear && !hasPlaceholder && !hasCustom && (!hasVanilla || !overrideVanilla) && !hasWhitelist && !hasProtect && !hasTracker && !isLocked) {
             if (hadMetaInitially) {
                 meta.lore(lore);
@@ -149,9 +145,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             return item;
         }
 
-        if (overrideVanilla) {
-            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-        }
+        if (overrideVanilla) meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
         List<Component> injectComponents = new ArrayList<>();
 
@@ -162,18 +156,14 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
         if (hasTracker) {
             injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-header", "&8&m      &r &6&lStat Tracker &8&m      ")).decoration(TextDecoration.ITALIC, false));
-            if (pdc.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)) {
+            if (pdc.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER))
                 injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-blocks").replace("%value%", String.valueOf(pdc.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
-            }
-            if (pdc.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)) {
+            if (pdc.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER))
                 injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-mobs").replace("%value%", String.valueOf(pdc.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
-            }
-            if (pdc.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)) {
+            if (pdc.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER))
                 injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-players").replace("%value%", String.valueOf(pdc.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
-            }
-            if (pdc.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)) {
+            if (pdc.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER))
                 injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-fish").replace("%value%", String.valueOf(pdc.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
-            }
             injectComponents.add(Component.empty());
         }
 
@@ -223,11 +213,9 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         for (Map.Entry<String, Integer> entry : customEnchants.entrySet()) {
             String eId = entry.getKey();
             int eLvl = entry.getValue();
-
             String eName = enchantsConfig.getString("custom-enchants." + eId + ".name", eId);
             String rarityKey = enchantsConfig.getString("custom-enchants." + eId + ".rarity", "COMMON");
             String rarityColor = settings.getString("rarities." + rarityKey, "&f");
-
             String formatted = rarityColor + eName + " " + (useRoman ? toRoman(eLvl) : eLvl);
 
             if (useDetailedDisplay) {
@@ -287,6 +275,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
                 }
             }
         }
+
         if (injectComponents.isEmpty()) {
             if (hadMetaInitially) {
                 meta.lore(lore);

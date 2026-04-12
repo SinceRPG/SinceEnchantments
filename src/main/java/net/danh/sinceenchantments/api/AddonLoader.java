@@ -1,6 +1,7 @@
 package net.danh.sinceenchantments.api;
 
 import net.danh.sinceenchantments.SinceEnchantments;
+import net.danh.sinceenchantments.modules.SinceEnchant;
 
 import java.io.File;
 import java.lang.reflect.Modifier;
@@ -14,7 +15,6 @@ import java.util.jar.JarFile;
  * Handles dynamic loading of external .jar addons.
  */
 public class AddonLoader {
-
     private final SinceEnchantments plugin;
 
     public AddonLoader(SinceEnchantments plugin) {
@@ -23,7 +23,6 @@ public class AddonLoader {
 
     public void loadAddons() {
         File addonFolder = new File(plugin.getDataFolder(), "Enchantments");
-
         if (!addonFolder.exists()) {
             addonFolder.mkdirs();
             plugin.getLogger().info("Created 'Enchantments' folder. Drop external .jar addons here!");
@@ -37,7 +36,6 @@ public class AddonLoader {
         }
 
         plugin.getLogger().info("Scanning for Custom Enchant Addons...");
-
         for (File jarFile : jarFiles) {
             try {
                 loadEnchantsFromJar(jarFile);
@@ -50,23 +48,16 @@ public class AddonLoader {
 
     private void loadEnchantsFromJar(File file) throws Exception {
         URL[] urls = {file.toURI().toURL()};
-
         URLClassLoader loader = new URLClassLoader(urls, plugin.getClass().getClassLoader());
-
         try (JarFile jar = new JarFile(file)) {
-
             Enumeration<JarEntry> entries = jar.entries();
             int loadedCount = 0;
-
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
-
                 if (entry.getName().endsWith(".class") && !entry.getName().contains("$")) {
                     String className = entry.getName().replace("/", ".").replace(".class", "");
-
                     try {
                         Class<?> clazz = Class.forName(className, true, loader);
-
                         if (SinceEnchant.class.isAssignableFrom(clazz) && !Modifier.isAbstract(clazz.getModifiers())) {
                             SinceEnchant enchant = (SinceEnchant) clazz.getDeclaredConstructor().newInstance();
                             plugin.getEnchantRegistry().register(enchant);
@@ -80,7 +71,6 @@ public class AddonLoader {
                     }
                 }
             }
-
             plugin.getLogger().info("Successfully loaded " + loadedCount + " enchant(s) from addon: " + file.getName());
         }
     }

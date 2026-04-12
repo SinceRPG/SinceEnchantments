@@ -14,7 +14,6 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 public class InventoryFixListener implements Listener {
-
     private final EnchantManager manager;
 
     public InventoryFixListener(SinceEnchantments plugin) {
@@ -24,23 +23,18 @@ public class InventoryFixListener implements Listener {
     private boolean needsUpdate(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
         PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
-
         if (pdc.has(manager.BOOK_ID_KEY, PersistentDataType.STRING) || pdc.has(manager.ENCHANT_KEY, PersistentDataType.STRING))
             return true;
         if (pdc.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) return true;
         if (pdc.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) return true;
         if (manager.isLocked(item)) return true;
-
         return !manager.getWhitelistedEnchants(item).isEmpty();
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onClick(InventoryClickEvent event) {
         if (event.getWhoClicked() instanceof Player p) {
-            ItemStack current = event.getCurrentItem();
-            ItemStack cursor = event.getCursor();
-
-            if (needsUpdate(current) || needsUpdate(cursor)) {
+            if (needsUpdate(event.getCurrentItem()) || needsUpdate(event.getCursor())) {
                 Bukkit.getScheduler().runTaskLater(SinceEnchantments.getInstance(), p::updateInventory, 1L);
             }
         }
@@ -49,8 +43,7 @@ public class InventoryFixListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDrag(InventoryDragEvent event) {
         if (event.getWhoClicked() instanceof Player p) {
-            ItemStack cursor = event.getOldCursor();
-            if (needsUpdate(cursor)) {
+            if (needsUpdate(event.getOldCursor())) {
                 Bukkit.getScheduler().runTaskLater(SinceEnchantments.getInstance(), p::updateInventory, 1L);
             }
         }

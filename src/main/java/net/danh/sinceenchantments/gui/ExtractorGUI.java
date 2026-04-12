@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 
 public class ExtractorGUI implements InventoryHolder {
-
     private final Inventory inventory;
     private final ItemStack weapon;
     private final int page;
@@ -26,7 +25,6 @@ public class ExtractorGUI implements InventoryHolder {
     public ExtractorGUI(SinceEnchantments plugin, ItemStack weapon, int page) {
         this.weapon = weapon;
         this.page = page;
-
         int size = plugin.getGuiFile().getInt("gui.extractor.size", 54);
         if (size % 9 != 0 || size < 27 || size > 54) size = 54;
 
@@ -41,9 +39,7 @@ public class ExtractorGUI implements InventoryHolder {
     private void populate(SinceEnchantments plugin, int size) {
         List<Integer> innerSlots = new ArrayList<>();
         for (int i = 0; i < size; i++) {
-            if (i > 8 && i < size - 9 && i % 9 != 0 && i % 9 != 8) {
-                innerSlots.add(i);
-            }
+            if (i > 8 && i < size - 9 && i % 9 != 0 && i % 9 != 8) innerSlots.add(i);
         }
 
         String borderMatStr = plugin.getGuiFile().getString("gui.extractor.border.material", "BLACK_STAINED_GLASS_PANE");
@@ -57,9 +53,7 @@ public class ExtractorGUI implements InventoryHolder {
         border.setItemMeta(borderMeta);
 
         for (int i = 0; i < size; i++) {
-            if (!innerSlots.contains(i)) {
-                inventory.setItem(i, border);
-            }
+            if (!innerSlots.contains(i)) inventory.setItem(i, border);
         }
 
         Map<String, Integer> allEnchantsMap = plugin.getEnchantManager().getAllEnchantsOnItem(weapon);
@@ -92,22 +86,15 @@ public class ExtractorGUI implements InventoryHolder {
             String rarity = plugin.getEnchantManager().getRarity(id);
             String color = plugin.getSettingsFile().getString("rarities." + rarity, "&f");
 
-            String parsedName = rawName.replace("%enchant_name%", name)
-                    .replace("%level%", String.valueOf(level))
-                    .replace("%rarity_name%", rarity)
-                    .replace("%rarity_color%", color);
+            String parsedName = rawName.replace("%enchant_name%", name).replace("%level%", String.valueOf(level)).replace("%rarity_name%", rarity).replace("%rarity_color%", color);
             meta.displayName(ColorUtils.parse(parsedName).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
 
             List<Component> finalLore = new ArrayList<>();
             for (String line : rawLore) {
-                String parsedLine = line.replace("%enchant_name%", name)
-                        .replace("%level%", String.valueOf(level))
-                        .replace("%rarity_name%", rarity)
-                        .replace("%rarity_color%", color);
+                String parsedLine = line.replace("%enchant_name%", name).replace("%level%", String.valueOf(level)).replace("%rarity_name%", rarity).replace("%rarity_color%", color);
                 finalLore.add(ColorUtils.parse(parsedLine).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
             }
             meta.lore(finalLore);
-
             meta.getPersistentDataContainer().set(plugin.getEnchantManager().BOOK_ID_KEY, PersistentDataType.STRING, id);
             meta.getPersistentDataContainer().set(plugin.getEnchantManager().BOOK_LEVEL_KEY, PersistentDataType.INTEGER, level);
 
@@ -119,7 +106,6 @@ public class ExtractorGUI implements InventoryHolder {
             int prevSlot = plugin.getGuiFile().getInt("gui.extractor.prev-page.slot", size - 9);
             Material pMat = Material.matchMaterial(plugin.getGuiFile().getString("gui.extractor.prev-page.material", "ARROW"));
             if (pMat == null) pMat = Material.ARROW;
-
             ItemStack prev = new ItemStack(pMat);
             ItemMeta pMeta = prev.getItemMeta();
             pMeta.displayName(ColorUtils.parse(plugin.getGuiFile().getString("gui.extractor.prev-page.name", "&cPrevious Page")).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
@@ -132,7 +118,6 @@ public class ExtractorGUI implements InventoryHolder {
             int nextSlot = plugin.getGuiFile().getInt("gui.extractor.next-page.slot", size - 1);
             Material nMat = Material.matchMaterial(plugin.getGuiFile().getString("gui.extractor.next-page.material", "ARROW"));
             if (nMat == null) nMat = Material.ARROW;
-
             ItemStack next = new ItemStack(nMat);
             ItemMeta nMeta = next.getItemMeta();
             nMeta.displayName(ColorUtils.parse(plugin.getGuiFile().getString("gui.extractor.next-page.name", "&aNext Page")).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));

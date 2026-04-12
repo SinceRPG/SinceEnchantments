@@ -14,7 +14,6 @@ import java.util.List;
 
 @SuppressWarnings("UnstableApiUsage")
 public class SinceEnchantments extends JavaPlugin {
-
     private static SinceEnchantments instance;
 
     private ConfigUtils settingsFile;
@@ -71,24 +70,18 @@ public class SinceEnchantments extends JavaPlugin {
 
         SinceCommand commandClass = new SinceCommand(this);
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-            event.registrar().register(
-                    commandClass.buildCommand(),
-                    "SinceEnchantments management command",
-                    List.of("se", "sinceenchant")
-            );
+            event.registrar().register(commandClass.buildCommand(), "SinceEnchantments management command", List.of("se", "sinceenchant"));
         });
 
         PacketEvents.getAPI().init();
-        PacketEvents.getAPI().getEventManager().registerListener(
-                new ItemPacketListener(),
-                com.github.retrooper.packetevents.event.PacketListenerPriority.NORMAL
-        );
+        PacketEvents.getAPI().getEventManager().registerListener(new ItemPacketListener(), com.github.retrooper.packetevents.event.PacketListenerPriority.NORMAL);
         getServer().getPluginManager().registerEvents(new InventoryFixListener(this), this);
         getServer().getPluginManager().registerEvents(new EnchantApplyListener(this), this);
         getServer().getPluginManager().registerEvents(new AnvilListener(this), this);
         getServer().getPluginManager().registerEvents(new ExtractorListener(this), this);
         getServer().getPluginManager().registerEvents(new StatTrackerListener(this), this);
         getServer().getPluginManager().registerEvents(new ProtectionListener(this), this);
+
         if (ServerVersion.isOlderThan(1, 21, 11))
             getLogger().warning("Warning: Your server version is below 1.21.11! If it have any error, join discord and report to author: https://discord.gg/zbMPtcM3wq");
         else if (ServerVersion.isAtLeast(26, 1))

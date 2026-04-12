@@ -6,14 +6,9 @@ import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.Method;
 
-/**
- * Handles soft-depend hooking into MythicLib/MMOItems to read Custom NBT data safely.
- */
 public class MythicLibHook {
-
     private final SinceEnchantments plugin;
     private boolean hooked = false;
-
     private Method nbtItemGetMethod;
     private Method nbtItemHasTypeMethod;
     private Method nbtItemGetTypeMethod;
@@ -32,7 +27,6 @@ public class MythicLibHook {
                 nbtItemHasTypeMethod = nbtItemClass.getMethod("hasType");
                 nbtItemGetTypeMethod = nbtItemClass.getMethod("getType");
                 nbtItemGetStringMethod = nbtItemClass.getMethod("getString", String.class);
-
                 hooked = true;
                 plugin.getLogger().info("Successfully hooked into MythicLib/MMOItems NBT API!");
             } catch (Exception e) {
@@ -45,10 +39,8 @@ public class MythicLibHook {
         return hooked;
     }
 
-
     public String getMMOItemKey(ItemStack item) {
         if (!hooked || item == null || item.getType().isAir()) return null;
-
         try {
             Object nbtItem = nbtItemGetMethod.invoke(null, item);
             if ((boolean) nbtItemHasTypeMethod.invoke(nbtItem)) {
@@ -60,7 +52,6 @@ public class MythicLibHook {
             }
         } catch (Exception ignored) {
         }
-
         return null;
     }
 }
