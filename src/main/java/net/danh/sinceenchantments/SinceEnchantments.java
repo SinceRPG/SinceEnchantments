@@ -22,6 +22,7 @@ public class SinceEnchantments extends JavaPlugin {
     private ConfigUtils messagesFile;
     private ConfigUtils itemsFile;
     private ConfigUtils guiFile;
+    private ConfigUtils customItemsFile;
 
     private EnchantManager enchantManager;
     private ItemFactory itemFactory;
@@ -57,6 +58,7 @@ public class SinceEnchantments extends JavaPlugin {
         this.messagesFile = new ConfigUtils(this, "messages.yml");
         this.itemsFile = new ConfigUtils(this, "items.yml");
         this.guiFile = new ConfigUtils(this, "gui.yml");
+        this.customItemsFile = new ConfigUtils(this, "custom-items.yml");
 
         this.mythicLibHook = new MythicLibHook(this);
         this.enchantManager = new EnchantManager(this);
@@ -117,6 +119,10 @@ public class SinceEnchantments extends JavaPlugin {
 
     public ConfigUtils getGuiFile() {
         return guiFile;
+    }
+
+    public ConfigUtils getCustomItemsFile() {
+        return customItemsFile;
     }
 
     public EnchantManager getEnchantManager() {

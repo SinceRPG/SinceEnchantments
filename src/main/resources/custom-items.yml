@@ -1,0 +1,41 @@
+# ============================================================================== #
+# CUSTOM ITEMS HOOK CONFIGURATION
+# Here you can define how the plugin detects items from other plugins (MythicMobs, 
+# ItemsAdder, Oraxen, etc.) using their PersistentDataContainer (PDC) keys.
+# 
+# Once detected, the item will be treated as a custom item, and you can configure
+# its limits and whitelists in limits.yml using the format you define below.
+# 
+# NOTE: MMOItems is hardcoded and supported out of the box (Format: TYPE:ID).
+# ============================================================================== #
+
+hooks:
+  mythicmobs:
+    # The PDC namespace and key used by the plugin
+    # Format: "namespace:key"
+    pdc-keys:
+      - "mythicmobs:type"
+      - "mythic-type"
+    # The format string that will be used in limits.yml
+    # {id} will be replaced by the value found in the PDC key
+    format: "MYTHICMOBS:{id}"
+
+  itemsadder:
+    pdc-keys:
+      - "itemsadder:id"
+    format: "ITEMSADDER:{id}"
+
+  oraxen:
+    pdc-keys:
+      - "oraxen:id"
+    format: "ORAXEN:{id}"
+
+  ecoitems:
+    pdc-keys:
+      - "eco:id"
+    format: "ECOITEMS:{id}"
+    
+  executableitems:
+    pdc-keys:
+      - "executableitems:id"
+    format: "EXECUTABLEITEMS:{id}"
