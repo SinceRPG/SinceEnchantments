@@ -453,8 +453,22 @@ public class EnchantManager {
             Enchantment bukkitEnc = getBukkitRegistry().get(key);
             if (bukkitEnc != null) return bukkitEnc.canEnchantItem(new ItemStack(mat));
         }
-        String target = targets.getOrDefault(enchantId, "ALL");
-        String name = mat.name();
+
+        String target = targets.getOrDefault(enchantId, "ALL").toUpperCase();
+        if (target.equals("ALL")) return true;
+
+        String name = mat.name().toUpperCase();
+
+        List<String> patterns = plugin.getSettingsFile().getStringList("settings.enchant-targets." + target);
+
+        if (patterns != null && !patterns.isEmpty()) {
+            for (String pattern : patterns) {
+                if (isMatch(name, pattern.toUpperCase())) {
+                    return true;
+                }
+            }
+            return false;
+        }
         return switch (target) {
             case "WEAPON" ->
                     name.endsWith("_SWORD") || name.endsWith("_AXE") || name.equals("TRIDENT") || name.equals("MACE");

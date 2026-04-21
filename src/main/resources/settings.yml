@@ -139,6 +139,44 @@ settings:
       mmoitems:
         - "FISHING_ROD:*"
 
+  # ========================================================
+  # === ENCHANTMENT TARGET CATEGORIES ===
+  # Define which items are allowed to receive specific types of enchantments.
+  # When you set `target: "WEAPON"` for an enchant in enchants.yml, it will
+  # use the "WEAPON" list below to check if the item is valid.
+  #
+  # - Supports Vanilla material names and wildcards (*).
+  # - Custom Items / Resource Packs: If you use an item like "STICK" or
+  #   "CARROT_ON_A_STICK" as a custom 3D weapon, you must add it to the
+  #   relevant list below so it can receive those enchantments.
+  # ========================================================
+  enchant-targets:
+    WEAPON:
+      # Items that can receive general combat/melee enchantments
+      - "*_SWORD"
+      - "*_AXE"
+      - "TRIDENT"
+      - "MACE"
+    ARMOR:
+      # Items that can receive defensive enchantments
+      - "*_HELMET"
+      - "*_CHESTPLATE"
+      - "*_LEGGINGS"
+      - "*_BOOTS"
+    SWORD:
+      # Items that specifically require sword-only enchantments (e.g., Sweeping Edge equivalents)
+      - "*_SWORD"
+    BOW:
+      # Items that can receive ranged enchantments
+      - "BOW"
+      - "CROSSBOW"
+    TOOL:
+      # Items that can receive utility/mining enchantments
+      - "*_PICKAXE"
+      - "*_SHOVEL"
+      - "*_AXE"
+      - "*_HOE"
+
 # ==========================================
 # RARITY SYSTEM
 # ==========================================
