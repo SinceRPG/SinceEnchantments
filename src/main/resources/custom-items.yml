@@ -18,7 +18,7 @@ hooks:
       - "mythic-type"
     # The format string that will be used in limits.yml
     # {id} will be replaced by the value found in the PDC key
-    format: "MYTHICMOBS:{id}"
+    format: "{id}"
 
   itemsadder:
     pdc-keys:
