@@ -220,14 +220,14 @@ public class EnchantManager {
     public String getCustomItemKey(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return null;
         PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
-        
+
         ConfigurationSection hooksSec = plugin.getCustomItemsFile().getConfig().getConfigurationSection("hooks");
         if (hooksSec != null) {
             for (String hookKey : hooksSec.getKeys(false)) {
                 List<String> pdcKeys = plugin.getCustomItemsFile().getStringList("hooks." + hookKey + ".pdc-keys");
                 String format = plugin.getCustomItemsFile().getString("hooks." + hookKey + ".format");
                 if (pdcKeys.isEmpty() || format == null) continue;
-                
+
                 for (String keyStr : pdcKeys) {
                     String[] parts = keyStr.split(":", 2);
                     if (parts.length == 2) {

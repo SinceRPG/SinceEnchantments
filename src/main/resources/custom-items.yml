@@ -34,7 +34,7 @@ hooks:
     pdc-keys:
       - "eco:id"
     format: "ECOITEMS:{id}"
-    
+
   executableitems:
     pdc-keys:
       - "executableitems:id"
