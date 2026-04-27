@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'net.danh'
-version = '1.2.1-SNAPSHOT-2'
+version = '1.2.1-SNAPSHOT-3'
 
 repositories {
     mavenCentral()
@@ -25,7 +25,7 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
 //    compileOnly("io.papermc.paper:paper-api:26.1.1.build.+")
-    compileOnly("com.github.retrooper:packetevents-spigot:2.12.0")
+    compileOnly("com.github.retrooper:packetevents-spigot:2.12.1")
 }
 
 tasks {

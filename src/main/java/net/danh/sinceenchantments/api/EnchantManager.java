@@ -91,6 +91,12 @@ public class EnchantManager {
         loadEnchantsFromConfig();
     }
 
+    // Hàm giúp xóa mọi dấu cách, gạch nối, đưa về chữ thường
+    private String normalizeName(String name) {
+        if (name == null) return "";
+        return ColorUtils.toPlainText(ColorUtils.parse(name)).replace(" ", "").replaceAll("[-_]", "").toLowerCase();
+    }
+
     public void loadEnchantsFromConfig() {
         maxLevels.clear();
         rarities.clear();
@@ -120,8 +126,10 @@ public class EnchantManager {
                 descriptions.put(key, plugin.getEnchantsFile().getStringList(path + ".description"));
 
                 if (key.startsWith("ae:")) {
-                    String plainName = ColorUtils.toPlainText(ColorUtils.parse(enchantNames.get(key))).trim();
-                    if (!plainName.isEmpty() && !aePlainNames.contains(plainName)) aePlainNames.add(plainName);
+                    String normalized = normalizeName(enchantNames.get(key));
+                    if (!normalized.isEmpty() && !aePlainNames.contains(normalized)) {
+                        aePlainNames.add(normalized);
+                    }
                 }
             }
         }
@@ -216,9 +224,9 @@ public class EnchantManager {
         requires.putIfAbsent(id, new ArrayList<>());
 
         if (id.startsWith("ae:")) {
-            String plainName = ColorUtils.toPlainText(ColorUtils.parse(name)).trim();
-            if (!plainName.isEmpty() && !aePlainNames.contains(plainName)) {
-                aePlainNames.add(plainName);
+            String normalized = normalizeName(name);
+            if (!normalized.isEmpty() && !aePlainNames.contains(normalized)) {
+                aePlainNames.add(normalized);
             }
         }
     }
@@ -330,11 +338,17 @@ public class EnchantManager {
 
             for (int i = lore.size() - 1; i >= 0; i--) {
                 String plainLine = ColorUtils.toPlainText(lore.get(i)).trim();
-                for (String aeName : aePlainNames) {
-                    if (plainLine.startsWith(aeName)) {
-                        lore.remove(i);
-                        strippedAe = true;
-                        break;
+                String normalizedLine = plainLine.replace(" ", "").replaceAll("[-_]", "").toLowerCase();
+
+                for (String aeNameNorm : aePlainNames) {
+                    if (normalizedLine.startsWith(aeNameNorm)) {
+
+                        String remainder = normalizedLine.substring(aeNameNorm.length());
+                        if (remainder.isEmpty() || remainder.matches("^[0-9]+$") || remainder.matches("^[ivxlcdm]+$")) {
+                            lore.remove(i);
+                            strippedAe = true;
+                            break;
+                        }
                     }
                 }
             }
