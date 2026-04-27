@@ -497,28 +497,25 @@ public class EnchantManager {
     }
 
     public boolean hasConflict(String enchantId, ItemStack item) {
-        NamespacedKey key = NamespacedKey.fromString(enchantId.toLowerCase());
-        if (key != null) {
-            Enchantment currentBukkit = getBukkitRegistry().get(key);
-            if (currentBukkit != null && item.hasItemMeta() && item.getItemMeta().hasEnchants()) {
-                for (Enchantment applied : item.getItemMeta().getEnchants().keySet()) {
-                    if (currentBukkit.conflictsWith(applied)) return true;
-                }
-                return false;
-            }
-        }
         List<String> conflictList = conflicts.getOrDefault(enchantId, new ArrayList<>());
-        if (conflictList.isEmpty()) return false;
-        Map<String, Integer> currentCustoms = getCustomEnchants(item);
+        Map<String, Integer> currentApplied = getAllEnchantsOnItem(item);
         for (String conf : conflictList) {
-            if (currentCustoms.containsKey(conf)) return true;
+            if (currentApplied.containsKey(conf)) return true;
         }
-        if (item.hasItemMeta() && item.getItemMeta().hasEnchants()) {
-            for (Enchantment vanilla : item.getItemMeta().getEnchants().keySet()) {
-                String vId = vanilla.getKey().toString();
-                if (conflictList.contains(vId)) return true;
+        ConfigurationSection vanillaOverride = plugin.getEnchantsFile().getConfig().getConfigurationSection("vanilla-enchants." + enchantId);
+
+        if (vanillaOverride == null) {
+            NamespacedKey key = NamespacedKey.fromString(enchantId.toLowerCase());
+            if (key != null) {
+                Enchantment currentBukkit = getBukkitRegistry().get(key);
+                if (currentBukkit != null && item.hasItemMeta() && item.getItemMeta().hasEnchants()) {
+                    for (Enchantment applied : item.getItemMeta().getEnchants().keySet()) {
+                        if (currentBukkit.conflictsWith(applied)) return true;
+                    }
+                }
             }
         }
+
         return false;
     }
 
