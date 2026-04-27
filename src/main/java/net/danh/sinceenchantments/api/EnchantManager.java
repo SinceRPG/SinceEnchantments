@@ -124,6 +124,18 @@ public class EnchantManager {
                 String path = "vanilla-enchants." + key;
                 descriptions.put(key, plugin.getEnchantsFile().getStringList(path + ".description"));
                 enchantNames.put(key, plugin.getEnchantsFile().getString(path + ".name", key));
+
+                if (plugin.getEnchantsFile().getConfig().contains(path + ".max-level")) {
+                    maxLevels.put(key, plugin.getEnchantsFile().getInt(path + ".max-level"));
+                }
+
+                if (plugin.getEnchantsFile().getConfig().contains(path + ".rarity")) {
+                    rarities.put(key, plugin.getEnchantsFile().getString(path + ".rarity", "COMMON"));
+                }
+
+                if (plugin.getEnchantsFile().getConfig().contains(path + ".target")) {
+                    targets.put(key, plugin.getEnchantsFile().getString(path + ".target").toUpperCase());
+                }
             }
         }
 
@@ -302,17 +314,26 @@ public class EnchantManager {
     }
 
     public int getMaxLevel(String enchantId) {
+        if (maxLevels.containsKey(enchantId)) {
+            return maxLevels.get(enchantId);
+        }
+
         NamespacedKey key = NamespacedKey.fromString(enchantId.toLowerCase());
         if (key != null) {
             Enchantment bukkitEnc = getBukkitRegistry().get(key);
             if (bukkitEnc != null) return bukkitEnc.getMaxLevel();
         }
-        return maxLevels.getOrDefault(enchantId, 1);
+
+        return 1;
     }
 
     public String getRarity(String enchantId) {
+        if (rarities.containsKey(enchantId)) {
+            return rarities.get(enchantId);
+        }
+
         if (isBukkitEnchant(enchantId)) return "COMMON";
-        return rarities.getOrDefault(enchantId, "COMMON");
+        return "COMMON";
     }
 
     public String getEnchantName(String enchantId) {
@@ -448,38 +469,31 @@ public class EnchantManager {
     }
 
     public boolean isApplicable(String enchantId, Material mat) {
+        if (targets.containsKey(enchantId)) {
+            String target = targets.get(enchantId);
+            if (target.equals("ALL")) return true;
+
+            String name = mat.name().toUpperCase();
+            List<String> patterns = plugin.getSettingsFile().getStringList("settings.enchant-targets." + target);
+
+            if (patterns != null && !patterns.isEmpty()) {
+                for (String pattern : patterns) {
+                    if (isMatch(name, pattern.toUpperCase())) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            return true;
+        }
+
         NamespacedKey key = NamespacedKey.fromString(enchantId.toLowerCase());
         if (key != null) {
             Enchantment bukkitEnc = getBukkitRegistry().get(key);
             if (bukkitEnc != null) return bukkitEnc.canEnchantItem(new ItemStack(mat));
         }
 
-        String target = targets.getOrDefault(enchantId, "ALL").toUpperCase();
-        if (target.equals("ALL")) return true;
-
-        String name = mat.name().toUpperCase();
-
-        List<String> patterns = plugin.getSettingsFile().getStringList("settings.enchant-targets." + target);
-
-        if (patterns != null && !patterns.isEmpty()) {
-            for (String pattern : patterns) {
-                if (isMatch(name, pattern.toUpperCase())) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        return switch (target) {
-            case "WEAPON" ->
-                    name.endsWith("_SWORD") || name.endsWith("_AXE") || name.equals("TRIDENT") || name.equals("MACE");
-            case "ARMOR" ->
-                    name.endsWith("_HELMET") || name.endsWith("_CHESTPLATE") || name.endsWith("_LEGGINGS") || name.endsWith("_BOOTS");
-            case "SWORD" -> name.endsWith("_SWORD");
-            case "BOW" -> name.equals("BOW") || name.equals("CROSSBOW");
-            case "TOOL" ->
-                    name.endsWith("_PICKAXE") || name.endsWith("_SHOVEL") || name.endsWith("_AXE") || name.endsWith("_HOE");
-            default -> true;
-        };
+        return true;
     }
 
     public boolean hasConflict(String enchantId, ItemStack item) {
