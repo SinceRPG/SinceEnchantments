@@ -213,8 +213,8 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         for (Map.Entry<String, Integer> entry : customEnchants.entrySet()) {
             String eId = entry.getKey();
             int eLvl = entry.getValue();
-            String eName = enchantsConfig.getString("custom-enchants." + eId + ".name", eId);
-            String rarityKey = enchantsConfig.getString("custom-enchants." + eId + ".rarity", "COMMON");
+            String eName = manager.getEnchantName(eId);
+            String rarityKey = manager.getRarity(eId);
             String rarityColor = settings.getString("rarities." + rarityKey, "&f");
             String formatted = rarityColor + eName + " " + (useRoman ? toRoman(eLvl) : eLvl);
 

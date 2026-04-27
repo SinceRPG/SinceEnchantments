@@ -1,6 +1,7 @@
 package net.danh.sinceenchantments;
 
 import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.danh.sinceenchantments.api.*;
@@ -82,7 +83,7 @@ public class SinceEnchantments extends JavaPlugin {
         });
 
         PacketEvents.getAPI().init();
-        PacketEvents.getAPI().getEventManager().registerListener(new ItemPacketListener(), com.github.retrooper.packetevents.event.PacketListenerPriority.NORMAL);
+        PacketEvents.getAPI().getEventManager().registerListener(new ItemPacketListener(), PacketListenerPriority.HIGHEST);
         getServer().getPluginManager().registerEvents(new InventoryFixListener(this), this);
         getServer().getPluginManager().registerEvents(new EnchantApplyListener(this), this);
         getServer().getPluginManager().registerEvents(new AnvilListener(this), this);
