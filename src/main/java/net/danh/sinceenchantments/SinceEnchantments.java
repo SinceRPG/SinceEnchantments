@@ -31,6 +31,7 @@ public class SinceEnchantments extends JavaPlugin {
     private InternalModuleLoader internalModuleLoader;
     private MMOCoreHook mmoCoreHook;
     private MythicLibHook mythicLibHook;
+    private AdvancedEnchantmentsHook advancedEnchantmentsHook;
 
     public static SinceEnchantments getInstance() {
         return instance;
@@ -65,6 +66,9 @@ public class SinceEnchantments extends JavaPlugin {
         this.itemFactory = new ItemFactory(this);
         this.enchantRegistry = new EnchantRegistry(this);
         this.mmoCoreHook = new MMOCoreHook(this);
+
+        this.advancedEnchantmentsHook = new AdvancedEnchantmentsHook(this);
+        this.advancedEnchantmentsHook.loadAEEnchantments();
 
         this.internalModuleLoader = new InternalModuleLoader(this);
         this.internalModuleLoader.loadInternalModules();
@@ -151,5 +155,9 @@ public class SinceEnchantments extends JavaPlugin {
 
     public MythicLibHook getMythicLibHook() {
         return mythicLibHook;
+    }
+
+    public AdvancedEnchantmentsHook getAdvancedEnchantmentsHook() {
+        return advancedEnchantmentsHook;
     }
 }

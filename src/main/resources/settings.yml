@@ -103,6 +103,11 @@ settings:
   tracker-players: "&7Players Killed: &c%value%"
   tracker-fish: "&7Fish Caught: &b%value%"
 
+  # The default description for enchantments automatically hooked from AdvancedEnchantments
+  ae-default-description:
+    - "&7Special effect from"
+    - "&7AdvancedEnchantments."
+
   # ========================================================
   # === STAT TRACKER CATEGORIES ===
   # Define which items are considered Tools, Weapons, or Rods.

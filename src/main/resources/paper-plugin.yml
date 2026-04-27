@@ -16,3 +16,6 @@ dependencies:
     MMOCore:
       load: BEFORE
       required: false
+    AdvancedEnchantments:
+      load: BEFORE
+      required: false

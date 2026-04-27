@@ -92,6 +92,44 @@ custom-enchants:
     messages:
       activate: "&fSuccessfully dodged an attack!"
 
+  # --- ADVANCED ENCHANTMENTS HOOKS ---
+
+  "ae:vampire":
+    name: "Vampire"
+    rarity: "EPIC"
+    max-level: 3
+    target: "WEAPON"
+    description:
+      - "&7Heals you for a portion of"
+      - "&7damage dealt when attacking."
+
+  "ae:strike":
+    name: "Strike"
+    rarity: "RARE"
+    max-level: 3
+    target: "WEAPON"
+    description:
+      - "&7Increases the damage dealt"
+      - "&7by critical strikes."
+
+  "ae:critical":
+    name: "Critical"
+    rarity: "UNCOMMON"
+    max-level: 3
+    target: "WEAPON"
+    description:
+      - "&7Increases the chance to"
+      - "&7deal a critical strike."
+
+  "ae:abiding":
+    name: "Abiding"
+    rarity: "LEGENDARY"
+    max-level: 1
+    target: "ALL"
+    description:
+      - "&7Makes the item completely"
+      - "&7unbreakable and everlasting."
+
 # ==========================================
 # VANILLA ENCHANTS
 # ==========================================

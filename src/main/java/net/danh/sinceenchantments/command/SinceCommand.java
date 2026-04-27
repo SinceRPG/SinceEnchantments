@@ -47,6 +47,9 @@ public class SinceCommand {
                     plugin.getItemsFile().reload();
                     plugin.getGuiFile().reload();
                     plugin.getEnchantManager().loadEnchantsFromConfig();
+
+                    plugin.getAdvancedEnchantmentsHook().loadAEEnchantments();
+
                     sendMessage(context.getSource(), "reload");
                     return Command.SINGLE_SUCCESS;
                 }))

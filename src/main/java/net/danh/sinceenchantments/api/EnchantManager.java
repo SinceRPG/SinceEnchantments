@@ -381,11 +381,15 @@ public class EnchantManager {
     public int getMaxSlots(ItemStack item) {
         if (item == null || item.getType() == Material.AIR)
             return plugin.getSettingsFile().getInt("settings.default-max-custom-enchants-per-item", 5);
+
         int raw = getRawMaxSlots(item);
         int modifier = 0;
+
         if (item.hasItemMeta()) {
-            modifier = item.getItemMeta().getPersistentDataContainer().getOrDefault(SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, 0);
+            PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+            modifier = pdc.getOrDefault(SLOT_MODIFIER_KEY, PersistentDataType.INTEGER, 0);
         }
+
         return Math.max(0, raw + modifier);
     }
 
@@ -522,7 +526,9 @@ public class EnchantManager {
     public Map<String, Integer> getCustomEnchants(ItemStack item) {
         Map<String, Integer> enchants = new HashMap<>();
         if (item == null || !item.hasItemMeta()) return enchants;
-        String rawData = item.getItemMeta().getPersistentDataContainer().get(ENCHANT_KEY, PersistentDataType.STRING);
+        PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+
+        String rawData = pdc.get(ENCHANT_KEY, PersistentDataType.STRING);
         if (rawData != null && !rawData.isEmpty()) {
             for (String pair : rawData.split(";")) {
                 String[] split = pair.split(",");
@@ -534,21 +540,65 @@ public class EnchantManager {
                 }
             }
         }
+
+        for (NamespacedKey key : pdc.getKeys()) {
+            if (key.getNamespace().equals("advancedenchantments") && key.getKey().startsWith("ae_enchantment-")) {
+                String aeId = "ae:" + key.getKey().substring(15);
+                Integer level = pdc.get(key, PersistentDataType.INTEGER);
+                if (level != null) {
+                    enchants.put(aeId, level);
+                }
+            }
+        }
+
         return enchants;
     }
 
     public void setCustomEnchants(ItemStack item, Map<String, Integer> enchants) {
         if (item == null || !item.hasItemMeta()) return;
         ItemMeta meta = item.getItemMeta();
-        if (enchants.isEmpty()) {
-            meta.getPersistentDataContainer().remove(ENCHANT_KEY);
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+
+        Map<String, Integer> sinceEnchants = new HashMap<>();
+        Map<String, Integer> aeEnchants = new HashMap<>();
+
+        for (Map.Entry<String, Integer> entry : enchants.entrySet()) {
+            if (entry.getKey().startsWith("ae:")) {
+                aeEnchants.put(entry.getKey(), entry.getValue());
+            } else {
+                sinceEnchants.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (sinceEnchants.isEmpty()) {
+            pdc.remove(ENCHANT_KEY);
         } else {
             StringBuilder sb = new StringBuilder();
-            for (Map.Entry<String, Integer> entry : enchants.entrySet()) {
+            for (Map.Entry<String, Integer> entry : sinceEnchants.entrySet()) {
                 sb.append(entry.getKey()).append(",").append(entry.getValue()).append(";");
             }
-            meta.getPersistentDataContainer().set(ENCHANT_KEY, PersistentDataType.STRING, sb.toString());
+            pdc.set(ENCHANT_KEY, PersistentDataType.STRING, sb.toString());
         }
+
+        for (NamespacedKey key : pdc.getKeys()) {
+            if (key.getNamespace().equals("advancedenchantments") && key.getKey().startsWith("ae_enchantment-")) {
+                pdc.remove(key);
+            }
+        }
+
+        for (Map.Entry<String, Integer> entry : aeEnchants.entrySet()) {
+            String aeName = entry.getKey().substring(3);
+            NamespacedKey aeKey = new NamespacedKey("advancedenchantments", "ae_enchantment-" + aeName);
+            pdc.set(aeKey, PersistentDataType.INTEGER, entry.getValue());
+        }
+        
+        NamespacedKey aeSlotTrackerKey = new NamespacedKey("advancedenchantments", "slots");
+        if (aeEnchants.isEmpty()) {
+            pdc.remove(aeSlotTrackerKey);
+        } else {
+            pdc.set(aeSlotTrackerKey, PersistentDataType.INTEGER, aeEnchants.size());
+        }
+
         item.setItemMeta(meta);
     }
 
@@ -611,5 +661,16 @@ public class EnchantManager {
             if (bukkitEnc != null && item.hasItemMeta()) return item.getItemMeta().getEnchantLevel(bukkitEnc);
         }
         return getCustomEnchants(item).getOrDefault(enchantId, 0);
+    }
+
+    public void registerDynamicEnchant(String id, String name, int maxLevel, String rarity, String target, List<String> description) {
+        enchantNames.put(id, name);
+        maxLevels.put(id, maxLevel);
+        rarities.put(id, rarity);
+        targets.put(id, target.toUpperCase());
+        descriptions.put(id, description);
+
+        conflicts.putIfAbsent(id, new ArrayList<>());
+        requires.putIfAbsent(id, new ArrayList<>());
     }
 }
