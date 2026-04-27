@@ -60,6 +60,8 @@ public class EnchantManager {
     private final Map<String, Integer> itemMaxSlotModifiers = new HashMap<>();
     private final Map<String, Integer> customItemsMaxSlotModifiers = new HashMap<>();
 
+    private final List<String> aePlainNames = new ArrayList<>();
+
     public EnchantManager(SinceEnchantments plugin) {
         this.plugin = plugin;
         this.ENCHANT_KEY = new NamespacedKey(plugin, "custom_enchants");
@@ -103,6 +105,7 @@ public class EnchantManager {
         customItemsMaxSlots.clear();
         itemMaxSlotModifiers.clear();
         customItemsMaxSlotModifiers.clear();
+        aePlainNames.clear();
 
         ConfigurationSection customEnchSec = plugin.getEnchantsFile().getConfig().getConfigurationSection("custom-enchants");
         if (customEnchSec != null) {
@@ -115,6 +118,11 @@ public class EnchantManager {
                 conflicts.put(key, plugin.getEnchantsFile().getStringList(path + ".conflicts"));
                 requires.put(key, plugin.getEnchantsFile().getStringList(path + ".requires"));
                 descriptions.put(key, plugin.getEnchantsFile().getStringList(path + ".description"));
+
+                if (key.startsWith("ae:")) {
+                    String plainName = ColorUtils.toPlainText(ColorUtils.parse(enchantNames.get(key))).trim();
+                    if (!plainName.isEmpty() && !aePlainNames.contains(plainName)) aePlainNames.add(plainName);
+                }
             }
         }
 
@@ -128,11 +136,9 @@ public class EnchantManager {
                 if (plugin.getEnchantsFile().getConfig().contains(path + ".max-level")) {
                     maxLevels.put(key, plugin.getEnchantsFile().getInt(path + ".max-level"));
                 }
-
                 if (plugin.getEnchantsFile().getConfig().contains(path + ".rarity")) {
                     rarities.put(key, plugin.getEnchantsFile().getString(path + ".rarity", "COMMON"));
                 }
-
                 if (plugin.getEnchantsFile().getConfig().contains(path + ".target")) {
                     targets.put(key, plugin.getEnchantsFile().getString(path + ".target").toUpperCase());
                 }
@@ -196,6 +202,23 @@ public class EnchantManager {
         if (mmoModSec != null) {
             for (String key : mmoModSec.getKeys(false)) {
                 customItemsMaxSlotModifiers.put(key.toUpperCase(), plugin.getLimitsFile().getInt("mmoitems-max-slot-modifiers." + key));
+            }
+        }
+    }
+
+    public void registerDynamicEnchant(String id, String name, int maxLevel, String rarity, String target, List<String> description) {
+        enchantNames.put(id, name);
+        maxLevels.put(id, maxLevel);
+        rarities.put(id, rarity);
+        targets.put(id, target.toUpperCase());
+        descriptions.put(id, description);
+        conflicts.putIfAbsent(id, new ArrayList<>());
+        requires.putIfAbsent(id, new ArrayList<>());
+
+        if (id.startsWith("ae:")) {
+            String plainName = ColorUtils.toPlainText(ColorUtils.parse(name)).trim();
+            if (!plainName.isEmpty() && !aePlainNames.contains(plainName)) {
+                aePlainNames.add(plainName);
             }
         }
     }
@@ -269,6 +292,8 @@ public class EnchantManager {
         if (item == null || !item.hasItemMeta()) return;
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        boolean changed = false;
+
         NamespacedKey startKey = new NamespacedKey(plugin, "lore_start");
         NamespacedKey countKey = new NamespacedKey(plugin, "lore_count");
         NamespacedKey placeholderKey = new NamespacedKey(plugin, "lore_placeholder");
@@ -296,6 +321,31 @@ public class EnchantManager {
             pdc.remove(startKey);
             pdc.remove(countKey);
             pdc.remove(placeholderKey);
+            changed = true;
+        }
+
+        if (meta.hasLore() && !aePlainNames.isEmpty()) {
+            List<Component> lore = new ArrayList<>(meta.lore());
+            boolean strippedAe = false;
+
+            for (int i = lore.size() - 1; i >= 0; i--) {
+                String plainLine = ColorUtils.toPlainText(lore.get(i)).trim();
+                for (String aeName : aePlainNames) {
+                    if (plainLine.startsWith(aeName)) {
+                        lore.remove(i);
+                        strippedAe = true;
+                        break;
+                    }
+                }
+            }
+
+            if (strippedAe) {
+                meta.lore(lore);
+                changed = true;
+            }
+        }
+
+        if (changed) {
             item.setItemMeta(meta);
         }
     }
@@ -591,7 +641,7 @@ public class EnchantManager {
             NamespacedKey aeKey = new NamespacedKey("advancedenchantments", "ae_enchantment-" + aeName);
             pdc.set(aeKey, PersistentDataType.INTEGER, entry.getValue());
         }
-        
+
         NamespacedKey aeSlotTrackerKey = new NamespacedKey("advancedenchantments", "slots");
         if (aeEnchants.isEmpty()) {
             pdc.remove(aeSlotTrackerKey);
@@ -661,16 +711,5 @@ public class EnchantManager {
             if (bukkitEnc != null && item.hasItemMeta()) return item.getItemMeta().getEnchantLevel(bukkitEnc);
         }
         return getCustomEnchants(item).getOrDefault(enchantId, 0);
-    }
-
-    public void registerDynamicEnchant(String id, String name, int maxLevel, String rarity, String target, List<String> description) {
-        enchantNames.put(id, name);
-        maxLevels.put(id, maxLevel);
-        rarities.put(id, rarity);
-        targets.put(id, target.toUpperCase());
-        descriptions.put(id, description);
-
-        conflicts.putIfAbsent(id, new ArrayList<>());
-        requires.putIfAbsent(id, new ArrayList<>());
     }
 }
