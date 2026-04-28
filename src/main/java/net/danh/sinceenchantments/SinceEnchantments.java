@@ -54,13 +54,20 @@ public class SinceEnchantments extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        this.settingsFile = new ConfigUtils(this, "settings.yml");
-        this.enchantsFile = new ConfigUtils(this, "enchants.yml");
-        this.limitsFile = new ConfigUtils(this, "limits.yml");
-        this.messagesFile = new ConfigUtils(this, "messages.yml");
-        this.itemsFile = new ConfigUtils(this, "items.yml");
-        this.guiFile = new ConfigUtils(this, "gui.yml");
-        this.customItemsFile = new ConfigUtils(this, "custom-items.yml");
+        this.settingsFile = new ConfigUtils(this, "settings.yml", true);
+        boolean updateEnchants = settingsFile.getBoolean("auto-update.enchants", false);
+        boolean updateLimits = settingsFile.getBoolean("auto-update.limits", false);
+        boolean updateMessages = settingsFile.getBoolean("auto-update.messages", true);
+        boolean updateItems = settingsFile.getBoolean("auto-update.items", false);
+        boolean updateGui = settingsFile.getBoolean("auto-update.gui", false);
+        boolean updateCustomItems = settingsFile.getBoolean("auto-update.custom-items", false);
+
+        this.enchantsFile = new ConfigUtils(this, "enchants.yml", updateEnchants);
+        this.limitsFile = new ConfigUtils(this, "limits.yml", updateLimits);
+        this.messagesFile = new ConfigUtils(this, "messages.yml", updateMessages);
+        this.itemsFile = new ConfigUtils(this, "items.yml", updateItems);
+        this.guiFile = new ConfigUtils(this, "gui.yml", updateGui);
+        this.customItemsFile = new ConfigUtils(this, "custom-items.yml", updateCustomItems);
 
         this.mythicLibHook = new MythicLibHook(this);
         this.enchantManager = new EnchantManager(this);

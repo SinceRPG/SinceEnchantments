@@ -21,16 +21,19 @@ public class ConfigUtils {
     private final String name;
     private File file;
     private FileConfiguration config;
+    private boolean needUpdate;
 
     /**
      * Generates or fetches a configuration file handle.
      *
-     * @param plugin The parent plugin.
-     * @param name   The path and name of the internal plugin resource.
+     * @param plugin     The parent plugin.
+     * @param name       The path and name of the internal plugin resource.
+     * @param needUpdate Whether to sync missing keys from jar.
      */
-    public ConfigUtils(SinceEnchantments plugin, String name) {
+    public ConfigUtils(SinceEnchantments plugin, String name, boolean needUpdate) {
         this.plugin = plugin;
         this.name = name;
+        this.needUpdate = needUpdate;
         this.load();
     }
 
@@ -49,15 +52,11 @@ public class ConfigUtils {
             }
         }
         config = YamlConfiguration.loadConfiguration(file);
-        autoUpdateConfig(false);
+        if (needUpdate) {
+            autoUpdateConfig(false);
+        }
     }
 
-    /**
-     * Compares the current file with the original file inside the .jar to automatically update it.
-     *
-     * @param removeObsolete If set to true, the plugin will DELETE keys that exist in the external file
-     *                       but not in the .jar (Use with caution as this risks losing user's custom data).
-     */
     private void autoUpdateConfig(boolean removeObsolete) {
         InputStream defaultStream = plugin.getResource(name);
         if (defaultStream == null) return;

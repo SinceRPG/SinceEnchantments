@@ -193,3 +193,16 @@ rarities:
   RARE: "&9"         # Blue
   EPIC: "&5"         # Purple
   LEGENDARY: "&6&l"  # Gold & Bold
+
+# ==========================================
+# AUTO UPDATE SETTINGS
+# ==========================================
+# If set to true, the plugin will automatically add the missing keys from the original file in the Jar to the external file.
+# If set to false, the plugin will not interfere with the file, allowing you to freely delete or modify it.
+auto-update:
+  enchants: false
+  limits: false
+  messages: true
+  items: false
+  gui: false
+  custom-items: false
