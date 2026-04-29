@@ -90,7 +90,7 @@ public class SinceEnchantments extends JavaPlugin {
         });
 
         PacketEvents.getAPI().init();
-        PacketEvents.getAPI().getEventManager().registerListener(new ItemPacketListener(), PacketListenerPriority.HIGHEST);
+        PacketEvents.getAPI().getEventManager().registerListener(new ItemPacketListener(), PacketListenerPriority.NORMAL);
         getServer().getPluginManager().registerEvents(new InventoryFixListener(this), this);
         getServer().getPluginManager().registerEvents(new EnchantApplyListener(this), this);
         getServer().getPluginManager().registerEvents(new AnvilListener(this), this);
