@@ -4,10 +4,13 @@ import com.github.retrooper.packetevents.event.PacketListener;
 import com.github.retrooper.packetevents.event.PacketListenerAbstract;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
+import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientCreativeInventoryAction;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.api.EnchantManager;
@@ -18,6 +21,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -25,15 +29,21 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.NonNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Intercepts packets to inject dynamically evaluated lore and enchantment visuals.
- * Highly optimized using NBT Fast-Failing to maintain perfect server TPS.
+ * Highly optimized using Guava Caching and NBT Fast-Failing to maintain perfect server TPS.
  */
 public class ItemPacketListener extends PacketListenerAbstract implements PacketListener {
+
+    // Memoization cache: Stores processed items for 1 second to prevent lag spikes during UI spam.
+    private final Cache<Integer, Optional<com.github.retrooper.packetevents.protocol.item.ItemStack>> itemCache =
+            CacheBuilder.newBuilder()
+                    .expireAfterWrite(1, TimeUnit.SECONDS)
+                    .maximumSize(5000)
+                    .build();
 
     private static boolean isEnchantableGear(ItemStack item) {
         if (item == null) return false;
@@ -50,16 +60,14 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
     @Override
     public void onPacketSend(@NonNull PacketSendEvent event) {
         try {
+            Player player = (Player) event.getPlayer();
+            if (player == null) return;
+
             if (event.getPacketType() == PacketType.Play.Server.SET_SLOT) {
                 WrapperPlayServerSetSlot wrapper = new WrapperPlayServerSetSlot(event);
                 var peItem = wrapper.getItem();
-
-                // Fast fail if empty or has no NBT
-                if (peItem == null || peItem.isEmpty() || peItem.getNBT() == null) return;
-
-                ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
-                bukkitItem = formatSkyblockItem(bukkitItem);
-                wrapper.setItem(SpigotConversionUtil.fromBukkitItemStack(bukkitItem));
+                var modified = processItem(player, peItem);
+                if (modified != null) wrapper.setItem(modified);
 
             } else if (event.getPacketType() == PacketType.Play.Server.WINDOW_ITEMS) {
                 WrapperPlayServerWindowItems wrapper = new WrapperPlayServerWindowItems(event);
@@ -68,11 +76,9 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
                 for (int i = 0; i < items.size(); i++) {
                     var peItem = items.get(i);
-                    // Fast fail NBT check to avoid heavy conversions
-                    if (peItem != null && !peItem.isEmpty() && peItem.getNBT() != null) {
-                        ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
-                        bukkitItem = formatSkyblockItem(bukkitItem);
-                        items.set(i, SpigotConversionUtil.fromBukkitItemStack(bukkitItem));
+                    var modItem = processItem(player, peItem);
+                    if (modItem != null) {
+                        items.set(i, modItem);
                         modified = true;
                     }
                 }
@@ -98,6 +104,36 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         }
     }
 
+    /**
+     * Processes an item with maximum efficiency utilizing memory caching.
+     */
+    private com.github.retrooper.packetevents.protocol.item.ItemStack processItem(Player player, com.github.retrooper.packetevents.protocol.item.ItemStack peItem) {
+        if (peItem == null || peItem.getAmount() <= 0 || peItem.getType() == ItemTypes.AIR) return null;
+
+        // Generate a unique fingerprint for this specific item state and player
+        int nbtHash = peItem.getNBT() != null ? peItem.getNBT().hashCode() : 0;
+        int cacheKey = Objects.hash(player.getUniqueId(), peItem.getType(), peItem.getAmount(), nbtHash);
+
+        // Instantly return the cached result if the player just spammed an action (0.0001ms execution)
+        Optional<com.github.retrooper.packetevents.protocol.item.ItemStack> cachedResult = itemCache.getIfPresent(cacheKey);
+        if (cachedResult != null) {
+            return cachedResult.orElse(null);
+        }
+
+        ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
+        ItemStack formattedItem = formatSkyblockItem(bukkitItem);
+
+        // If the formatter did not change the item, cache an empty Optional so we know to skip it next time
+        if (formattedItem.equals(bukkitItem)) {
+            itemCache.put(cacheKey, Optional.empty());
+            return null;
+        }
+
+        var result = SpigotConversionUtil.fromBukkitItemStack(formattedItem);
+        itemCache.put(cacheKey, Optional.of(result));
+        return result;
+    }
+
     private ItemStack cleanCreativeItem(ItemStack item) {
         SinceEnchantments.getInstance().getEnchantManager().cleanItemLore(item);
         if (item.hasItemMeta()) {
@@ -108,7 +144,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         return item;
     }
 
-    private org.bukkit.inventory.ItemStack formatSkyblockItem(org.bukkit.inventory.ItemStack item) {
+    private ItemStack formatSkyblockItem(ItemStack item) {
         EnchantManager manager = SinceEnchantments.getInstance().getEnchantManager();
         manager.cleanItemLore(item);
 

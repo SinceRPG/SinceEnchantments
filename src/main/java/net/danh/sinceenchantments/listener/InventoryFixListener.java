@@ -12,8 +12,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 
 /**
- * Cleans items of injected lore when moved within inventories.
- * Highly optimized to fast-fail and prevent updateInventory() lag spikes.
+ * Cleans items of injected visual lore when moved within inventories.
+ * Highly optimized to fast-fail and prevent updateInventory() packet storms.
  */
 public class InventoryFixListener implements Listener {
     private final EnchantManager manager;
@@ -27,11 +27,11 @@ public class InventoryFixListener implements Listener {
         if (event.getWhoClicked() instanceof Player p) {
             boolean update = false;
 
-            // Only trigger an update if the item actually HAD injected lore stripped from it
+            // Only trigger a packet update if the item actually HAD injected lore stripped from it
             if (manager.cleanItemLore(event.getCurrentItem())) update = true;
             if (manager.cleanItemLore(event.getCursor())) update = true;
 
-            // Specifically handle hotkey swapping (F key and Numbers 1-9)
+            // Specifically handle hotkey swapping ('F' key and Numbers 1-9) which causes severe lag if not isolated
             if (event.getClick() == ClickType.SWAP_OFFHAND) {
                 if (manager.cleanItemLore(p.getInventory().getItemInOffHand())) update = true;
             } else if (event.getClick() == ClickType.NUMBER_KEY) {
