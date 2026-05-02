@@ -13,6 +13,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
 
+/**
+ * Main class for the SinceEnchantments plugin.
+ * Handles the initialization sequence, configuration loading, and dependency hooking.
+ */
 @SuppressWarnings("UnstableApiUsage")
 public class SinceEnchantments extends JavaPlugin {
     private static SinceEnchantments instance;
@@ -41,12 +45,6 @@ public class SinceEnchantments extends JavaPlugin {
     @Override
     public void onLoad() {
         instance = this;
-        if (ServerVersion.isAtMost(1, 21, 11))
-            getLogger().info("Running natively for Paper 1.21+ | NMS Version: " + ServerVersion.getNmsVersion());
-        else {
-            getLogger().info("Running natively for Paper 26.1+ | Version: v" + ServerVersion.getMajor() + "_" + ServerVersion.getMinor() + "_" + ServerVersion.getPatch());
-            getLogger().info("Running natively for Paper 26.1+ | NMS Version: v" + ServerVersion.getMajor() + "_" + ServerVersion.getMinor() + "_R" + ServerVersion.getRevisionNumber());
-        }
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
         PacketEvents.getAPI().getSettings().reEncodeByDefault(true).checkForUpdates(true);
         PacketEvents.getAPI().load();
@@ -55,19 +53,15 @@ public class SinceEnchantments extends JavaPlugin {
     @Override
     public void onEnable() {
         this.settingsFile = new ConfigUtils(this, "settings.yml", true);
-        boolean updateEnchants = settingsFile.getBoolean("auto-update.enchants", false);
-        boolean updateLimits = settingsFile.getBoolean("auto-update.limits", false);
-        boolean updateMessages = settingsFile.getBoolean("auto-update.messages", true);
-        boolean updateItems = settingsFile.getBoolean("auto-update.items", false);
-        boolean updateGui = settingsFile.getBoolean("auto-update.gui", false);
-        boolean updateCustomItems = settingsFile.getBoolean("auto-update.custom-items", false);
+        this.messagesFile = new ConfigUtils(this, "messages.yml", settingsFile.getBoolean("auto-update.messages", true));
 
-        this.enchantsFile = new ConfigUtils(this, "enchants.yml", updateEnchants);
-        this.limitsFile = new ConfigUtils(this, "limits.yml", updateLimits);
-        this.messagesFile = new ConfigUtils(this, "messages.yml", updateMessages);
-        this.itemsFile = new ConfigUtils(this, "items.yml", updateItems);
-        this.guiFile = new ConfigUtils(this, "gui.yml", updateGui);
-        this.customItemsFile = new ConfigUtils(this, "custom-items.yml", updateCustomItems);
+        logStartupVersion();
+
+        this.enchantsFile = new ConfigUtils(this, "enchants.yml", settingsFile.getBoolean("auto-update.enchants", false));
+        this.limitsFile = new ConfigUtils(this, "limits.yml", settingsFile.getBoolean("auto-update.limits", false));
+        this.itemsFile = new ConfigUtils(this, "items.yml", settingsFile.getBoolean("auto-update.items", false));
+        this.guiFile = new ConfigUtils(this, "gui.yml", settingsFile.getBoolean("auto-update.gui", false));
+        this.customItemsFile = new ConfigUtils(this, "custom-items.yml", settingsFile.getBoolean("auto-update.custom-items", false));
 
         this.mythicLibHook = new MythicLibHook(this);
         this.enchantManager = new EnchantManager(this);
@@ -86,22 +80,19 @@ public class SinceEnchantments extends JavaPlugin {
 
         SinceCommand commandClass = new SinceCommand(this);
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
-            event.registrar().register(commandClass.buildCommand(), "SinceEnchantments management command", List.of("se", "sinceenchant"));
+            String desc = messagesFile.getString("command-description", "SinceEnchantments management command");
+            event.registrar().register(commandClass.buildCommand(), desc, List.of("se", "sinceenchant"));
         });
 
         PacketEvents.getAPI().init();
         PacketEvents.getAPI().getEventManager().registerListener(new ItemPacketListener(), PacketListenerPriority.NORMAL);
+
         getServer().getPluginManager().registerEvents(new InventoryFixListener(this), this);
         getServer().getPluginManager().registerEvents(new EnchantApplyListener(this), this);
         getServer().getPluginManager().registerEvents(new AnvilListener(this), this);
         getServer().getPluginManager().registerEvents(new ExtractorListener(this), this);
         getServer().getPluginManager().registerEvents(new StatTrackerListener(this), this);
         getServer().getPluginManager().registerEvents(new ProtectionListener(this), this);
-
-        if (ServerVersion.isOlderThan(1, 21, 11))
-            getLogger().warning("Warning: Your server version is below 1.21.11! If it have any error, join discord and report to author: https://discord.gg/zbMPtcM3wq");
-        else if (ServerVersion.isAtLeast(26, 1))
-            getLogger().warning("Warning: Your server version is below 26.1+! If it have any error, join discord and report to author: https://discord.gg/zbMPtcM3wq");
     }
 
     @Override
@@ -109,6 +100,24 @@ public class SinceEnchantments extends JavaPlugin {
         PacketEvents.getAPI().terminate();
     }
 
+    /**
+     * Reads version information and prints the appropriate configured message.
+     */
+    private void logStartupVersion() {
+        if (ServerVersion.isAtMost(1, 21, 11)) {
+            String msg = messagesFile.getString("startup-native", "Running natively for Paper 1.21+ | NMS: %nms%");
+            getLogger().info(msg.replace("%nms%", ServerVersion.getNmsVersion()));
+        } else {
+            String msg = messagesFile.getString("startup-future", "Running natively for Paper 26.1+ | Version: %version%");
+            getLogger().info(msg.replace("%version%", "v" + ServerVersion.getMajor() + "_" + ServerVersion.getMinor()));
+        }
+
+        if (ServerVersion.isOlderThan(1, 21, 11) || ServerVersion.isAtLeast(26, 1)) {
+            getLogger().warning(messagesFile.getString("startup-warning", "Warning: Unsupported server version detected!"));
+        }
+    }
+
+    // Getters omitted for brevity but remain unchanged...
     public ConfigUtils getSettingsFile() {
         return settingsFile;
     }

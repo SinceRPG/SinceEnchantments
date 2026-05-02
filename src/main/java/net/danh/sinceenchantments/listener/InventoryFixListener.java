@@ -15,6 +15,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+/**
+ * Cleans items of injected lore when moved within inventories.
+ * Optimized to skip non-custom items instantly.
+ */
 public class InventoryFixListener implements Listener {
     private final EnchantManager manager;
 
@@ -22,6 +26,10 @@ public class InventoryFixListener implements Listener {
         this.manager = plugin.getEnchantManager();
     }
 
+    /**
+     * Checks if an item requires metadata cleaning.
+     * Fast-fails on empty ItemMeta to save CPU cycles.
+     */
     private boolean needsUpdate(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
         ItemMeta meta = item.getItemMeta();
@@ -29,6 +37,8 @@ public class InventoryFixListener implements Listener {
         if (meta.hasLore()) return true;
 
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        if (pdc.isEmpty()) return false; // FAST FAIL: Skip processing if no custom PDC tags exist.
+
         if (pdc.has(manager.BOOK_ID_KEY, PersistentDataType.STRING) || pdc.has(manager.ENCHANT_KEY, PersistentDataType.STRING))
             return true;
 
@@ -39,6 +49,7 @@ public class InventoryFixListener implements Listener {
         if (pdc.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE)) return true;
         if (pdc.has(manager.TRACKER_KEY, PersistentDataType.BYTE)) return true;
         if (manager.isLocked(item)) return true;
+
         return !manager.getWhitelistedEnchants(item).isEmpty();
     }
 

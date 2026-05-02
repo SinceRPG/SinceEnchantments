@@ -4,7 +4,6 @@ import com.github.retrooper.packetevents.event.PacketListener;
 import com.github.retrooper.packetevents.event.PacketListenerAbstract;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
-import com.github.retrooper.packetevents.protocol.item.ItemStack;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientCreativeInventoryAction;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot;
@@ -20,6 +19,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -29,9 +29,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Intercepts packets to inject dynamically evaluated lore and enchantment visuals.
+ * Highly optimized using NBT Fast-Failing to maintain perfect server TPS.
+ */
 public class ItemPacketListener extends PacketListenerAbstract implements PacketListener {
 
-    private static boolean isEnchantableGear(org.bukkit.inventory.ItemStack item) {
+    private static boolean isEnchantableGear(ItemStack item) {
         if (item == null) return false;
         String name = item.getType().name();
         return name.endsWith("_SWORD") || name.endsWith("_AXE") || name.endsWith("_PICKAXE") ||
@@ -48,20 +52,25 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         try {
             if (event.getPacketType() == PacketType.Play.Server.SET_SLOT) {
                 WrapperPlayServerSetSlot wrapper = new WrapperPlayServerSetSlot(event);
-                ItemStack peItem = wrapper.getItem();
-                if (peItem != null && !peItem.isEmpty()) {
-                    org.bukkit.inventory.ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
-                    bukkitItem = formatSkyblockItem(bukkitItem);
-                    wrapper.setItem(SpigotConversionUtil.fromBukkitItemStack(bukkitItem));
-                }
+                var peItem = wrapper.getItem();
+
+                // Fast fail if empty or has no NBT
+                if (peItem == null || peItem.isEmpty() || peItem.getNBT() == null) return;
+
+                ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
+                bukkitItem = formatSkyblockItem(bukkitItem);
+                wrapper.setItem(SpigotConversionUtil.fromBukkitItemStack(bukkitItem));
+
             } else if (event.getPacketType() == PacketType.Play.Server.WINDOW_ITEMS) {
                 WrapperPlayServerWindowItems wrapper = new WrapperPlayServerWindowItems(event);
-                List<ItemStack> items = wrapper.getItems();
+                var items = wrapper.getItems();
                 boolean modified = false;
+
                 for (int i = 0; i < items.size(); i++) {
-                    ItemStack peItem = items.get(i);
-                    if (peItem != null && !peItem.isEmpty()) {
-                        org.bukkit.inventory.ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
+                    var peItem = items.get(i);
+                    // Fast fail NBT check to avoid heavy conversions
+                    if (peItem != null && !peItem.isEmpty() && peItem.getNBT() != null) {
+                        ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
                         bukkitItem = formatSkyblockItem(bukkitItem);
                         items.set(i, SpigotConversionUtil.fromBukkitItemStack(bukkitItem));
                         modified = true;
@@ -78,9 +87,9 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         try {
             if (event.getPacketType() == PacketType.Play.Client.CREATIVE_INVENTORY_ACTION) {
                 WrapperPlayClientCreativeInventoryAction wrapper = new WrapperPlayClientCreativeInventoryAction(event);
-                ItemStack peItem = wrapper.getItemStack();
+                var peItem = wrapper.getItemStack();
                 if (peItem != null && !peItem.isEmpty()) {
-                    org.bukkit.inventory.ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
+                    ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
                     bukkitItem = cleanCreativeItem(bukkitItem);
                     wrapper.setItemStack(SpigotConversionUtil.fromBukkitItemStack(bukkitItem));
                 }
@@ -89,7 +98,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         }
     }
 
-    private org.bukkit.inventory.ItemStack cleanCreativeItem(org.bukkit.inventory.ItemStack item) {
+    private ItemStack cleanCreativeItem(ItemStack item) {
         SinceEnchantments.getInstance().getEnchantManager().cleanItemLore(item);
         if (item.hasItemMeta()) {
             ItemMeta meta = item.getItemMeta();

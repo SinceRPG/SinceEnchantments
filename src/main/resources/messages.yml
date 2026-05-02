@@ -62,3 +62,8 @@ tracker-invalid-item: "&cStat Trackers can only be applied to Weapons, Tools, or
 
 item-protected-consumed: "&eYour protected item was saved and the Protection Gem was consumed!"
 item-protected-saved: "&eYour protected item was saved!"
+
+startup-native: "Running natively for Paper 1.21+ | NMS: %nms%"
+startup-future: "Running natively for Paper 26.1+ | Version: %version%"
+startup-warning: "Warning: Unsupported server version detected! Join our discord if you experience errors: https://discord.gg/zbMPtcM3wq"
+command-description: "Main administrative command for SinceEnchantments."
