@@ -1,7 +1,9 @@
 package net.danh.sinceenchantments.modules;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -13,6 +15,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * EXCAVATOR ENCHANT MODULE
+ * <p>
+ * Functionality:
+ * Custom enchantment module that breaks a configurable 3x3 or 5x5 area around the
+ * originally broken block. Factored to handle vanilla Unbreaking logic dynamically
+ * to prevent unbreakable items from snapping instantly.
+ */
 public class ExcavatorEnchant extends SinceEnchant {
     private final Set<UUID> activePlayers = new HashSet<>();
 
@@ -49,7 +59,7 @@ public class ExcavatorEnchant extends SinceEnchant {
             }
 
             if (blocksBroken > 0 && item.getItemMeta() instanceof Damageable damageable) {
-                int unbreakingLvl = item.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.UNBREAKING);
+                int unbreakingLvl = item.getEnchantmentLevel(Enchantment.UNBREAKING);
                 int effectiveDamage = 0;
                 for (int i = 0; i < blocksBroken; i++) {
                     if (unbreakingLvl == 0 || (100.0 / (unbreakingLvl + 1)) > Math.random() * 100) {
@@ -61,7 +71,7 @@ public class ExcavatorEnchant extends SinceEnchant {
                     item.setItemMeta(damageable);
                     if (damageable.getDamage() >= item.getType().getMaxDurability()) {
                         p.getInventory().setItemInMainHand(null);
-                        p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_ITEM_BREAK, 1f, 1f);
+                        p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1f, 1f);
                     }
                 }
             }

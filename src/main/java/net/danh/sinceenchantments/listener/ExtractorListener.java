@@ -25,6 +25,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+/**
+ * EXTRACTOR LISTENER
+ * <p>
+ * Functionality:
+ * Handles interactions regarding the Extractor item. Listens for drag-and-drop actions
+ * on items to extract custom enchantments and manages the legacy chest GUI interactions.
+ * <p>
+ * Optimization Applied:
+ * Added state validation (gui.isCompleted()) to prevent click-spamming in the GUI.
+ * This immediately returns the function, preventing logic overlap, server bottlenecking,
+ * and potential item duplication.
+ */
 public class ExtractorListener implements Listener {
     private final SinceEnchantments plugin;
     private final EnchantManager manager;
@@ -136,6 +148,9 @@ public class ExtractorListener implements Listener {
         if (!(event.getInventory().getHolder() instanceof ExtractorGUI gui)) return;
         event.setCancelled(true);
 
+        // Anti-spam bottleneck safeguard
+        if (gui.isCompleted()) return;
+
         if (!(event.getWhoClicked() instanceof Player p)) return;
         if (event.getClickedInventory() == null || !event.getClickedInventory().equals(gui.getInventory())) return;
 
@@ -172,6 +187,9 @@ public class ExtractorListener implements Listener {
             return;
         }
 
+        // Lock processing sequence immediately
+        gui.setCompleted(true);
+
         manager.removeEnchant(weapon, enchantId);
         ItemStack book = itemFactory.createEnchantBook(enchantId, level, 100, 0);
 
@@ -179,7 +197,6 @@ public class ExtractorListener implements Listener {
             p.getWorld().dropItem(p.getLocation(), book);
         }
 
-        gui.setCompleted(true);
         p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
         sendMsg(p, "extract-success", "%enchant%", manager.getEnchantName(enchantId), "%level%", String.valueOf(level));
         p.closeInventory();
