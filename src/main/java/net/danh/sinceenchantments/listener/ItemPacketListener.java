@@ -33,8 +33,15 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Intercepts packets to inject dynamically evaluated lore and enchantment visuals.
- * Highly optimized using Guava Caching and NBT Fast-Failing to maintain perfect server TPS.
+ * ITEM PACKET LISTENER
+ * <p>
+ * Functionality:
+ * Intercepts packets sent to the client to inject dynamically evaluated lore and enchantment
+ * visuals. Items on the server remain clean, but appear fully customized to the player.
+ * <p>
+ * Lag Optimization Applied:
+ * Highly optimized using Guava Caching and string-based NBT hash Fast-Failing to maintain
+ * perfect server TPS even during heavy inventory spam.
  */
 public class ItemPacketListener extends PacketListenerAbstract implements PacketListener {
 
@@ -110,53 +117,61 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
     private com.github.retrooper.packetevents.protocol.item.ItemStack processItem(Player player, com.github.retrooper.packetevents.protocol.item.ItemStack peItem) {
         if (peItem == null || peItem.getAmount() <= 0 || peItem.getType() == ItemTypes.AIR) return null;
 
-        // Generate a unique fingerprint for this specific item state and player
-        int nbtHash = peItem.getNBT() != null ? peItem.getNBT().hashCode() : 0;
+        // FIX: peItem.getNBT().toString().hashCode() provides secure value-based hashing.
+        // peItem.getNBT().hashCode() fails in many environments leading to massive memory leaks and TPS drops.
+        int nbtHash = peItem.getNBT() != null ? peItem.getNBT().toString().hashCode() : 0;
         int cacheKey = Objects.hash(player.getUniqueId(), peItem.getType(), peItem.getAmount(), nbtHash);
 
-        // Instantly return the cached result if the player just spammed an action (0.0001ms execution)
+        // Instantly return the cached result if the player just spammed an action
         Optional<com.github.retrooper.packetevents.protocol.item.ItemStack> cachedResult = itemCache.getIfPresent(cacheKey);
         if (cachedResult != null) {
             return cachedResult.orElse(null);
         }
 
         ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
-        ItemStack formattedItem = formatSkyblockItem(bukkitItem);
 
-        // If the formatter did not change the item, cache an empty Optional so we know to skip it next time
-        if (formattedItem.equals(bukkitItem)) {
+        // FIX: Must create a distinct clone before formatting to accurately compare changes
+        ItemStack originalItem = bukkitItem.clone();
+        boolean modified = formatSkyblockItem(bukkitItem);
+
+        // If the item wasn't functionally modified, cache empty and abort packet alteration
+        if (!modified && bukkitItem.equals(originalItem)) {
             itemCache.put(cacheKey, Optional.empty());
             return null;
         }
 
-        var result = SpigotConversionUtil.fromBukkitItemStack(formattedItem);
+        var result = SpigotConversionUtil.fromBukkitItemStack(bukkitItem);
         itemCache.put(cacheKey, Optional.of(result));
         return result;
     }
 
     private ItemStack cleanCreativeItem(ItemStack item) {
+        // The EnchantManager logic has been upgraded to handle secure HIDE_ENCHANTS wiping internally.
         SinceEnchantments.getInstance().getEnchantManager().cleanItemLore(item);
-        if (item.hasItemMeta()) {
-            ItemMeta meta = item.getItemMeta();
-            meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
-            item.setItemMeta(meta);
-        }
         return item;
     }
 
-    private ItemStack formatSkyblockItem(ItemStack item) {
+    /**
+     * Injects the visual enchantments into the ItemStack.
+     *
+     * @param item The Bukkit ItemStack to format.
+     * @return TRUE if the item was modified, FALSE otherwise.
+     */
+    private boolean formatSkyblockItem(ItemStack item) {
         EnchantManager manager = SinceEnchantments.getInstance().getEnchantManager();
-        manager.cleanItemLore(item);
+        boolean cleaned = manager.cleanItemLore(item);
 
-        if (item == null || item.getType().isAir()) return item;
+        if (item == null || item.getType().isAir()) return cleaned;
         boolean hadMetaInitially = item.hasItemMeta();
         ItemMeta meta = hadMetaInitially ? item.getItemMeta() : Bukkit.getItemFactory().getItemMeta(item.getType());
-        if (meta == null) return item;
+        if (meta == null) return cleaned;
 
         ConfigUtils settings = SinceEnchantments.getInstance().getSettingsFile();
         ConfigUtils enchantsConfig = SinceEnchantments.getInstance().getEnchantsFile();
         List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
-        String placeholderStr = settings.getString("settings.placeholder", "#enchants#").toLowerCase();
+
+        // Ensure default hardcode points to the expected config value to prevent mismatch bugs
+        String placeholderStr = settings.getString("settings.placeholder", "{enchants}").toLowerCase();
         int targetIndex = -1;
 
         for (int i = lore.size() - 1; i >= 0; i--) {
@@ -172,6 +187,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         Map<String, Integer> customEnchants = manager.getCustomEnchants(item);
         boolean overrideVanilla = settings.getBoolean("settings.override-vanilla-enchants", true);
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
+
         boolean hasProtect = pdc.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE);
         boolean hasTracker = pdc.has(manager.TRACKER_KEY, PersistentDataType.BYTE);
         boolean isLocked = manager.isLocked(item);
@@ -183,16 +199,21 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         boolean hasWhitelist = !manager.getWhitelistedEnchants(item).isEmpty();
 
         if (!isGear && !hasPlaceholder && !hasCustom && (!hasVanilla || !overrideVanilla) && !hasWhitelist && !hasProtect && !hasTracker && !isLocked) {
-            if (hadMetaInitially) {
+            if (hadMetaInitially && hasPlaceholder) {
                 meta.lore(lore);
                 item.setItemMeta(meta);
+                return true;
             }
-            return item;
+            return cleaned;
         }
 
-        if (overrideVanilla) meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-
         List<Component> injectComponents = new ArrayList<>();
+
+        if (overrideVanilla && !meta.hasItemFlag(ItemFlag.HIDE_ENCHANTS)) {
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            // Securely mark that WE were the ones to hide the enchants, so we don't break admin-hidden items
+            pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_hid_enchants"), PersistentDataType.BYTE, (byte) 1);
+        }
 
         if (hasProtect) {
             injectComponents.add(ColorUtils.parse(settings.getString("settings.protected-format", "&a&lProtected &7(Keeps on death)")).decoration(TextDecoration.ITALIC, false));
@@ -202,13 +223,13 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         if (hasTracker) {
             injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-header", "&8&m      &r &6&lStat Tracker &8&m      ")).decoration(TextDecoration.ITALIC, false));
             if (pdc.has(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER))
-                injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-blocks").replace("%value%", String.valueOf(pdc.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
+                injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-blocks", "&7Blocks Mined: &e%value%").replace("%value%", String.valueOf(pdc.get(manager.STAT_BLOCKS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
             if (pdc.has(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER))
-                injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-mobs").replace("%value%", String.valueOf(pdc.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
+                injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-mobs", "&7Mobs Killed: &e%value%").replace("%value%", String.valueOf(pdc.get(manager.STAT_MOBS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
             if (pdc.has(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER))
-                injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-players").replace("%value%", String.valueOf(pdc.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
+                injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-players", "&7Players Killed: &c%value%").replace("%value%", String.valueOf(pdc.get(manager.STAT_PLAYERS_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
             if (pdc.has(manager.STAT_FISH_KEY, PersistentDataType.INTEGER))
-                injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-fish").replace("%value%", String.valueOf(pdc.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
+                injectComponents.add(ColorUtils.parse(settings.getString("settings.tracker-fish", "&7Fish Caught: &b%value%").replace("%value%", String.valueOf(pdc.get(manager.STAT_FISH_KEY, PersistentDataType.INTEGER)))).decoration(TextDecoration.ITALIC, false));
             injectComponents.add(Component.empty());
         }
 
@@ -326,7 +347,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
                 meta.lore(lore);
                 item.setItemMeta(meta);
             }
-            return item;
+            return hasPlaceholder || cleaned;
         }
 
         boolean addEmptyLineAbove = settings.getBoolean("settings.add-empty-line-above", true);
@@ -356,7 +377,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
         meta.lore(lore);
         item.setItemMeta(meta);
-        return item;
+        return true; // We successfully injected components
     }
 
     private String formatDefaultName(String rawName) {

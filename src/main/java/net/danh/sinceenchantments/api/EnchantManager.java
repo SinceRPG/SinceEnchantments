@@ -310,6 +310,15 @@ public class EnchantManager {
         NamespacedKey startKey = new NamespacedKey(plugin, "lore_start");
         NamespacedKey countKey = new NamespacedKey(plugin, "lore_count");
         NamespacedKey placeholderKey = new NamespacedKey(plugin, "lore_placeholder");
+        NamespacedKey hideEnchKey = new NamespacedKey(plugin, "lore_hid_enchants");
+
+        // SECURE HIDE_ENCHANTS CHECK: Only remove the flag if WE were the ones who added it.
+        // This prevents the plugin from destroying intentional admin/vanilla item flags.
+        if (pdc.has(hideEnchKey, PersistentDataType.BYTE)) {
+            meta.removeItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+            pdc.remove(hideEnchKey);
+            changed = true;
+        }
 
         if (pdc.has(countKey, PersistentDataType.INTEGER)) {
             int start = pdc.getOrDefault(startKey, PersistentDataType.INTEGER, -1);
@@ -322,7 +331,8 @@ public class EnchantManager {
                     if (start < lore.size()) lore.remove(start);
                 }
                 if (hadPlaceholder) {
-                    String placeholderStr = plugin.getSettingsFile().getString("settings.placeholder", "#enchants#");
+                    // FIX: Hardcoded fallback changed from #enchants# to {enchants} to match config defaults
+                    String placeholderStr = plugin.getSettingsFile().getString("settings.placeholder", "{enchants}");
                     if (start <= lore.size()) {
                         lore.add(start, ColorUtils.parse(placeholderStr).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
                     } else {
