@@ -91,7 +91,6 @@ public class EnchantManager {
         loadEnchantsFromConfig();
     }
 
-    // Hàm giúp xóa mọi dấu cách, gạch nối, đưa về chữ thường
     private String normalizeName(String name) {
         if (name == null) return "";
         return ColorUtils.toPlainText(ColorUtils.parse(name)).replace(" ", "").replaceAll("[-_]", "").toLowerCase();
@@ -296,8 +295,14 @@ public class EnchantManager {
         return plugin.getMythicLibHook().getMMOItemKey(item);
     }
 
-    public void cleanItemLore(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return;
+    /**
+     * Cleans the item of any injected visual lore and resets it to its base state.
+     *
+     * @param item The item to clean.
+     * @return TRUE if the item was modified (meaning it had injected lore), FALSE otherwise.
+     */
+    public boolean cleanItemLore(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
         ItemMeta meta = item.getItemMeta();
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         boolean changed = false;
@@ -362,6 +367,8 @@ public class EnchantManager {
         if (changed) {
             item.setItemMeta(meta);
         }
+
+        return changed;
     }
 
     private Registry<Enchantment> getBukkitRegistry() {
