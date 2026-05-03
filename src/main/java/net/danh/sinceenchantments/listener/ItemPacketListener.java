@@ -95,6 +95,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         }
     }
 
+
     @Override
     public void onPacketReceive(@NonNull PacketReceiveEvent event) {
         try {
@@ -102,7 +103,8 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
                 WrapperPlayClientCreativeInventoryAction wrapper = new WrapperPlayClientCreativeInventoryAction(event);
                 var peItem = wrapper.getItemStack();
                 if (peItem != null && !peItem.isEmpty()) {
-                    ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
+                    // CRITICAL FIX: Deep clone the Bukkit ItemStack to detach from NMS
+                    ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem).clone();
                     bukkitItem = cleanCreativeItem(bukkitItem);
                     wrapper.setItemStack(SpigotConversionUtil.fromBukkitItemStack(bukkitItem));
                 }
@@ -110,31 +112,27 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         } catch (Exception ignored) {
         }
     }
-
     /**
      * Processes an item with maximum efficiency utilizing memory caching.
+     * Prevents Async NMS DataComponentMap corruption by forcefully cloning the item.
      */
     private com.github.retrooper.packetevents.protocol.item.ItemStack processItem(Player player, com.github.retrooper.packetevents.protocol.item.ItemStack peItem) {
         if (peItem == null || peItem.getAmount() <= 0 || peItem.getType() == ItemTypes.AIR) return null;
 
-        // FIX: peItem.getNBT().toString().hashCode() provides secure value-based hashing.
-        // peItem.getNBT().hashCode() fails in many environments leading to massive memory leaks and TPS drops.
-        int nbtHash = peItem.getNBT() != null ? peItem.getNBT().toString().hashCode() : 0;
+        int nbtHash = peItem.getNBT() != null ? peItem.getNBT().hashCode() : 0;
         int cacheKey = Objects.hash(player.getUniqueId(), peItem.getType(), peItem.getAmount(), nbtHash);
 
-        // Instantly return the cached result if the player just spammed an action
         Optional<com.github.retrooper.packetevents.protocol.item.ItemStack> cachedResult = itemCache.getIfPresent(cacheKey);
         if (cachedResult != null) {
             return cachedResult.orElse(null);
         }
 
-        ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem);
-
-        // FIX: Must create a distinct clone before formatting to accurately compare changes
+        // CRITICAL FIX: Deep clone the Bukkit ItemStack immediately.
+        // This detaches the object from the server's NMS backend, preventing fatal async map corruption!
+        ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem).clone();
         ItemStack originalItem = bukkitItem.clone();
         boolean modified = formatSkyblockItem(bukkitItem);
 
-        // If the item wasn't functionally modified, cache empty and abort packet alteration
         if (!modified && bukkitItem.equals(originalItem)) {
             itemCache.put(cacheKey, Optional.empty());
             return null;

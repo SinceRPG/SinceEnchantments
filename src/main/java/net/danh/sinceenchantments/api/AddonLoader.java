@@ -25,22 +25,23 @@ public class AddonLoader {
         File addonFolder = new File(plugin.getDataFolder(), "Enchantments");
         if (!addonFolder.exists()) {
             addonFolder.mkdirs();
-            plugin.getLogger().info("Created 'Enchantments' folder. Drop external .jar addons here!");
+            plugin.getLogger().info(plugin.getMessagesFile().getString("log-addon-folder-created", "Created 'Enchantments' folder. Drop external .jar addons here!"));
             return;
         }
 
         File[] jarFiles = addonFolder.listFiles((dir, name) -> name.endsWith(".jar"));
         if (jarFiles == null || jarFiles.length == 0) {
-            plugin.getLogger().info("No Addons (.jar) found in Enchantments folder.");
+            plugin.getLogger().info(plugin.getMessagesFile().getString("log-addon-none-found", "No Addons (.jar) found in Enchantments folder."));
             return;
         }
 
-        plugin.getLogger().info("Scanning for Custom Enchant Addons...");
+        plugin.getLogger().info(plugin.getMessagesFile().getString("log-addon-scanning", "Scanning for Custom Enchant Addons..."));
         for (File jarFile : jarFiles) {
             try {
                 loadEnchantsFromJar(jarFile);
             } catch (Exception e) {
-                plugin.getLogger().severe("Failed to load addon from file: " + jarFile.getName());
+                String errorMsg = plugin.getMessagesFile().getString("log-addon-load-failed", "Failed to load addon from file: %file%").replace("%file%", jarFile.getName());
+                plugin.getLogger().severe(errorMsg);
                 e.printStackTrace();
             }
         }
@@ -64,14 +65,17 @@ public class AddonLoader {
                             loadedCount++;
                         }
                     } catch (NoClassDefFoundError | ClassNotFoundException e) {
-                        plugin.getLogger().warning("Skipping class " + className + " due to missing dependencies.");
+                        String warnMsg = plugin.getMessagesFile().getString("log-addon-missing-deps", "Skipping class %class% due to missing dependencies.").replace("%class%", className);
+                        plugin.getLogger().warning(warnMsg);
                     } catch (Exception e) {
-                        plugin.getLogger().warning("Error initializing class " + className + " in " + file.getName());
+                        String warnMsg = plugin.getMessagesFile().getString("log-addon-init-error", "Error initializing class %class% in %file%").replace("%class%", className).replace("%file%", file.getName());
+                        plugin.getLogger().warning(warnMsg);
                         e.printStackTrace();
                     }
                 }
             }
-            plugin.getLogger().info("Successfully loaded " + loadedCount + " enchant(s) from addon: " + file.getName());
+            String successMsg = plugin.getMessagesFile().getString("log-addon-success", "Successfully loaded %count% enchant(s) from addon: %file%").replace("%count%", String.valueOf(loadedCount)).replace("%file%", file.getName());
+            plugin.getLogger().info(successMsg);
         }
     }
 }

@@ -33,17 +33,17 @@ public class MMOCoreHook {
                 }
                 setLevelMethod = playerDataClass.getMethod("setLevel", int.class, reasonEnumClass);
                 hooked = true;
-                plugin.getLogger().info("Successfully hooked into MMOCore API (Latest Version) for Anvil EXP sync!");
+                plugin.getLogger().info(plugin.getMessagesFile().getString("log-mmo-hook-latest", "Successfully hooked into MMOCore API (Latest Version) for Anvil EXP sync!"));
             } catch (Exception e) {
-                plugin.getLogger().warning("Failed to hook into latest MMOCore API. Attempting legacy hook...");
+                plugin.getLogger().warning(plugin.getMessagesFile().getString("log-mmo-hook-fail", "Failed to hook into latest MMOCore API. Attempting legacy hook..."));
                 try {
                     Class<?> playerDataClass = Class.forName("net.Indyuce.mmocore.api.player.PlayerData");
                     getPlayerDataMethod = playerDataClass.getMethod("get", UUID.class);
                     setLevelMethod = playerDataClass.getMethod("setLevel", int.class);
                     hooked = true;
-                    plugin.getLogger().info("Successfully hooked into MMOCore API (Legacy Version)!");
+                    plugin.getLogger().info(plugin.getMessagesFile().getString("log-mmo-hook-legacy", "Successfully hooked into MMOCore API (Legacy Version)!"));
                 } catch (Exception ex) {
-                    plugin.getLogger().warning("Completely failed to hook into MMOCore. EXP might desync in Anvil.");
+                    plugin.getLogger().warning(plugin.getMessagesFile().getString("log-mmo-hook-critical", "Completely failed to hook into MMOCore. EXP might desync in Anvil."));
                 }
             }
         }

@@ -26,9 +26,9 @@ public class AdvancedEnchantmentsHook {
                 getHighestEnchantmentLevelMethod = aeApiClass.getMethod("getHighestEnchantmentLevel", String.class);
 
                 hooked = true;
-                plugin.getLogger().info("Successfully hooked into AdvancedEnchantments API!");
+                plugin.getLogger().info(plugin.getMessagesFile().getString("log-ae-hook-success", "Successfully hooked into AdvancedEnchantments API!"));
             } catch (Exception e) {
-                plugin.getLogger().warning("AdvancedEnchantments detected, but failed to hook into API.");
+                plugin.getLogger().warning(plugin.getMessagesFile().getString("log-ae-hook-fail", "AdvancedEnchantments detected, but failed to hook into API."));
             }
         }
     }
@@ -80,7 +80,8 @@ public class AdvancedEnchantmentsHook {
             }
 
             if (count > 0) {
-                plugin.getLogger().info("Auto-registered " + count + " missing enchantments from AdvancedEnchantments API!");
+                String logMsg = plugin.getMessagesFile().getString("log-ae-autoload", "Auto-registered %count% missing enchantments from AdvancedEnchantments API!").replace("%count%", String.valueOf(count));
+                plugin.getLogger().info(logMsg);
             }
         } catch (Exception e) {
             plugin.getLogger().warning("Error while auto-loading enchantments from AdvancedEnchantments!");

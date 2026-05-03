@@ -28,9 +28,9 @@ public class MythicLibHook {
                 nbtItemGetTypeMethod = nbtItemClass.getMethod("getType");
                 nbtItemGetStringMethod = nbtItemClass.getMethod("getString", String.class);
                 hooked = true;
-                plugin.getLogger().info("Successfully hooked into MythicLib/MMOItems NBT API!");
+                plugin.getLogger().info(plugin.getMessagesFile().getString("log-mythic-hook-success", "Successfully hooked into MythicLib/MMOItems NBT API!"));
             } catch (Exception e) {
-                plugin.getLogger().warning("MythicLib or MMOItems detected, but failed to hook into API. Falling back to Vanilla/PDC.");
+                plugin.getLogger().warning(plugin.getMessagesFile().getString("log-mythic-hook-fail", "MythicLib or MMOItems detected, but failed to hook into API. Falling back to Vanilla/PDC."));
             }
         }
     }

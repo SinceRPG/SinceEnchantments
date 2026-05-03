@@ -19,7 +19,7 @@ public class InternalModuleLoader {
     }
 
     public void loadInternalModules() {
-        plugin.getLogger().info("Scanning for internal Custom Enchant modules...");
+        plugin.getLogger().info(plugin.getMessagesFile().getString("log-internal-scanning", "Scanning for internal Custom Enchant modules..."));
         int loadedCount = 0;
 
         try {
@@ -34,16 +34,18 @@ public class InternalModuleLoader {
                         plugin.getEnchantRegistry().register(enchant);
                         loadedCount++;
                     } catch (Exception e) {
-                        plugin.getLogger().warning("Error initializing internal module: " + clazz.getSimpleName());
+                        String errMsg = plugin.getMessagesFile().getString("log-internal-error", "Error initializing internal module: %class%").replace("%class%", clazz.getSimpleName());
+                        plugin.getLogger().warning(errMsg);
                         e.printStackTrace();
                     }
                 }
             }
 
-            plugin.getLogger().info("Successfully auto-registered " + loadedCount + " enchants from internal modules!");
+            String successMsg = plugin.getMessagesFile().getString("log-internal-success", "Successfully auto-registered %count% enchants from internal modules!").replace("%count%", String.valueOf(loadedCount));
+            plugin.getLogger().info(successMsg);
 
         } catch (Exception e) {
-            plugin.getLogger().severe("System error while scanning internal modules!");
+            plugin.getLogger().severe(plugin.getMessagesFile().getString("log-internal-severe", "System error while scanning internal modules!"));
             e.printStackTrace();
         }
     }
