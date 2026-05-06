@@ -55,12 +55,6 @@ pipeline {
     }
 
     post {
-        success {
-            script {
-                // Archive the JAR file to Jenkins UI for direct download
-                archiveArtifacts artifacts: 'build/libs/SinceEnchantments-*.jar', fingerprint: true, allowEmptyArchive: false
-            }
-        }
         always {
             // Clean the workspace to save disk space
             cleanWs()
