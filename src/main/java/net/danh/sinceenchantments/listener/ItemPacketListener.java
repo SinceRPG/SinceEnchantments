@@ -40,28 +40,47 @@ import java.util.concurrent.TimeUnit;
  * visuals. Items on the server remain clean, but appear fully customized to the player.
  * <p>
  * Lag Optimization Applied:
- * Highly optimized using Guava Caching and string-based NBT hash Fast-Failing to maintain
- * perfect server TPS even during heavy inventory spam.
+ * Highly optimized using Guava Caching and string-based Component hash Fast-Failing to maintain
+ * perfect server TPS even during heavy inventory spam. Fixed 1.21 custom model data collision bugs.
  */
 public class ItemPacketListener extends PacketListenerAbstract implements PacketListener {
 
-    // Memoization cache: Stores processed items for 1 second to prevent lag spikes during UI spam.
+    /**
+     * Memoization cache: Stores processed items for 1 second to prevent lag spikes during UI spam.
+     * The cache uses the Bukkit ItemStack hash to ensure 1.21+ Data Components are distinctly recognized.
+     */
     private final Cache<Integer, Optional<com.github.retrooper.packetevents.protocol.item.ItemStack>> itemCache =
             CacheBuilder.newBuilder()
                     .expireAfterWrite(1, TimeUnit.SECONDS)
                     .maximumSize(5000)
                     .build();
 
-    private static boolean isEnchantableGear(ItemStack item) {
+    /**
+     * Dynamically verifies if an item is considered enchantable gear based on the configuration file.
+     * This replaces previous hardcoded string checks.
+     *
+     * @param item The ItemStack to verify.
+     * @return TRUE if the item is enchantable gear, FALSE otherwise.
+     */
+    private boolean isEnchantableGear(ItemStack item) {
         if (item == null) return false;
         String name = item.getType().name();
-        return name.endsWith("_SWORD") || name.endsWith("_AXE") || name.endsWith("_PICKAXE") ||
-                name.endsWith("_SHOVEL") || name.endsWith("_HOE") || name.endsWith("_HELMET") ||
-                name.endsWith("_CHESTPLATE") || name.endsWith("_LEGGINGS") || name.endsWith("_BOOTS") ||
-                name.equals("BOW") || name.equals("CROSSBOW") || name.equals("TRIDENT") ||
-                name.equals("MACE") || name.equals("FISHING_ROD") || name.equals("SHIELD") ||
-                name.equals("ELYTRA") || name.equals("SHEARS") || name.equals("FLINT_AND_STEEL") ||
-                name.equals("BRUSH") || name.equals("CARROT_ON_A_STICK") || name.equals("WARPED_FUNGUS_ON_A_STICK");
+
+        ConfigUtils settings = SinceEnchantments.getInstance().getSettingsFile();
+        List<String> suffixes = settings.getStringList("settings.enchantable-gear-suffixes");
+        List<String> exacts = settings.getStringList("settings.enchantable-gear-exact");
+
+        if (suffixes != null) {
+            for (String suffix : suffixes) {
+                if (name.endsWith(suffix)) return true;
+            }
+        }
+        if (exacts != null) {
+            for (String exact : exacts) {
+                if (name.equals(exact)) return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -95,7 +114,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         }
     }
 
-
     @Override
     public void onPacketReceive(@NonNull PacketReceiveEvent event) {
         try {
@@ -103,7 +121,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
                 WrapperPlayClientCreativeInventoryAction wrapper = new WrapperPlayClientCreativeInventoryAction(event);
                 var peItem = wrapper.getItemStack();
                 if (peItem != null && !peItem.isEmpty()) {
-                    // CRITICAL FIX: Deep clone the Bukkit ItemStack to detach from NMS
                     ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem).clone();
                     bukkitItem = cleanCreativeItem(bukkitItem);
                     wrapper.setItemStack(SpigotConversionUtil.fromBukkitItemStack(bukkitItem));
@@ -112,24 +129,31 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         } catch (Exception ignored) {
         }
     }
+
     /**
      * Processes an item with maximum efficiency utilizing memory caching.
-     * Prevents Async NMS DataComponentMap corruption by forcefully cloning the item.
+     * Prevents DataComponentMap corruption and solves 1.21+ texture overriding bugs
+     * by hashing the converted Bukkit ItemStack instead of raw NBT.
+     *
+     * @param player The player receiving the packet.
+     * @param peItem The PacketEvents ItemStack.
+     * @return The modified PacketEvents ItemStack, or null if no changes were made.
      */
     private com.github.retrooper.packetevents.protocol.item.ItemStack processItem(Player player, com.github.retrooper.packetevents.protocol.item.ItemStack peItem) {
         if (peItem == null || peItem.getAmount() <= 0 || peItem.getType() == ItemTypes.AIR) return null;
 
-        int nbtHash = peItem.getNBT() != null ? peItem.getNBT().hashCode() : 0;
-        int cacheKey = Objects.hash(player.getUniqueId(), peItem.getType(), peItem.getAmount(), nbtHash);
+        // CRITICAL FIX: Convert to Bukkit ItemStack BEFORE hashing.
+        // Bukkit's ItemStack.hashCode() natively checks all 1.21 Data Components (item_model, custom_model_data, etc).
+        // peItem.getNBT() is often null or missing component data in 1.21+, which caused the texture overwrite bug!
+        ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem).clone();
+
+        int cacheKey = Objects.hash(player.getUniqueId(), bukkitItem);
 
         Optional<com.github.retrooper.packetevents.protocol.item.ItemStack> cachedResult = itemCache.getIfPresent(cacheKey);
         if (cachedResult != null) {
             return cachedResult.orElse(null);
         }
 
-        // CRITICAL FIX: Deep clone the Bukkit ItemStack immediately.
-        // This detaches the object from the server's NMS backend, preventing fatal async map corruption!
-        ItemStack bukkitItem = SpigotConversionUtil.toBukkitItemStack(peItem).clone();
         ItemStack originalItem = bukkitItem.clone();
         boolean modified = formatSkyblockItem(bukkitItem);
 
@@ -143,14 +167,20 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         return result;
     }
 
+    /**
+     * Cleans an item extracted from the Creative Menu to ensure packet-injected lore
+     * is completely wiped before reaching the server's actual inventory.
+     *
+     * @param item The Bukkit ItemStack.
+     * @return The cleaned Bukkit ItemStack.
+     */
     private ItemStack cleanCreativeItem(ItemStack item) {
-        // The EnchantManager logic has been upgraded to handle secure HIDE_ENCHANTS wiping internally.
         SinceEnchantments.getInstance().getEnchantManager().cleanItemLore(item);
         return item;
     }
 
     /**
-     * Injects the visual enchantments into the ItemStack.
+     * Injects the visual enchantments into the ItemStack seamlessly.
      *
      * @param item The Bukkit ItemStack to format.
      * @return TRUE if the item was modified, FALSE otherwise.
@@ -168,7 +198,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         ConfigUtils enchantsConfig = SinceEnchantments.getInstance().getEnchantsFile();
         List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
 
-        // Ensure default hardcode points to the expected config value to prevent mismatch bugs
         String placeholderStr = settings.getString("settings.placeholder", "{enchants}").toLowerCase();
         int targetIndex = -1;
 
@@ -209,7 +238,6 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
         if (overrideVanilla && !meta.hasItemFlag(ItemFlag.HIDE_ENCHANTS)) {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-            // Securely mark that WE were the ones to hide the enchants, so we don't break admin-hidden items
             pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_hid_enchants"), PersistentDataType.BYTE, (byte) 1);
         }
 
@@ -375,9 +403,15 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
         meta.lore(lore);
         item.setItemMeta(meta);
-        return true; // We successfully injected components
+        return true;
     }
 
+    /**
+     * Formats default vanilla names nicely.
+     *
+     * @param rawName The raw key format.
+     * @return Formatted Title Case name.
+     */
     private String formatDefaultName(String rawName) {
         String name = rawName.replace("_", " ");
         String[] words = name.split(" ");
@@ -389,6 +423,12 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         return sb.toString().trim();
     }
 
+    /**
+     * Converts an integer to a Roman Numeral string.
+     *
+     * @param number The level.
+     * @return Roman Numeral representation.
+     */
     private String toRoman(int number) {
         String[] roman = {"O", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX"};
         return (number > 0 && number < roman.length) ? roman[number] : String.valueOf(number);

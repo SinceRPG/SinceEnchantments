@@ -11,6 +11,7 @@ import net.danh.sinceenchantments.utils.ConfigUtils;
 import net.danh.sinceenchantments.utils.ServerVersion;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -75,13 +76,16 @@ public class SinceEnchantments extends JavaPlugin {
         this.internalModuleLoader = new InternalModuleLoader(this);
         this.internalModuleLoader.loadInternalModules();
 
-        this.addonLoader = new AddonLoader(this);
-        this.addonLoader.loadAddons();
-
         SinceCommand commandClass = new SinceCommand(this);
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             String desc = messagesFile.getString("command-description", "SinceEnchantments management command");
-            event.registrar().register(commandClass.buildCommand(), desc, List.of("se", "sinceenchant"));
+            List<String> aliases = settingsFile.getStringList("settings.command-aliases");
+            if (aliases == null || aliases.isEmpty()) {
+                aliases = new ArrayList<>();
+                aliases.add("se");
+                aliases.add("sinceenchant");
+            }
+            event.registrar().register(commandClass.buildCommand(), desc, aliases);
         });
 
         PacketEvents.getAPI().init();
@@ -117,7 +121,6 @@ public class SinceEnchantments extends JavaPlugin {
         }
     }
 
-    // Getters omitted for brevity but remain unchanged...
     public ConfigUtils getSettingsFile() {
         return settingsFile;
     }

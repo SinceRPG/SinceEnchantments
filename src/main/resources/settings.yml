@@ -182,6 +182,42 @@ settings:
       - "*_AXE"
       - "*_HOE"
 
+  # ========================================================
+  # === COMMAND ALIASES ===
+  # ========================================================
+  command-aliases:
+    - "se"
+    - "sinceenchant"
+
+  # ========================================================
+  # === ENCHANTABLE GEAR IDENTIFIERS ===
+  # Defines which items trigger the visual lore formatting.
+  # ========================================================
+  enchantable-gear-suffixes:
+    - "_SWORD"
+    - "_AXE"
+    - "_PICKAXE"
+    - "_SHOVEL"
+    - "_HOE"
+    - "_HELMET"
+    - "_CHESTPLATE"
+    - "_LEGGINGS"
+    - "_BOOTS"
+
+  enchantable-gear-exact:
+    - "BOW"
+    - "CROSSBOW"
+    - "TRIDENT"
+    - "MACE"
+    - "FISHING_ROD"
+    - "SHIELD"
+    - "ELYTRA"
+    - "SHEARS"
+    - "FLINT_AND_STEEL"
+    - "BRUSH"
+    - "CARROT_ON_A_STICK"
+    - "WARPED_FUNGUS_ON_A_STICK"
+
 # ==========================================
 # RARITY SYSTEM
 # ==========================================
