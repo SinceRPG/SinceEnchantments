@@ -30,14 +30,14 @@ pipeline {
                     sh 'chmod +x gradlew'
 
                     // 1. Notify Discord that the build has started
-                    sh 'python3 build_enchantments.py --start || echo "Discord Start Notify Failed"'
+                    sh 'python3 build.py --start || echo "Discord Start Notify Failed"'
 
                     try {
                         // 2. Execute the Gradle build process
                         sh './gradlew clean build'
                     } catch (Exception e) {
                         // 3. If build fails, update Discord message to RED
-                        sh 'python3 build_enchantments.py --fail'
+                        sh 'python3 build.py --fail'
                         error "Build failed: ${e.message}"
                     }
                 }
@@ -48,7 +48,7 @@ pipeline {
             steps {
                 script {
                     // 4. If successful, update Discord message to GREEN and attach the JAR
-                    sh 'python3 build_enchantments.py'
+                    sh 'python3 build.py'
                 }
             }
         }
