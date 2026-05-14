@@ -3,6 +3,7 @@ package net.danh.sinceenchantments.gui;
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.utils.ColorUtils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
@@ -87,12 +88,12 @@ public class ExtractorGUI implements InventoryHolder {
             String color = plugin.getSettingsFile().getString("rarities." + rarity, "&f");
 
             String parsedName = rawName.replace("%enchant_name%", name).replace("%level%", String.valueOf(level)).replace("%rarity_name%", rarity).replace("%rarity_color%", color);
-            meta.displayName(ColorUtils.parse(parsedName).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+            meta.displayName(ColorUtils.parse(parsedName).decoration(TextDecoration.ITALIC, false));
 
             List<Component> finalLore = new ArrayList<>();
             for (String line : rawLore) {
                 String parsedLine = line.replace("%enchant_name%", name).replace("%level%", String.valueOf(level)).replace("%rarity_name%", rarity).replace("%rarity_color%", color);
-                finalLore.add(ColorUtils.parse(parsedLine).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+                finalLore.add(ColorUtils.parse(parsedLine).decoration(TextDecoration.ITALIC, false));
             }
             meta.lore(finalLore);
             meta.getPersistentDataContainer().set(plugin.getEnchantManager().BOOK_ID_KEY, PersistentDataType.STRING, id);
@@ -108,7 +109,7 @@ public class ExtractorGUI implements InventoryHolder {
             if (pMat == null) pMat = Material.ARROW;
             ItemStack prev = new ItemStack(pMat);
             ItemMeta pMeta = prev.getItemMeta();
-            pMeta.displayName(ColorUtils.parse(plugin.getGuiFile().getString("gui.extractor.prev-page.name", "&cPrevious Page")).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+            pMeta.displayName(ColorUtils.parse(plugin.getGuiFile().getString("gui.extractor.prev-page.name", "&cPrevious Page")).decoration(TextDecoration.ITALIC, false));
             pMeta.getPersistentDataContainer().set(plugin.getEnchantManager().GUI_ACTION_KEY, PersistentDataType.STRING, "PREV_PAGE");
             prev.setItemMeta(pMeta);
             inventory.setItem(prevSlot, prev);
@@ -120,7 +121,7 @@ public class ExtractorGUI implements InventoryHolder {
             if (nMat == null) nMat = Material.ARROW;
             ItemStack next = new ItemStack(nMat);
             ItemMeta nMeta = next.getItemMeta();
-            nMeta.displayName(ColorUtils.parse(plugin.getGuiFile().getString("gui.extractor.next-page.name", "&aNext Page")).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+            nMeta.displayName(ColorUtils.parse(plugin.getGuiFile().getString("gui.extractor.next-page.name", "&aNext Page")).decoration(TextDecoration.ITALIC, false));
             nMeta.getPersistentDataContainer().set(plugin.getEnchantManager().GUI_ACTION_KEY, PersistentDataType.STRING, "NEXT_PAGE");
             next.setItemMeta(nMeta);
             inventory.setItem(nextSlot, next);

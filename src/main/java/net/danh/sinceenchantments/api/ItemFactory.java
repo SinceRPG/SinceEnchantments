@@ -1,4 +1,3 @@
-// Đường dẫn: src/main/java/net/danh/sinceenchantments/api/ItemFactory.java
 package net.danh.sinceenchantments.api;
 
 import io.papermc.paper.registry.RegistryAccess;
@@ -42,7 +41,12 @@ public class ItemFactory {
     private ItemStack buildItem(String configPath, String defMat, int amount) {
         String matStr = plugin.getItemsFile().getString(configPath + ".material", defMat);
         Material mat = Material.matchMaterial(matStr.toUpperCase());
-        if (mat == null) mat = Material.valueOf(defMat.toUpperCase());
+        if (mat == null) {
+            mat = Material.matchMaterial(defMat.toUpperCase());
+        }
+        if (mat == null) {
+            mat = Material.PAPER;
+        }
         return new ItemStack(mat, amount);
     }
 
@@ -58,12 +62,12 @@ public class ItemFactory {
             return;
         }
 
-        // 1. Display Name (Custom Name)
+        // Display name shown in hover text and inventory slots.
         String name = cfg.getString("name", defName);
         for (int i = 0; i < replacements.length; i += 2) name = name.replace(replacements[i], replacements[i + 1]);
         meta.displayName(ColorUtils.parse(name).decoration(TextDecoration.ITALIC, false));
 
-        // 2. Item Name (1.21+ API - Tên hiển thị nguyên bản, không in nghiêng, không sửa được bằng đe)
+        // Item name is stable 1.21+ metadata that cannot be renamed in an anvil.
         if (cfg.contains("item-name")) {
             try {
                 String itemName = cfg.getString("item-name");
@@ -71,10 +75,10 @@ public class ItemFactory {
                     itemName = itemName.replace(replacements[i], replacements[i + 1]);
                 meta.itemName(ColorUtils.parse(itemName).decoration(TextDecoration.ITALIC, false));
             } catch (Throwable ignored) {
-            } // Bỏ qua nếu API server quá cũ
+            }
         }
 
-        // 3. Lore
+        // Lore supports placeholders and MiniMessage/color-code parsing.
         if (cfg.contains("lore")) {
             List<String> rawLore = cfg.getStringList("lore");
             List<Component> compLore = new ArrayList<>();
@@ -86,7 +90,7 @@ public class ItemFactory {
             meta.lore(compLore);
         }
 
-        // 4. Custom Model Data (Tương thích cả Integer cũ lẫn Component mới)
+        // Custom model data supports both legacy integer values and modern components.
         if (cfg.contains("custom-model-data")) {
             if (cfg.isConfigurationSection("custom-model-data")) {
                 ConfigurationSection cmdSec = cfg.getConfigurationSection("custom-model-data");
@@ -132,7 +136,7 @@ public class ItemFactory {
             }
         }
 
-        // 5. Item Model (1.21+ Override model mặc định bằng namespace)
+        // 1.21+ item model override.
         if (cfg.contains("item-model")) {
             try {
                 NamespacedKey key = NamespacedKey.fromString(cfg.getString("item-model"));
@@ -141,7 +145,7 @@ public class ItemFactory {
             }
         }
 
-        // 6. Tooltip Style (1.21+ Đổi giao diện khung nền của đồ)
+        // 1.21+ tooltip style override.
         if (cfg.contains("tooltip-style")) {
             try {
                 NamespacedKey key = NamespacedKey.fromString(cfg.getString("tooltip-style"));
@@ -150,7 +154,7 @@ public class ItemFactory {
             }
         }
 
-        // 7. Max Stack Size (1.21+ Ghi đè giới hạn stack)
+        // 1.21+ stack-size override, clamped to vanilla-safe values.
         if (cfg.contains("max-stack-size")) {
             try {
                 meta.setMaxStackSize(Math.max(1, Math.min(99, cfg.getInt("max-stack-size"))));
@@ -158,7 +162,7 @@ public class ItemFactory {
             }
         }
 
-        // 8. Rarity (Độ hiếm màu sắc chuẩn của Vanilla)
+        // Vanilla item rarity color.
         if (cfg.contains("rarity")) {
             try {
                 meta.setRarity(ItemRarity.valueOf(cfg.getString("rarity").toUpperCase()));
@@ -166,7 +170,7 @@ public class ItemFactory {
             }
         }
 
-        // 9. Ẩn Tooltip hoàn toàn (Item sẽ không hiện lore khi chỉ chuột vào)
+        // Hide the entire tooltip when configured.
         if (cfg.contains("hide-tooltip")) {
             try {
                 meta.setHideTooltip(cfg.getBoolean("hide-tooltip"));
@@ -174,7 +178,7 @@ public class ItemFactory {
             }
         }
 
-        // 10. Glint Override (Ép sáng đồ như được enchant mà không cần enchant)
+        // Force or remove enchantment glint without requiring a real enchantment.
         if (cfg.contains("glint-override")) {
             try {
                 meta.setEnchantmentGlintOverride(cfg.getBoolean("glint-override"));
@@ -182,7 +186,7 @@ public class ItemFactory {
             }
         }
 
-        // 11. Kích hoạt khả năng bay lượn (như Elytra)
+        // Enables glider behavior on supported server versions.
         if (cfg.contains("glider")) {
             try {
                 meta.setGlider(cfg.getBoolean("glider"));
@@ -190,7 +194,7 @@ public class ItemFactory {
             }
         }
 
-        // 12. Định mức Enchantable (Khả năng hút bùa phép ngon trong bàn phù phép)
+        // Controls vanilla enchanting table weight on supported server versions.
         if (cfg.contains("enchantable")) {
             try {
                 meta.setEnchantable(cfg.getInt("enchantable"));
@@ -198,10 +202,10 @@ public class ItemFactory {
             }
         }
 
-        // 13. Unbreakable (Không thể hỏng)
+        // Makes the item ignore durability loss.
         if (cfg.contains("unbreakable")) meta.setUnbreakable(cfg.getBoolean("unbreakable"));
 
-        // 14. Item Flags (Ẩn thuộc tính, ẩn enchant,...)
+        // Item flags hide selected vanilla tooltip sections.
         if (cfg.contains("flags")) {
             for (String flag : cfg.getStringList("flags")) {
                 try {
@@ -225,7 +229,7 @@ public class ItemFactory {
             }
         }
 
-        // 16. Attribute Modifiers (Chỉ số tấn công, máu, tốc độ...)
+        // Attribute modifiers such as attack damage, max health, or movement speed.
         if (cfg.contains("attributes")) {
             ConfigurationSection attrSec = cfg.getConfigurationSection("attributes");
             if (attrSec != null) {
@@ -255,7 +259,7 @@ public class ItemFactory {
             }
         }
 
-        // 17. Chỉnh sửa độ bền hao hụt (Damage)
+        // Pre-applied durability damage.
         if (cfg.contains("damage") && meta instanceof Damageable dmgMeta) {
             dmgMeta.setDamage(cfg.getInt("damage"));
         }
@@ -270,11 +274,11 @@ public class ItemFactory {
         String rColor = plugin.getSettingsFile().getString("rarities." + rName, "&f");
         List<String> description = manager.getDescription(enchantId);
 
-        // Áp dụng các thông số nền (Model, Tooltip, Max Stack Size, v.v)
+        // Apply shared item metadata before writing enchant-book-specific data.
         applyItemMeta(book, "enchant-book", "Book: %enchant_name%", "%enchant_name%", eName, "%level%", String.valueOf(level), "%rarity_name%", rName, "%rarity_color%", rColor);
         ItemMeta meta = book.getItemMeta();
 
-        // Ghi đè Lore một cách linh hoạt để hỗ trợ cấu trúc %description% dạng List
+        // Rebuild lore here so %description% can expand into multiple configured lines.
         List<String> rawLore = plugin.getItemsFile().getStringList("enchant-book.lore");
         if (!rawLore.isEmpty()) {
             List<Component> finalLore = new ArrayList<>();

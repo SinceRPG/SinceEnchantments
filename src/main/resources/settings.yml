@@ -6,6 +6,11 @@ settings:
   # where you want the plugin to inject the custom enchantments list.
   placeholder: "{enchants}"
 
+  # Packet lore cache controls. Raising max-size can reduce repeated formatting work,
+  # while lowering expire-ms frees entries faster on memory-constrained servers.
+  packet-cache-expire-ms: 1000
+  packet-cache-max-size: 5000
+
   # IMPORTANT: Compatibility Mode for MMOItems / Custom Enchant Plugins!
   # TRUE: The plugin will hide all default Minecraft enchantments (and other plugins' enchants)
   #       and rewrite them beautifully inside the {enchants} placeholder.

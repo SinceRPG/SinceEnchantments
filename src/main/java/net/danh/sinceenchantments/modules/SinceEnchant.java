@@ -64,7 +64,6 @@ public abstract class SinceEnchant implements Listener {
     }
 
     /**
-     * /**
      * Retrieves the level of this enchantment on the given item.
      *
      * @param item The ItemStack to check.

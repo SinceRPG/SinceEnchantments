@@ -3,6 +3,7 @@ version: '${version}'
 main: net.danh.sinceenchantments.SinceEnchantments
 api-version: '1.21'
 load: POSTWORLD
+folia-supported: true
 authors: [ VoChiDanh ]
 website: https://gitlab.com/sincerpg/SinceEnchantments/-/wikis/home
 dependencies:

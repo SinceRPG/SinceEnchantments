@@ -26,10 +26,13 @@ public class ThunderEnchant extends SinceEnchant {
             int level = getLevel(p.getInventory().getItemInMainHand());
             if (level > 0 && r.nextInt(100) < (level * getInt("chance-per-level", 8))) {
                 isStriking.add(p.getUniqueId());
-                target.getWorld().strikeLightningEffect(target.getLocation());
-                target.damage(getDouble("extra-damage", 3.0), p);
-                isStriking.remove(p.getUniqueId());
-                sendMessage(p, "activate");
+                try {
+                    target.getWorld().strikeLightningEffect(target.getLocation());
+                    target.damage(getDouble("extra-damage", 3.0), p);
+                    sendMessage(p, "activate");
+                } finally {
+                    isStriking.remove(p.getUniqueId());
+                }
             }
         }
     }

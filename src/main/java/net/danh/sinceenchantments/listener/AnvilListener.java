@@ -6,8 +6,8 @@ import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.api.EnchantManager;
 import net.danh.sinceenchantments.api.ItemFactory;
 import net.danh.sinceenchantments.utils.ConfigUtils;
+import net.danh.sinceenchantments.utils.FoliaScheduler;
 import net.danh.sinceenchantments.utils.ServerVersion;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -222,7 +222,7 @@ public class AnvilListener implements Listener {
         if (!isOurOperation) return;
 
         if (plugin.getMMOCoreHook().isHooked()) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            FoliaScheduler.runForPlayerLater(plugin, p, () -> {
                 if (p.isOnline()) plugin.getMMOCoreHook().syncLevelFromVanilla(p);
             }, 1L);
         }

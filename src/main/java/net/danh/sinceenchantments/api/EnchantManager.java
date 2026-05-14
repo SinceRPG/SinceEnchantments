@@ -6,6 +6,7 @@ import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.utils.ColorUtils;
 import net.danh.sinceenchantments.utils.ConfigUtils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
@@ -13,10 +14,16 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "unused", "UnusedReturnValue"})
 public class EnchantManager {
@@ -64,29 +71,29 @@ public class EnchantManager {
 
     public EnchantManager(SinceEnchantments plugin) {
         this.plugin = plugin;
-        this.ENCHANT_KEY = new NamespacedKey(plugin, "custom_enchants");
-        this.BOOK_ID_KEY = new NamespacedKey(plugin, "book_enchant_id");
-        this.BOOK_LEVEL_KEY = new NamespacedKey(plugin, "book_enchant_level");
-        this.BOOK_SUCCESS_KEY = new NamespacedKey(plugin, "book_success_rate");
-        this.BOOK_DESTROY_KEY = new NamespacedKey(plugin, "book_destroy_rate");
-        this.EXTRACTOR_TYPE_KEY = new NamespacedKey(plugin, "extractor_type");
-        this.CHARM_BONUS_KEY = new NamespacedKey(plugin, "charm_bonus");
-        this.GUI_ACTION_KEY = new NamespacedKey(plugin, "gui_action");
-        this.SLOT_GEM_KEY = new NamespacedKey(plugin, "slot_gem_item");
-        this.SLOT_MODIFIER_KEY = new NamespacedKey(plugin, "slot_modifier");
-        this.LOCKED_KEY = new NamespacedKey(plugin, "item_locked");
-        this.LOCK_SCROLL_KEY = new NamespacedKey(plugin, "lock_scroll");
-        this.PURGE_SCROLL_KEY = new NamespacedKey(plugin, "purge_scroll");
-        this.PURGE_RETURN_KEY = new NamespacedKey(plugin, "purge_return_books");
-        this.RANDOMIZER_KEY = new NamespacedKey(plugin, "randomizer_stone");
-        this.PROTECTOR_KEY = new NamespacedKey(plugin, "protection_gem");
-        this.PROTECTED_ITEM_KEY = new NamespacedKey(plugin, "item_is_protected");
-        this.TRACKER_ITEM_KEY = new NamespacedKey(plugin, "stat_tracker_item");
-        this.TRACKER_KEY = new NamespacedKey(plugin, "stat_tracker_applied");
-        this.STAT_BLOCKS_KEY = new NamespacedKey(plugin, "stat_blocks_mined");
-        this.STAT_MOBS_KEY = new NamespacedKey(plugin, "stat_mobs_killed");
-        this.STAT_PLAYERS_KEY = new NamespacedKey(plugin, "stat_players_killed");
-        this.STAT_FISH_KEY = new NamespacedKey(plugin, "stat_fish_caught");
+        this.ENCHANT_KEY = new NamespacedKey(plugin, PersistentKeyNames.CUSTOM_ENCHANTS);
+        this.BOOK_ID_KEY = new NamespacedKey(plugin, PersistentKeyNames.BOOK_ENCHANT_ID);
+        this.BOOK_LEVEL_KEY = new NamespacedKey(plugin, PersistentKeyNames.BOOK_ENCHANT_LEVEL);
+        this.BOOK_SUCCESS_KEY = new NamespacedKey(plugin, PersistentKeyNames.BOOK_SUCCESS_RATE);
+        this.BOOK_DESTROY_KEY = new NamespacedKey(plugin, PersistentKeyNames.BOOK_DESTROY_RATE);
+        this.EXTRACTOR_TYPE_KEY = new NamespacedKey(plugin, PersistentKeyNames.EXTRACTOR_TYPE);
+        this.CHARM_BONUS_KEY = new NamespacedKey(plugin, PersistentKeyNames.CHARM_BONUS);
+        this.GUI_ACTION_KEY = new NamespacedKey(plugin, PersistentKeyNames.GUI_ACTION);
+        this.SLOT_GEM_KEY = new NamespacedKey(plugin, PersistentKeyNames.SLOT_GEM_ITEM);
+        this.SLOT_MODIFIER_KEY = new NamespacedKey(plugin, PersistentKeyNames.SLOT_MODIFIER);
+        this.LOCKED_KEY = new NamespacedKey(plugin, PersistentKeyNames.ITEM_LOCKED);
+        this.LOCK_SCROLL_KEY = new NamespacedKey(plugin, PersistentKeyNames.LOCK_SCROLL);
+        this.PURGE_SCROLL_KEY = new NamespacedKey(plugin, PersistentKeyNames.PURGE_SCROLL);
+        this.PURGE_RETURN_KEY = new NamespacedKey(plugin, PersistentKeyNames.PURGE_RETURN_BOOKS);
+        this.RANDOMIZER_KEY = new NamespacedKey(plugin, PersistentKeyNames.RANDOMIZER_STONE);
+        this.PROTECTOR_KEY = new NamespacedKey(plugin, PersistentKeyNames.PROTECTION_GEM);
+        this.PROTECTED_ITEM_KEY = new NamespacedKey(plugin, PersistentKeyNames.ITEM_IS_PROTECTED);
+        this.TRACKER_ITEM_KEY = new NamespacedKey(plugin, PersistentKeyNames.STAT_TRACKER_ITEM);
+        this.TRACKER_KEY = new NamespacedKey(plugin, PersistentKeyNames.STAT_TRACKER_APPLIED);
+        this.STAT_BLOCKS_KEY = new NamespacedKey(plugin, PersistentKeyNames.STAT_BLOCKS_MINED);
+        this.STAT_MOBS_KEY = new NamespacedKey(plugin, PersistentKeyNames.STAT_MOBS_KILLED);
+        this.STAT_PLAYERS_KEY = new NamespacedKey(plugin, PersistentKeyNames.STAT_PLAYERS_KILLED);
+        this.STAT_FISH_KEY = new NamespacedKey(plugin, PersistentKeyNames.STAT_FISH_CAUGHT);
 
         loadEnchantsFromConfig();
     }
@@ -285,8 +292,8 @@ public class EnchantManager {
             }
         }
 
-        NamespacedKey typeKey = new NamespacedKey("mmoitems", "type");
-        NamespacedKey idKey = new NamespacedKey("mmoitems", "id");
+        NamespacedKey typeKey = new NamespacedKey(PersistentKeyNames.MMOITEMS_NAMESPACE, PersistentKeyNames.MMOITEMS_TYPE);
+        NamespacedKey idKey = new NamespacedKey(PersistentKeyNames.MMOITEMS_NAMESPACE, PersistentKeyNames.MMOITEMS_ID);
         if (pdc.has(typeKey, PersistentDataType.STRING) && pdc.has(idKey, PersistentDataType.STRING)) {
             String type = pdc.get(typeKey, PersistentDataType.STRING);
             String id = pdc.get(idKey, PersistentDataType.STRING);
@@ -307,15 +314,15 @@ public class EnchantManager {
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         boolean changed = false;
 
-        NamespacedKey startKey = new NamespacedKey(plugin, "lore_start");
-        NamespacedKey countKey = new NamespacedKey(plugin, "lore_count");
-        NamespacedKey placeholderKey = new NamespacedKey(plugin, "lore_placeholder");
-        NamespacedKey hideEnchKey = new NamespacedKey(plugin, "lore_hid_enchants");
+        NamespacedKey startKey = new NamespacedKey(plugin, PersistentKeyNames.LORE_START);
+        NamespacedKey countKey = new NamespacedKey(plugin, PersistentKeyNames.LORE_COUNT);
+        NamespacedKey placeholderKey = new NamespacedKey(plugin, PersistentKeyNames.LORE_PLACEHOLDER);
+        NamespacedKey hideEnchKey = new NamespacedKey(plugin, PersistentKeyNames.LORE_HID_ENCHANTS);
 
         // SECURE HIDE_ENCHANTS CHECK: Only remove the flag if WE were the ones who added it.
         // This prevents the plugin from destroying intentional admin/vanilla item flags.
         if (pdc.has(hideEnchKey, PersistentDataType.BYTE)) {
-            meta.removeItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+            meta.removeItemFlags(ItemFlag.HIDE_ENCHANTS);
             pdc.remove(hideEnchKey);
             changed = true;
         }
@@ -334,9 +341,9 @@ public class EnchantManager {
                     // FIX: Hardcoded fallback changed from #enchants# to {enchants} to match config defaults
                     String placeholderStr = plugin.getSettingsFile().getString("settings.placeholder", "{enchants}");
                     if (start <= lore.size()) {
-                        lore.add(start, ColorUtils.parse(placeholderStr).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+                        lore.add(start, ColorUtils.parse(placeholderStr).decoration(TextDecoration.ITALIC, false));
                     } else {
-                        lore.add(ColorUtils.parse(placeholderStr).decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+                        lore.add(ColorUtils.parse(placeholderStr).decoration(TextDecoration.ITALIC, false));
                     }
                 }
                 meta.lore(lore);
@@ -623,8 +630,9 @@ public class EnchantManager {
         }
 
         for (NamespacedKey key : pdc.getKeys()) {
-            if (key.getNamespace().equals("advancedenchantments") && key.getKey().startsWith("ae_enchantment-")) {
-                String aeId = "ae:" + key.getKey().substring(15);
+            if (key.getNamespace().equals(PersistentKeyNames.ADVANCED_ENCHANTMENTS_NAMESPACE)
+                    && key.getKey().startsWith(PersistentKeyNames.AE_ENCHANTMENT_PREFIX)) {
+                String aeId = "ae:" + key.getKey().substring(PersistentKeyNames.AE_ENCHANTMENT_PREFIX.length());
                 Integer level = pdc.get(key, PersistentDataType.INTEGER);
                 if (level != null) {
                     enchants.put(aeId, level);
@@ -662,18 +670,19 @@ public class EnchantManager {
         }
 
         for (NamespacedKey key : pdc.getKeys()) {
-            if (key.getNamespace().equals("advancedenchantments") && key.getKey().startsWith("ae_enchantment-")) {
+            if (key.getNamespace().equals(PersistentKeyNames.ADVANCED_ENCHANTMENTS_NAMESPACE)
+                    && key.getKey().startsWith(PersistentKeyNames.AE_ENCHANTMENT_PREFIX)) {
                 pdc.remove(key);
             }
         }
 
         for (Map.Entry<String, Integer> entry : aeEnchants.entrySet()) {
             String aeName = entry.getKey().substring(3);
-            NamespacedKey aeKey = new NamespacedKey("advancedenchantments", "ae_enchantment-" + aeName);
+            NamespacedKey aeKey = new NamespacedKey(PersistentKeyNames.ADVANCED_ENCHANTMENTS_NAMESPACE, PersistentKeyNames.AE_ENCHANTMENT_PREFIX + aeName);
             pdc.set(aeKey, PersistentDataType.INTEGER, entry.getValue());
         }
 
-        NamespacedKey aeSlotTrackerKey = new NamespacedKey("advancedenchantments", "slots");
+        NamespacedKey aeSlotTrackerKey = new NamespacedKey(PersistentKeyNames.ADVANCED_ENCHANTMENTS_NAMESPACE, PersistentKeyNames.AE_SLOTS);
         if (aeEnchants.isEmpty()) {
             pdc.remove(aeSlotTrackerKey);
         } else {

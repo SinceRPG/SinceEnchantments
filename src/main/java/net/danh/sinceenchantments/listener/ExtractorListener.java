@@ -6,7 +6,7 @@ import net.danh.sinceenchantments.api.ItemFactory;
 import net.danh.sinceenchantments.gui.ExtractorDialog;
 import net.danh.sinceenchantments.gui.ExtractorGUI;
 import net.danh.sinceenchantments.utils.ColorUtils;
-import org.bukkit.Bukkit;
+import net.danh.sinceenchantments.utils.FoliaScheduler;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -129,9 +129,9 @@ public class ExtractorListener implements Listener {
             String mode = plugin.getSettingsFile().getString("settings.extractor-mode", "DIALOG").toUpperCase();
             if (mode.equals("GUI")) {
                 ExtractorGUI gui = new ExtractorGUI(plugin, current, 0);
-                Bukkit.getScheduler().runTask(plugin, () -> p.openInventory(gui.getInventory()));
+                FoliaScheduler.runForPlayer(plugin, p, () -> p.openInventory(gui.getInventory()));
             } else {
-                Bukkit.getScheduler().runTask(plugin, () -> ExtractorDialog.open(plugin, p, current));
+                FoliaScheduler.runForPlayer(plugin, p, () -> ExtractorDialog.open(plugin, p, current));
             }
         }
     }

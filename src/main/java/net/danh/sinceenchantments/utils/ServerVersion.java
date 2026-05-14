@@ -25,7 +25,7 @@ public class ServerVersion {
             if (parts.length > 1) minor = Integer.parseInt(parts[1]);
             if (parts.length > 2) patch = Integer.parseInt(parts[2]);
         } catch (Exception e) {
-            Bukkit.getLogger().warning("[SinceDungeon] Cannot parse server build version!");
+            Bukkit.getLogger().warning("[SinceEnchantments] Cannot parse server build version!");
         }
 
         try {
@@ -104,7 +104,7 @@ public class ServerVersion {
 
 
     /**
-     * Kiểm tra xem server có >= phiên bản yêu cầu không.
+     * Checks whether the server version is greater than or equal to the requested version.
      */
     public static boolean isAtLeast(int reqMajor, int reqMinor, int reqPatch) {
         if (major != reqMajor) return major > reqMajor;
@@ -113,7 +113,7 @@ public class ServerVersion {
     }
 
     /**
-     * Kiểm tra xem server có <= phiên bản yêu cầu không.
+     * Checks whether the server version is less than or equal to the requested version.
      */
     public static boolean isAtMost(int reqMajor, int reqMinor, int reqPatch) {
         if (major != reqMajor) return major < reqMajor;
@@ -122,7 +122,7 @@ public class ServerVersion {
     }
 
     /**
-     * Kiểm tra xem server có MỚI HƠN hẳn (>) phiên bản yêu cầu không.
+     * Checks whether the server version is strictly newer than the requested version.
      */
     public static boolean isNewerThan(int reqMajor, int reqMinor, int reqPatch) {
         if (major != reqMajor) return major > reqMajor;
@@ -131,7 +131,7 @@ public class ServerVersion {
     }
 
     /**
-     * Kiểm tra xem server có CŨ HƠN hẳn (<) phiên bản yêu cầu không.
+     * Checks whether the server version is strictly older than the requested version.
      */
     public static boolean isOlderThan(int reqMajor, int reqMinor, int reqPatch) {
         if (major != reqMajor) return major < reqMajor;
@@ -140,7 +140,7 @@ public class ServerVersion {
     }
 
     /**
-     * Kiểm tra xem server có TRÙNG KHỚP (=) phiên bản yêu cầu không.
+     * Checks whether the server version exactly matches the requested version.
      */
     public static boolean isExactly(int reqMajor, int reqMinor, int reqPatch) {
         return major == reqMajor && minor == reqMinor && patch == reqPatch;

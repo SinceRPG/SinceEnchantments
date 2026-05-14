@@ -14,6 +14,7 @@ import com.google.common.cache.CacheBuilder;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.api.EnchantManager;
+import net.danh.sinceenchantments.api.PersistentKeyNames;
 import net.danh.sinceenchantments.utils.ColorUtils;
 import net.danh.sinceenchantments.utils.ConfigUtils;
 import net.kyori.adventure.text.Component;
@@ -29,7 +30,11 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.NonNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -49,11 +54,21 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
      * Memoization cache: Stores processed items for 1 second to prevent lag spikes during UI spam.
      * The cache uses the Bukkit ItemStack hash to ensure 1.21+ Data Components are distinctly recognized.
      */
-    private final Cache<Integer, Optional<com.github.retrooper.packetevents.protocol.item.ItemStack>> itemCache =
-            CacheBuilder.newBuilder()
-                    .expireAfterWrite(1, TimeUnit.SECONDS)
-                    .maximumSize(5000)
-                    .build();
+    private final Cache<Integer, Optional<com.github.retrooper.packetevents.protocol.item.ItemStack>> itemCache;
+
+    public ItemPacketListener() {
+        ConfigUtils settings = SinceEnchantments.getInstance().getSettingsFile();
+        long cacheExpireMillis = Math.max(100L, settings.getInt("settings.packet-cache-expire-ms", 1000));
+        long cacheMaxSize = Math.max(128L, settings.getInt("settings.packet-cache-max-size", 5000));
+        this.itemCache = CacheBuilder.newBuilder()
+                .expireAfterWrite(cacheExpireMillis, TimeUnit.MILLISECONDS)
+                .maximumSize(cacheMaxSize)
+                .build();
+    }
+
+    public void clearCache() {
+        itemCache.invalidateAll();
+    }
 
     /**
      * Dynamically verifies if an item is considered enchantable gear based on the configuration file.
@@ -238,7 +253,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
         if (overrideVanilla && !meta.hasItemFlag(ItemFlag.HIDE_ENCHANTS)) {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-            pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_hid_enchants"), PersistentDataType.BYTE, (byte) 1);
+            pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), PersistentKeyNames.LORE_HID_ENCHANTS), PersistentDataType.BYTE, (byte) 1);
         }
 
         if (hasProtect) {
@@ -397,9 +412,9 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         if (hasPlaceholder) lore.addAll(targetIndex, injectComponents);
         else lore.addAll(injectComponents);
 
-        pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_start"), PersistentDataType.INTEGER, startIdx);
-        pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_count"), PersistentDataType.INTEGER, injectComponents.size());
-        pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), "lore_placeholder"), PersistentDataType.BYTE, (byte) (hasPlaceholder ? 1 : 0));
+        pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), PersistentKeyNames.LORE_START), PersistentDataType.INTEGER, startIdx);
+        pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), PersistentKeyNames.LORE_COUNT), PersistentDataType.INTEGER, injectComponents.size());
+        pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), PersistentKeyNames.LORE_PLACEHOLDER), PersistentDataType.BYTE, (byte) (hasPlaceholder ? 1 : 0));
 
         meta.lore(lore);
         item.setItemMeta(meta);

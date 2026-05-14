@@ -39,44 +39,47 @@ public class ExcavatorEnchant extends SinceEnchant {
 
         if (level > 0) {
             activePlayers.add(p.getUniqueId());
-            int radius = getInt("radius", 1);
-            Block center = event.getBlock();
-            int blocksBroken = 0;
+            try {
+                int radius = getInt("radius", 1);
+                Block center = event.getBlock();
+                int blocksBroken = 0;
 
-            for (int x = -radius; x <= radius; x++) {
-                for (int y = -radius; y <= radius; y++) {
-                    for (int z = -radius; z <= radius; z++) {
-                        Block b = center.getRelative(x, y, z);
-                        if (!b.getType().isAir() && b.getType().getHardness() >= 0 && !b.equals(center)) {
-                            BlockBreakEvent breakEvent = new BlockBreakEvent(b, p);
-                            Bukkit.getPluginManager().callEvent(breakEvent);
-                            if (!breakEvent.isCancelled()) {
-                                if (b.breakNaturally(item)) blocksBroken++;
+                for (int x = -radius; x <= radius; x++) {
+                    for (int y = -radius; y <= radius; y++) {
+                        for (int z = -radius; z <= radius; z++) {
+                            Block b = center.getRelative(x, y, z);
+                            if (!b.getType().isAir() && b.getType().getHardness() >= 0 && !b.equals(center)) {
+                                BlockBreakEvent breakEvent = new BlockBreakEvent(b, p);
+                                Bukkit.getPluginManager().callEvent(breakEvent);
+                                if (!breakEvent.isCancelled()) {
+                                    if (b.breakNaturally(item)) blocksBroken++;
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            if (blocksBroken > 0 && item.getItemMeta() instanceof Damageable damageable) {
-                int unbreakingLvl = item.getEnchantmentLevel(Enchantment.UNBREAKING);
-                int effectiveDamage = 0;
-                for (int i = 0; i < blocksBroken; i++) {
-                    if (unbreakingLvl == 0 || (100.0 / (unbreakingLvl + 1)) > Math.random() * 100) {
-                        effectiveDamage++;
+                if (blocksBroken > 0 && item.getItemMeta() instanceof Damageable damageable) {
+                    int unbreakingLvl = item.getEnchantmentLevel(Enchantment.UNBREAKING);
+                    int effectiveDamage = 0;
+                    for (int i = 0; i < blocksBroken; i++) {
+                        if (unbreakingLvl == 0 || (100.0 / (unbreakingLvl + 1)) > Math.random() * 100) {
+                            effectiveDamage++;
+                        }
+                    }
+                    if (effectiveDamage > 0) {
+                        damageable.setDamage(damageable.getDamage() + effectiveDamage);
+                        item.setItemMeta(damageable);
+                        if (damageable.getDamage() >= item.getType().getMaxDurability()) {
+                            p.getInventory().setItemInMainHand(null);
+                            p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1f, 1f);
+                        }
                     }
                 }
-                if (effectiveDamage > 0) {
-                    damageable.setDamage(damageable.getDamage() + effectiveDamage);
-                    item.setItemMeta(damageable);
-                    if (damageable.getDamage() >= item.getType().getMaxDurability()) {
-                        p.getInventory().setItemInMainHand(null);
-                        p.playSound(p.getLocation(), Sound.ENTITY_ITEM_BREAK, 1f, 1f);
-                    }
-                }
+                sendMessage(p, "activate");
+            } finally {
+                activePlayers.remove(p.getUniqueId());
             }
-            activePlayers.remove(p.getUniqueId());
-            sendMessage(p, "activate");
         }
     }
 }
