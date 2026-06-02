@@ -348,9 +348,11 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
 
         if (settings.getBoolean("settings.show-slots", true)) {
             int maxSlots = manager.getMaxSlots(item);
-            String slotLine = settings.getString("settings.slots-format", "&7Enchantment Slots: &e%current% / %max%");
-            slotLine = slotLine.replace("%current%", String.valueOf(totalEnchantsApplied)).replace("%max%", String.valueOf(maxSlots));
-            injectComponents.add(ColorUtils.parse(slotLine).decoration(TextDecoration.ITALIC, false));
+            if (totalEnchantsApplied > 0 || maxSlots > 0) {
+                String slotLine = settings.getString("settings.slots-format", "&7Enchantment Slots: &e%current% / %max%");
+                slotLine = slotLine.replace("%current%", String.valueOf(totalEnchantsApplied)).replace("%max%", String.valueOf(maxSlots));
+                injectComponents.add(ColorUtils.parse(slotLine).decoration(TextDecoration.ITALIC, false));
+            }
         }
 
         if (isLocked) {
