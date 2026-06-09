@@ -4,6 +4,7 @@ import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.api.EnchantManager;
 import net.danh.sinceenchantments.api.ItemFactory;
 import net.danh.sinceenchantments.utils.ColorUtils;
+import net.danh.sinceenchantments.utils.FoliaScheduler;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
@@ -48,6 +49,12 @@ public class EnchantApplyListener implements Listener {
             cursor.setAmount(cursor.getAmount() - 1);
             player.setItemOnCursor(cursor);
         }
+    }
+
+    private void syncClickedItem(InventoryClickEvent event, Player player, ItemStack item) {
+        event.setCurrentItem(item);
+        plugin.clearItemPacketCache();
+        FoliaScheduler.runForPlayer(plugin, player, player::updateInventory);
     }
 
     @EventHandler
@@ -345,14 +352,25 @@ public class EnchantApplyListener implements Listener {
             newLevel = manager.getMaxLevel(enchantId);
         }
 
-        consumeCursor(player, cursor);
-
         int roll = random.nextInt(100) + 1;
         if (roll <= successRate) {
-            manager.addEnchant(current, enchantId, newLevel);
+            boolean applied = manager.addEnchant(current, enchantId, newLevel);
+            int appliedLevel = manager.getEnchantLevel(current, enchantId);
+
+            if (!applied || appliedLevel < newLevel) {
+                plugin.getLogger().warning("Failed to write enchantment " + enchantId + " level " + newLevel + " to " + current.getType() + " for " + player.getName() + ". Applied=" + applied + ", detectedLevel=" + appliedLevel);
+                sendMsg(player, "enchant-apply-error");
+                syncClickedItem(event, player, current);
+                return;
+            }
+
+            consumeCursor(player, cursor);
+            syncClickedItem(event, player, current);
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
             sendMsg(player, "enchant-success");
         } else {
+            consumeCursor(player, cursor);
+            syncClickedItem(event, player, current);
             player.playSound(player.getLocation(), Sound.BLOCK_FIRE_EXTINGUISH, 1f, 1f);
             sendMsg(player, "enchant-fail");
         }

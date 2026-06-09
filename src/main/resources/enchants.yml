@@ -92,7 +92,16 @@ custom-enchants:
     messages:
       activate: "&fSuccessfully dodged an attack!"
 
-  # --- ADVANCED ENCHANTMENTS HOOKS ---
+  # --- EXTERNAL ENCHANTMENT HOOKS ---
+  # AdvancedEnchantments and CrazyEnchantments are auto-detected at startup.
+  # SinceEnchantments will register missing external enchants in memory using:
+  #   AdvancedEnchantments: "ae:<enchant_name>"
+  #   CrazyEnchantments: "ce:<enchant_name>"
+  # You do not need to add entries here for the hooks to work.
+  # Add an entry only when you want to override the display name, max level,
+  # rarity, target, conflicts, requirements, or description.
+
+  # --- ADVANCED ENCHANTMENTS OVERRIDES ---
 
   "ae:vampire":
     name: "Vampire"
@@ -129,6 +138,16 @@ custom-enchants:
     description:
       - "&7Makes the item completely"
       - "&7unbreakable and everlasting."
+
+  # --- CRAZY ENCHANTMENTS OVERRIDES ---
+  # Example:
+  # "ce:lifesteal":
+  #   name: "Lifesteal"
+  #   rarity: "EPIC"
+  #   max-level: 3
+  #   target: "WEAPON"
+  #   description:
+  #     - "&7Example CrazyEnchantments override."
 
 # ==========================================
 # VANILLA ENCHANTS

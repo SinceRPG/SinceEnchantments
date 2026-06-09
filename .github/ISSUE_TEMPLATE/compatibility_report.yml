@@ -1,0 +1,59 @@
+name: Compatibility report
+description: Report an issue with another enchantment, item, packet, or RPG plugin.
+title: "[Compatibility]: "
+labels: ["compatibility"]
+body:
+  - type: dropdown
+    id: integration
+    attributes:
+      label: Integration area
+      options:
+        - AdvancedEnchantments
+        - CrazyEnchantments
+        - MMOItems or MythicLib
+        - MMOCore
+        - PacketEvents or item packets
+        - Custom item PDC hook
+        - Other plugin
+    validations:
+      required: true
+  - type: textarea
+    id: versions
+    attributes:
+      label: Exact versions
+      description: Include SinceEnchantments, server software, and all related plugin versions.
+      placeholder: |
+        SinceEnchantments:
+        Paper/Purpur/Folia:
+        Related plugin:
+        PacketEvents:
+    validations:
+      required: true
+  - type: textarea
+    id: item
+    attributes:
+      label: Item and enchant setup
+      description: Include material, custom item ID, enchant IDs, levels, slots, whitelist entries, and whether the item uses the {enchants} placeholder.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Compatibility problem
+      description: Explain what breaks, duplicates, disappears, fails to apply, or displays incorrectly.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Include commands or plugin GUI actions.
+    validations:
+      required: true
+  - type: textarea
+    id: configs
+    attributes:
+      label: Relevant config sections
+      render: yaml
+    validations:
+      required: false

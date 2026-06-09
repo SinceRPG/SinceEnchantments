@@ -1,0 +1,82 @@
+name: Bug report
+description: Report a reproducible SinceEnchantments bug.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and did not find this already reported.
+          required: true
+        - label: I tested with the latest available SinceEnchantments build.
+          required: true
+  - type: input
+    id: since-version
+    attributes:
+      label: SinceEnchantments version
+      description: Use the exact version, not "latest".
+      placeholder: "1.2.2"
+    validations:
+      required: true
+  - type: input
+    id: server-version
+    attributes:
+      label: Server software and version
+      placeholder: "Paper 1.21.11 build 42"
+    validations:
+      required: true
+  - type: textarea
+    id: plugins
+    attributes:
+      label: Related plugins
+      description: Include versions for AdvancedEnchantments, CrazyEnchantments, MMOItems, MythicLib, MMOCore, PacketEvents, and any custom item plugins.
+      placeholder: |
+        PacketEvents:
+        AdvancedEnchantments:
+        CrazyEnchantments:
+        MythicLib/MMOItems:
+        MMOCore:
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Give exact commands, item setup, enchant IDs, levels, and clicked inventory slots where relevant.
+      placeholder: |
+        1. Run /se givebook ...
+        2. Apply the book to ...
+        3. Open ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or errors
+      description: Paste a mclo.gs link or a short stack trace.
+    validations:
+      required: false
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant config
+      description: Paste only the relevant sections from settings.yml, enchants.yml, limits.yml, or custom-items.yml.
+      render: yaml
+    validations:
+      required: false

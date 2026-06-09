@@ -67,7 +67,7 @@ public class EnchantManager {
     private final Map<String, Integer> itemMaxSlotModifiers = new HashMap<>();
     private final Map<String, Integer> customItemsMaxSlotModifiers = new HashMap<>();
 
-    private final List<String> aePlainNames = new ArrayList<>();
+    private final List<String> externalPlainNames = new ArrayList<>();
 
     public EnchantManager(SinceEnchantments plugin) {
         this.plugin = plugin;
@@ -117,7 +117,7 @@ public class EnchantManager {
         customItemsMaxSlots.clear();
         itemMaxSlotModifiers.clear();
         customItemsMaxSlotModifiers.clear();
-        aePlainNames.clear();
+        externalPlainNames.clear();
 
         ConfigurationSection customEnchSec = plugin.getEnchantsFile().getConfig().getConfigurationSection("custom-enchants");
         if (customEnchSec != null) {
@@ -131,11 +131,8 @@ public class EnchantManager {
                 requires.put(key, plugin.getEnchantsFile().getStringList(path + ".requires"));
                 descriptions.put(key, plugin.getEnchantsFile().getStringList(path + ".description"));
 
-                if (key.startsWith("ae:")) {
-                    String normalized = normalizeName(enchantNames.get(key));
-                    if (!normalized.isEmpty() && !aePlainNames.contains(normalized)) {
-                        aePlainNames.add(normalized);
-                    }
+                if (isExternalEnchant(key)) {
+                    addExternalPlainName(enchantNames.get(key));
                 }
             }
         }
@@ -229,12 +226,7 @@ public class EnchantManager {
         conflicts.putIfAbsent(id, new ArrayList<>());
         requires.putIfAbsent(id, new ArrayList<>());
 
-        if (id.startsWith("ae:")) {
-            String normalized = normalizeName(name);
-            if (!normalized.isEmpty() && !aePlainNames.contains(normalized)) {
-                aePlainNames.add(normalized);
-            }
-        }
+        if (isExternalEnchant(id)) addExternalPlainName(name);
     }
 
     public boolean isMatch(String text, String pattern) {
@@ -354,7 +346,7 @@ public class EnchantManager {
             changed = true;
         }
 
-        if (meta.hasLore() && !aePlainNames.isEmpty()) {
+        if (meta.hasLore() && !externalPlainNames.isEmpty()) {
             List<Component> lore = new ArrayList<>(meta.lore());
             boolean strippedAe = false;
 
@@ -362,7 +354,7 @@ public class EnchantManager {
                 String plainLine = ColorUtils.toPlainText(lore.get(i)).trim();
                 String normalizedLine = plainLine.replace(" ", "").replaceAll("[-_]", "").toLowerCase();
 
-                for (String aeNameNorm : aePlainNames) {
+                for (String aeNameNorm : externalPlainNames) {
                     if (normalizedLine.startsWith(aeNameNorm)) {
 
                         String remainder = normalizedLine.substring(aeNameNorm.length());
@@ -398,7 +390,11 @@ public class EnchantManager {
     }
 
     public boolean enchantExists(String id) {
-        return plugin.getEnchantRegistry().getEnchant(id) != null || isBukkitEnchant(id);
+        return enchantNames.containsKey(id) || plugin.getEnchantRegistry().getEnchant(id) != null || isBukkitEnchant(id);
+    }
+
+    public Set<String> getKnownEnchantIds() {
+        return new HashSet<>(enchantNames.keySet());
     }
 
     public int getMaxLevel(String enchantId) {
@@ -640,6 +636,13 @@ public class EnchantManager {
             }
         }
 
+        if (plugin.getAdvancedEnchantmentsHook() != null && plugin.getAdvancedEnchantmentsHook().isHooked()) {
+            enchants.putAll(plugin.getAdvancedEnchantmentsHook().getEnchants(item));
+        }
+        if (plugin.getCrazyEnchantmentsHook() != null && plugin.getCrazyEnchantmentsHook().isHooked()) {
+            enchants.putAll(plugin.getCrazyEnchantmentsHook().getEnchants(item));
+        }
+
         return enchants;
     }
 
@@ -650,10 +653,13 @@ public class EnchantManager {
 
         Map<String, Integer> sinceEnchants = new HashMap<>();
         Map<String, Integer> aeEnchants = new HashMap<>();
+        Map<String, Integer> ceEnchants = new HashMap<>();
 
         for (Map.Entry<String, Integer> entry : enchants.entrySet()) {
             if (entry.getKey().startsWith("ae:")) {
                 aeEnchants.put(entry.getKey(), entry.getValue());
+            } else if (entry.getKey().startsWith("ce:")) {
+                ceEnchants.put(entry.getKey(), entry.getValue());
             } else {
                 sinceEnchants.put(entry.getKey(), entry.getValue());
             }
@@ -677,9 +683,11 @@ public class EnchantManager {
         }
 
         for (Map.Entry<String, Integer> entry : aeEnchants.entrySet()) {
-            String aeName = entry.getKey().substring(3);
-            NamespacedKey aeKey = new NamespacedKey(PersistentKeyNames.ADVANCED_ENCHANTMENTS_NAMESPACE, PersistentKeyNames.AE_ENCHANTMENT_PREFIX + aeName);
-            pdc.set(aeKey, PersistentDataType.INTEGER, entry.getValue());
+            if (plugin.getAdvancedEnchantmentsHook() == null || !plugin.getAdvancedEnchantmentsHook().isHooked()) {
+                String aeName = entry.getKey().substring(3);
+                NamespacedKey aeKey = new NamespacedKey(PersistentKeyNames.ADVANCED_ENCHANTMENTS_NAMESPACE, PersistentKeyNames.AE_ENCHANTMENT_PREFIX + aeName);
+                pdc.set(aeKey, PersistentDataType.INTEGER, entry.getValue());
+            }
         }
 
         NamespacedKey aeSlotTrackerKey = new NamespacedKey(PersistentKeyNames.ADVANCED_ENCHANTMENTS_NAMESPACE, PersistentKeyNames.AE_SLOTS);
@@ -690,6 +698,30 @@ public class EnchantManager {
         }
 
         item.setItemMeta(meta);
+
+        if (plugin.getAdvancedEnchantmentsHook() != null && plugin.getAdvancedEnchantmentsHook().isHooked()) {
+            Map<String, Integer> currentAeEnchants = plugin.getAdvancedEnchantmentsHook().getEnchants(item);
+            for (String currentId : currentAeEnchants.keySet()) {
+                if (!aeEnchants.containsKey(currentId)) {
+                    plugin.getAdvancedEnchantmentsHook().removeEnchant(item, currentId);
+                }
+            }
+            for (Map.Entry<String, Integer> entry : aeEnchants.entrySet()) {
+                plugin.getAdvancedEnchantmentsHook().applyEnchant(item, entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (plugin.getCrazyEnchantmentsHook() != null && plugin.getCrazyEnchantmentsHook().isHooked()) {
+            Map<String, Integer> currentCeEnchants = plugin.getCrazyEnchantmentsHook().getEnchants(item);
+            for (String currentId : currentCeEnchants.keySet()) {
+                if (!ceEnchants.containsKey(currentId)) {
+                    plugin.getCrazyEnchantmentsHook().removeEnchant(item, currentId);
+                }
+            }
+            for (Map.Entry<String, Integer> entry : ceEnchants.entrySet()) {
+                plugin.getCrazyEnchantmentsHook().applyEnchant(item, entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     public Map<String, Integer> getAllEnchantsOnItem(ItemStack item) {
@@ -721,6 +753,18 @@ public class EnchantManager {
         Map<String, Integer> current = getCustomEnchants(item);
         int currentLevel = current.getOrDefault(enchantId, 0);
         if (currentLevel >= maxLvl && level <= maxLvl) return false;
+
+        if (enchantId.startsWith("ae:")
+                && plugin.getAdvancedEnchantmentsHook() != null
+                && plugin.getAdvancedEnchantmentsHook().applyEnchant(item, enchantId, finalLevel)) {
+            return true;
+        }
+        if (enchantId.startsWith("ce:")
+                && plugin.getCrazyEnchantmentsHook() != null
+                && plugin.getCrazyEnchantmentsHook().applyEnchant(item, enchantId, finalLevel)) {
+            return true;
+        }
+
         current.put(enchantId, finalLevel);
         setCustomEnchants(item, current);
         return true;
@@ -739,6 +783,16 @@ public class EnchantManager {
         }
         Map<String, Integer> current = getCustomEnchants(item);
         if (current.containsKey(enchantId)) {
+            if (enchantId.startsWith("ae:")
+                    && plugin.getAdvancedEnchantmentsHook() != null
+                    && plugin.getAdvancedEnchantmentsHook().removeEnchant(item, enchantId)) {
+                return;
+            }
+            if (enchantId.startsWith("ce:")
+                    && plugin.getCrazyEnchantmentsHook() != null
+                    && plugin.getCrazyEnchantmentsHook().removeEnchant(item, enchantId)) {
+                return;
+            }
             current.remove(enchantId);
             setCustomEnchants(item, current);
         }
@@ -751,5 +805,16 @@ public class EnchantManager {
             if (bukkitEnc != null && item.hasItemMeta()) return item.getItemMeta().getEnchantLevel(bukkitEnc);
         }
         return getCustomEnchants(item).getOrDefault(enchantId, 0);
+    }
+
+    private boolean isExternalEnchant(String id) {
+        return id.startsWith("ae:") || id.startsWith("ce:");
+    }
+
+    private void addExternalPlainName(String name) {
+        String normalized = normalizeName(name);
+        if (!normalized.isEmpty() && !externalPlainNames.contains(normalized)) {
+            externalPlainNames.add(normalized);
+        }
     }
 }

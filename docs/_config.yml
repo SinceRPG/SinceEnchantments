@@ -1,0 +1,16 @@
+title: SinceEnchantments Wiki
+description: Complete English documentation for the SinceEnchantments Minecraft enchantments plugin.
+lang: en
+markdown: kramdown
+highlighter: rouge
+
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: page

@@ -1,0 +1,47 @@
+- title: Overview
+  links:
+    - title: Home
+      url: /
+    - title: Getting Started
+      url: /getting-started.html
+    - title: Configuration
+      url: /configuration.html
+    - title: Commands
+      url: /commands.html
+    - title: Permissions
+      url: /permissions.html
+
+- title: Dungeon Building
+  links:
+    - title: Dungeon Files
+      url: /dungeon-files.html
+    - title: Actions
+      url: /actions.html
+    - title: Rewards
+      url: /rewards.html
+    - title: Editor
+      url: /editor.html
+    - title: Example Dungeon
+      url: /example-dungeon.html
+    - title: Schematic Setup
+      url: /folia-schematic.html
+
+- title: Systems
+  links:
+    - title: Lives and Cooldowns
+      url: /lives-cooldowns.html
+    - title: Leaderboards
+      url: /leaderboards.html
+    - title: Languages
+      url: /languages-customization.html
+    - title: Integrations
+      url: /integrations.html
+
+- title: Advanced
+  links:
+    - title: Premium Addon
+      url: /premium.html
+    - title: Developer API
+      url: /developer-api.html
+    - title: Troubleshooting
+      url: /troubleshooting.html

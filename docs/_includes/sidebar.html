@@ -1,0 +1,25 @@
+<aside class="sidebar" aria-label="Wiki navigation">
+  <a class="brand" href="{{ '/' | relative_url }}">
+    <span class="brand-mark">SD</span>
+    <span>
+      <strong>SinceDungeon</strong>
+      <small>Plugin Wiki</small>
+    </span>
+  </a>
+
+  <nav class="nav">
+    {% for section in site.data.navigation %}
+      <section class="nav-section">
+        <h2>{{ section.title }}</h2>
+        {% for link in section.links %}
+          {% assign current_url = page.url | replace: 'index.html', '' %}
+          {% assign link_url = link.url | relative_url %}
+          <a
+            class="nav-link{% if current_url == link.url or page.url == link.url %} is-active{% endif %}"
+            href="{{ link.url | relative_url }}"
+          >{{ link.title }}</a>
+        {% endfor %}
+      </section>
+    {% endfor %}
+  </nav>
+</aside>

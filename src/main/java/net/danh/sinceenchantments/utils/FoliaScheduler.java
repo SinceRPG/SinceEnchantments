@@ -20,6 +20,14 @@ public final class FoliaScheduler {
         Bukkit.getScheduler().runTask(plugin, task);
     }
 
+    public static void runLater(SinceEnchantments plugin, Runnable task, long delayTicks) {
+        if (ServerVersion.isFolia()) {
+            Bukkit.getGlobalRegionScheduler().runDelayed(plugin, scheduledTask -> task.run(), delayTicks);
+            return;
+        }
+        Bukkit.getScheduler().runTaskLater(plugin, task, delayTicks);
+    }
+
     public static void runForPlayer(SinceEnchantments plugin, Player player, Runnable task) {
         if (ServerVersion.isFolia()) {
             player.getScheduler().run(plugin, scheduledTask -> task.run(), null);

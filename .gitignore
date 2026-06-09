@@ -4,6 +4,7 @@
 /build/classes/java/main/
 /.idea/
 /.vscode/
+/libs/*.jar
 config.json
 consolidator.py
 project_context.txt

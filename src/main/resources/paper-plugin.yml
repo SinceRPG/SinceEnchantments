@@ -20,3 +20,6 @@ dependencies:
     AdvancedEnchantments:
       load: BEFORE
       required: false
+    CrazyEnchantments:
+      load: BEFORE
+      required: false

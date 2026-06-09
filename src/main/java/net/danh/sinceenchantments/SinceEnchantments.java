@@ -6,6 +6,7 @@ import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.danh.sinceenchantments.api.AddonLoader;
 import net.danh.sinceenchantments.api.AdvancedEnchantmentsHook;
+import net.danh.sinceenchantments.api.CrazyEnchantmentsHook;
 import net.danh.sinceenchantments.api.EnchantManager;
 import net.danh.sinceenchantments.api.EnchantRegistry;
 import net.danh.sinceenchantments.api.InternalModuleLoader;
@@ -51,6 +52,7 @@ public class SinceEnchantments extends JavaPlugin {
     private MMOCoreHook mmoCoreHook;
     private MythicLibHook mythicLibHook;
     private AdvancedEnchantmentsHook advancedEnchantmentsHook;
+    private CrazyEnchantmentsHook crazyEnchantmentsHook;
     private ItemPacketListener itemPacketListener;
 
     public static SinceEnchantments getInstance() {
@@ -86,6 +88,8 @@ public class SinceEnchantments extends JavaPlugin {
 
         this.advancedEnchantmentsHook = new AdvancedEnchantmentsHook(this);
         this.advancedEnchantmentsHook.loadAEEnchantments();
+        this.crazyEnchantmentsHook = new CrazyEnchantmentsHook(this);
+        this.crazyEnchantmentsHook.loadCrazyEnchantments();
 
         this.internalModuleLoader = new InternalModuleLoader(this);
         this.internalModuleLoader.loadInternalModules();
@@ -136,7 +140,7 @@ public class SinceEnchantments extends JavaPlugin {
             getLogger().info(msg.replace("%version%", "v" + ServerVersion.getMajor() + "_" + ServerVersion.getMinor()));
         }
 
-        if (ServerVersion.isOlderThan(1, 21, 11) || ServerVersion.isAtLeast(26, 1)) {
+        if (ServerVersion.isOlderThan(1, 21, 3)) {
             getLogger().warning(messagesFile.getString("startup-warning", "Warning: Unsupported server version detected!"));
         }
     }
@@ -199,5 +203,15 @@ public class SinceEnchantments extends JavaPlugin {
 
     public AdvancedEnchantmentsHook getAdvancedEnchantmentsHook() {
         return advancedEnchantmentsHook;
+    }
+
+    public CrazyEnchantmentsHook getCrazyEnchantmentsHook() {
+        return crazyEnchantmentsHook;
+    }
+
+    public void clearItemPacketCache() {
+        if (itemPacketListener != null) {
+            itemPacketListener.clearCache();
+        }
     }
 }

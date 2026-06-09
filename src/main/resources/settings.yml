@@ -113,6 +113,11 @@ settings:
     - "&7Special effect from"
     - "&7AdvancedEnchantments."
 
+  # The default description for enchantments automatically hooked from CrazyEnchantments
+  ce-default-description:
+    - "&7Special effect from"
+    - "&7CrazyEnchantments."
+
   # ========================================================
   # === STAT TRACKER CATEGORIES ===
   # Define which items are considered Tools, Weapons, or Rods.

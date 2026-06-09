@@ -51,6 +51,7 @@ public class SinceCommand {
                     plugin.getEnchantManager().loadEnchantsFromConfig();
 
                     plugin.getAdvancedEnchantmentsHook().loadAEEnchantments();
+                    plugin.getCrazyEnchantmentsHook().loadCrazyEnchantments();
 
                     sendMessage(context.getSource(), "reload");
                     return Command.SINGLE_SUCCESS;
@@ -58,6 +59,9 @@ public class SinceCommand {
                 .then(Commands.literal("givebook").then(Commands.argument("target", ArgumentTypes.player()).then(Commands.argument("enchant", StringArgumentType.string())
                         .suggests((context, builder) -> {
                             String remaining = builder.getRemainingLowerCase();
+                            for (String id : plugin.getEnchantManager().getKnownEnchantIds()) {
+                                if (id.toLowerCase().contains(remaining)) builder.suggest('"' + id + '"');
+                            }
                             for (String id : plugin.getEnchantRegistry().getRegisteredIds()) {
                                 if (id.toLowerCase().contains(remaining)) builder.suggest('"' + id + '"');
                             }

@@ -2,6 +2,7 @@ package net.danh.sinceenchantments.listener;
 
 import net.danh.sinceenchantments.SinceEnchantments;
 import net.danh.sinceenchantments.api.EnchantManager;
+import net.danh.sinceenchantments.utils.FoliaScheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -26,13 +27,15 @@ import org.bukkit.event.inventory.InventoryDragEvent;
  * server sync with zero performance penalty.
  */
 public class InventoryFixListener implements Listener {
+    private final SinceEnchantments plugin;
     private final EnchantManager manager;
 
     public InventoryFixListener(SinceEnchantments plugin) {
+        this.plugin = plugin;
         this.manager = plugin.getEnchantManager();
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onClick(InventoryClickEvent event) {
         if (event.getWhoClicked() instanceof Player p) {
 
@@ -46,13 +49,21 @@ public class InventoryFixListener implements Listener {
             } else if (event.getClick() == ClickType.NUMBER_KEY) {
                 manager.cleanItemLore(p.getInventory().getItem(event.getHotbarButton()));
             }
+
+            resyncVisualLore(p);
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onDrag(InventoryDragEvent event) {
         if (event.getWhoClicked() instanceof Player p) {
             manager.cleanItemLore(event.getOldCursor());
+            resyncVisualLore(p);
         }
+    }
+
+    private void resyncVisualLore(Player player) {
+        plugin.clearItemPacketCache();
+        FoliaScheduler.runForPlayerLater(plugin, player, player::updateInventory, 1L);
     }
 }
