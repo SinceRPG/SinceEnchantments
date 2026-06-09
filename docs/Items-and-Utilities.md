@@ -32,7 +32,7 @@ Most item templates support:
 Command:
 
 ```text
-/se givebook <player> <enchant> <level> [success] [destroy]
+/se givebook <player> <enchant> <level> [success] [destroy] [-s]
 ```
 
 Behavior:
@@ -40,7 +40,9 @@ Behavior:
 - Drag onto an item to apply.
 - Uses success chance.
 - Stores book data in PDC.
-- Supports vanilla, custom, AdvancedEnchantments, and CrazyEnchantments IDs.
+- Supports vanilla, custom, AdvancedEnchantments, CrazyEnchantments, and ExcellentEnchants IDs.
+- Use `/se giverandombook <player> [options]` for filtered random books.
+- Random book options include `-level:1`, `-rarity:LEGENDARY`, `-target:WEAPON`, `-type:ee`, `-success:40to90`, `-failure:10to30`, `-amount:1to2`, and `-s`.
 
 Placeholders:
 
@@ -152,4 +154,3 @@ Behavior:
 - Drag onto weapons, tools, or fishing rods.
 - Tracks blocks mined, mobs killed, players killed, or fish caught.
 - Valid item categories are configured in `settings.stat-tracker-categories`.
-

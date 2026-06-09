@@ -15,6 +15,8 @@ This page covers server requirements, dependencies, install order, update safety
 | MMOCore | Optional | Used for anvil experience sync |
 | AdvancedEnchantments | Optional | Auto-hooked through runtime reflection |
 | CrazyEnchantments | Optional | Auto-hooked through its public API dependency |
+| NightCore | Optional | Required by ExcellentEnchants when that hook is used |
+| ExcellentEnchants | Optional | Auto-hooked through its public API dependency |
 
 ## Plugin Load Order
 
@@ -38,13 +40,16 @@ dependencies:
     CrazyEnchantments:
       load: BEFORE
       required: false
+    ExcellentEnchants:
+      load: BEFORE
+      required: false
 ```
 
 ## Install Steps
 
 1. Stop the server.
 2. Install PacketEvents into `plugins/`.
-3. Install optional plugins you use, such as MythicLib, MMOItems, MMOCore, AdvancedEnchantments, or CrazyEnchantments.
+3. Install optional plugins you use, such as MythicLib, MMOItems, MMOCore, AdvancedEnchantments, CrazyEnchantments, NightCore, or ExcellentEnchants.
 4. Put `SinceEnchantments.jar` into `plugins/`.
 5. Start the server.
 6. Confirm startup logs mention PacketEvents initialization and SinceEnchantments version support.
@@ -102,6 +107,7 @@ Running natively for Paper 1.21+ | NMS: ...
 Successfully hooked into MythicLib/MMOItems NBT API!
 AdvancedEnchantments detected ...
 CrazyEnchantments detected ...
+ExcellentEnchants detected ...
 Successfully auto-registered ... enchants from internal modules!
 ```
 
@@ -111,9 +117,17 @@ Not every optional hook must be present. Missing optional plugins should log a s
 
 Do not commit premium plugin jars such as AdvancedEnchantments to GitHub. SinceEnchantments does not need to ship the AdvancedEnchantments jar. The hook uses runtime reflection and reads the installed plugin on the server.
 
+ExcellentEnchants is integrated through compile-time API dependencies:
+
+```gradle
+compileOnly("su.nightexpress.nightcore:main:2.16.2")
+compileOnly("su.nightexpress.excellentenchants:Core:5.4.3")
+```
+
+Those jars are still provided by the server at runtime. They should not be bundled into SinceEnchantments.
+
 Recommended repository rule:
 
 ```gitignore
 /libs/*.jar
 ```
-

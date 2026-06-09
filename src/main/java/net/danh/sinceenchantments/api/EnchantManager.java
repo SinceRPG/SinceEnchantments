@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -397,6 +398,15 @@ public class EnchantManager {
         return new HashSet<>(enchantNames.keySet());
     }
 
+    public Set<String> getAllKnownEnchantIds() {
+        Set<String> ids = getKnownEnchantIds();
+        ids.addAll(plugin.getEnchantRegistry().getRegisteredIds());
+        for (Enchantment enc : getBukkitRegistry()) {
+            ids.add(enc.getKey().toString().toLowerCase(Locale.ROOT));
+        }
+        return ids;
+    }
+
     public int getMaxLevel(String enchantId) {
         if (maxLevels.containsKey(enchantId)) {
             return maxLevels.get(enchantId);
@@ -418,6 +428,38 @@ public class EnchantManager {
 
         if (isBukkitEnchant(enchantId)) return "COMMON";
         return "COMMON";
+    }
+
+    public String getTarget(String enchantId) {
+        if (targets.containsKey(enchantId)) {
+            return targets.get(enchantId);
+        }
+
+        NamespacedKey key = NamespacedKey.fromString(enchantId.toLowerCase(Locale.ROOT));
+        if (key != null) {
+            Enchantment bukkitEnc = getBukkitRegistry().get(key);
+            if (bukkitEnc != null) return inferTarget(bukkitEnc);
+        }
+
+        return "ALL";
+    }
+
+    public String getEnchantType(String enchantId) {
+        String id = enchantId.toLowerCase(Locale.ROOT);
+        if (id.startsWith("ae:")) return "ae";
+        if (id.startsWith("ce:")) return "ce";
+        if (id.startsWith("excellentenchants:") || id.startsWith("ee:")) return "ee";
+        if (id.startsWith("minecraft:")) return "vanilla";
+        if (plugin.getEnchantRegistry().getEnchant(id) != null || enchantNames.containsKey(id)) return "since";
+
+        NamespacedKey key = NamespacedKey.fromString(id);
+        if (key != null) {
+            if (key.getNamespace().equals("minecraft")) return "vanilla";
+            if (key.getNamespace().equals("excellentenchants")) return "ee";
+            return key.getNamespace();
+        }
+
+        return "since";
     }
 
     public String getEnchantName(String enchantId) {
@@ -478,10 +520,13 @@ public class EnchantManager {
     }
 
     public int getAppliedEnchantsCount(ItemStack item) {
-        int count = getCustomEnchants(item).size();
+        Map<String, Integer> custom = getCustomEnchants(item);
+        int count = custom.size();
         if (plugin.getSettingsFile().getBoolean("settings.override-vanilla-enchants", true)) {
             if (item != null && item.hasItemMeta() && item.getItemMeta().hasEnchants()) {
-                count += item.getItemMeta().getEnchants().size();
+                for (Enchantment enchantment : item.getItemMeta().getEnchants().keySet()) {
+                    if (!custom.containsKey(enchantment.getKey().toString().toLowerCase(Locale.ROOT))) count++;
+                }
             }
         }
         return count;
@@ -641,6 +686,9 @@ public class EnchantManager {
         }
         if (plugin.getCrazyEnchantmentsHook() != null && plugin.getCrazyEnchantmentsHook().isHooked()) {
             enchants.putAll(plugin.getCrazyEnchantmentsHook().getEnchants(item));
+        }
+        if (plugin.getExcellentEnchantsHook() != null && plugin.getExcellentEnchantsHook().isHooked()) {
+            enchants.putAll(plugin.getExcellentEnchantsHook().getEnchants(item));
         }
 
         return enchants;
@@ -808,7 +856,7 @@ public class EnchantManager {
     }
 
     private boolean isExternalEnchant(String id) {
-        return id.startsWith("ae:") || id.startsWith("ce:");
+        return id.startsWith("ae:") || id.startsWith("ce:") || id.startsWith("ee:") || id.startsWith("excellentenchants:");
     }
 
     private void addExternalPlainName(String name) {
@@ -816,5 +864,28 @@ public class EnchantManager {
         if (!normalized.isEmpty() && !externalPlainNames.contains(normalized)) {
             externalPlainNames.add(normalized);
         }
+    }
+
+    private String inferTarget(Enchantment enchantment) {
+        if (canEnchantAny(enchantment, Material.DIAMOND_SWORD, Material.NETHERITE_AXE, Material.TRIDENT, Material.MACE)) {
+            return "WEAPON";
+        }
+        if (canEnchantAny(enchantment, Material.BOW, Material.CROSSBOW)) {
+            return "BOW";
+        }
+        if (canEnchantAny(enchantment, Material.DIAMOND_PICKAXE, Material.DIAMOND_SHOVEL, Material.DIAMOND_HOE)) {
+            return "TOOL";
+        }
+        if (canEnchantAny(enchantment, Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS)) {
+            return "ARMOR";
+        }
+        return "ALL";
+    }
+
+    private boolean canEnchantAny(Enchantment enchantment, Material... materials) {
+        for (Material material : materials) {
+            if (enchantment.canEnchantItem(new ItemStack(material))) return true;
+        }
+        return false;
     }
 }

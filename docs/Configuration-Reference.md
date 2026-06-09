@@ -121,6 +121,10 @@ ae-default-description:
 ce-default-description:
   - "&7Special effect from"
   - "&7CrazyEnchantments."
+
+ee-default-description:
+  - "&7Special effect from"
+  - "&7ExcellentEnchants."
 ```
 
 Used when external enchantments are auto-registered without an override in `enchants.yml`.
@@ -175,4 +179,3 @@ enchant-success: "&aEnchantment successful! Your item grows stronger."
 ## custom-items.yml
 
 See [MMOItems and Custom Items](MMOItems-and-Custom-Items).
-

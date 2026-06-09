@@ -10,6 +10,7 @@ SinceEnchantments uses namespaced IDs everywhere.
 | Vanilla enchant | `minecraft:sharpness` |
 | AdvancedEnchantments enchant | `ae:harvest` |
 | CrazyEnchantments enchant | `ce:lifesteal` |
+| ExcellentEnchants enchant | `excellentenchants:tunnel` |
 
 Always use lowercase IDs in commands and configs unless a page explicitly says otherwise.
 
@@ -124,6 +125,6 @@ Instead:
 
 - AdvancedEnchantments uses `ae:<name>`.
 - CrazyEnchantments uses `ce:<name>`.
+- ExcellentEnchants uses Bukkit registry IDs such as `excellentenchants:<name>`.
 - Missing entries are auto-registered in memory.
 - Optional overrides can be added to `enchants.yml`.
-

@@ -21,7 +21,7 @@ Failed to write enchantment ...
 3. Confirm item is not stacked.
 4. Confirm item is not locked.
 5. Confirm whitelist allows the enchant.
-6. Confirm external hook is active for `ae:` or `ce:` IDs.
+6. Confirm the external hook is active for `ae:`, `ce:`, or `excellentenchants:` IDs.
 
 ## Lore Disappears Until Inventory Reopens
 
@@ -104,6 +104,18 @@ Check:
 - Version includes the expected Paper API.
 - Startup log mentions CrazyManager readiness.
 
+## ExcellentEnchants Hook Fails
+
+Check:
+
+- ExcellentEnchants is installed and enabled.
+- NightCore is installed and enabled.
+- Gradle dependencies use compatible NightCore and ExcellentEnchants API versions.
+- Startup log mentions `Successfully hooked into ExcellentEnchants API`.
+- ExcellentEnchants has registered enchantments before SinceEnchantments runs `/se reload`.
+
+If `-rarity:<rarity>` filters do not match ExcellentEnchants books, add an override in `enchants.yml` or confirm the ExcellentEnchants enchant config has a supported rarity-style key such as `Rarity`, `Tier`, or `Group`.
+
 ## Vanilla Enchants Duplicate
 
 Set:
@@ -150,4 +162,3 @@ Include:
 - Full error log.
 - Relevant item config and enchant config.
 - Steps to reproduce.
-

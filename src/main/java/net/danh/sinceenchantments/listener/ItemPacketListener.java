@@ -31,6 +31,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -225,8 +226,14 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             }
         }
 
-        Map<Enchantment, Integer> vanillaEnchants = meta.getEnchants();
         Map<String, Integer> customEnchants = manager.getCustomEnchants(item);
+        Map<Enchantment, Integer> vanillaEnchants = new HashMap<>();
+        for (Map.Entry<Enchantment, Integer> entry : meta.getEnchants().entrySet()) {
+            String id = entry.getKey().getKey().toString().toLowerCase();
+            if (!customEnchants.containsKey(id)) {
+                vanillaEnchants.put(entry.getKey(), entry.getValue());
+            }
+        }
         boolean overrideVanilla = settings.getBoolean("settings.override-vanilla-enchants", true);
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
 

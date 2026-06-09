@@ -9,6 +9,7 @@ import net.danh.sinceenchantments.api.AdvancedEnchantmentsHook;
 import net.danh.sinceenchantments.api.CrazyEnchantmentsHook;
 import net.danh.sinceenchantments.api.EnchantManager;
 import net.danh.sinceenchantments.api.EnchantRegistry;
+import net.danh.sinceenchantments.api.ExcellentEnchantsHook;
 import net.danh.sinceenchantments.api.InternalModuleLoader;
 import net.danh.sinceenchantments.api.ItemFactory;
 import net.danh.sinceenchantments.api.MMOCoreHook;
@@ -53,6 +54,7 @@ public class SinceEnchantments extends JavaPlugin {
     private MythicLibHook mythicLibHook;
     private AdvancedEnchantmentsHook advancedEnchantmentsHook;
     private CrazyEnchantmentsHook crazyEnchantmentsHook;
+    private ExcellentEnchantsHook excellentEnchantsHook;
     private ItemPacketListener itemPacketListener;
 
     public static SinceEnchantments getInstance() {
@@ -90,6 +92,8 @@ public class SinceEnchantments extends JavaPlugin {
         this.advancedEnchantmentsHook.loadAEEnchantments();
         this.crazyEnchantmentsHook = new CrazyEnchantmentsHook(this);
         this.crazyEnchantmentsHook.loadCrazyEnchantments();
+        this.excellentEnchantsHook = new ExcellentEnchantsHook(this);
+        this.excellentEnchantsHook.loadExcellentEnchantments();
 
         this.internalModuleLoader = new InternalModuleLoader(this);
         this.internalModuleLoader.loadInternalModules();
@@ -207,6 +211,10 @@ public class SinceEnchantments extends JavaPlugin {
 
     public CrazyEnchantmentsHook getCrazyEnchantmentsHook() {
         return crazyEnchantmentsHook;
+    }
+
+    public ExcellentEnchantsHook getExcellentEnchantsHook() {
+        return excellentEnchantsHook;
     }
 
     public void clearItemPacketCache() {

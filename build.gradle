@@ -24,6 +24,10 @@ repositories {
         name = "codemc-repo-releases"
         url = "https://repo.codemc.io/repository/maven-snapshots/"
     }
+    maven {
+        name = "nightexpress-releases"
+        url = "https://repo.nightexpressdev.com/releases"
+    }
 }
 
 dependencies {
@@ -31,6 +35,8 @@ dependencies {
 //    compileOnly("io.papermc.paper:paper-api:26.1.1.build.+")
     compileOnly("com.github.retrooper:packetevents-spigot:2.12.1")
     compileOnly("com.badbones69.crazyenchantments:crazyenchantments-paper-api:2.5")
+    compileOnly("su.nightexpress.nightcore:main:2.16.2")
+    compileOnly("su.nightexpress.excellentenchants:Core:5.4.3")
 }
 
 tasks {

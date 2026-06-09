@@ -5,7 +5,7 @@ title: SinceEnchantments Wiki
 
 # SinceEnchantments Wiki
 
-> A modern Paper custom-enchantments system built for clean item lore, drag-and-drop progression, MMOItems compatibility, Folia-ready scheduling, and optional hooks into AdvancedEnchantments and CrazyEnchantments.
+> A modern Paper custom-enchantments system built for clean item lore, drag-and-drop progression, MMOItems compatibility, Folia-ready scheduling, and optional hooks into AdvancedEnchantments, CrazyEnchantments, and ExcellentEnchants.
 
 [![Paper 1.21+](https://img.shields.io/badge/Paper-1.21%2B-2f81f7)](Installation)
 [![Folia Supported](https://img.shields.io/badge/Folia-supported-238636)](Installation)
@@ -22,7 +22,7 @@ SinceEnchantments gives server owners a full enchantment economy without forcing
 | Vanilla enchantments | Optional visual override for all vanilla enchants, configurable names, colors, and descriptions |
 | Item utilities | Enchantment books, random and specific extractors, success charms, slot gems, lock scrolls, purge scrolls, randomizer stones, protection gems, and stat trackers |
 | MMOItems support | MMOItems and MythicLib item detection, custom item whitelists, custom slot rules, and placeholder-driven lore injection |
-| External hooks | Auto-registration for AdvancedEnchantments and CrazyEnchantments with `ae:` and `ce:` IDs |
+| External hooks | Auto-registration for AdvancedEnchantments, CrazyEnchantments, and ExcellentEnchants with `ae:`, `ce:`, and `excellentenchants:` IDs |
 | Interfaces | Paper Dialog extractor UI on modern Paper, legacy chest GUI fallback, Brigadier commands |
 | Safety | Locking, protection-on-death, slot caps, max slot modifiers, whitelist previews, conflict checks, and requirement checks |
 | Performance | Packet lore caching, packet-side visual formatting, Folia-safe delayed scheduling |
@@ -61,7 +61,7 @@ This matters most on MMOItems servers, where the item itself may already contain
 | Packet lore renderer | [Lore and Visual Engine](Lore-and-Visual-Engine) |
 | Slot rules and whitelists | [Limits and Whitelists](Limits-and-Whitelists) |
 | MMOItems, MythicMobs, ItemsAdder, Oraxen | [MMOItems and Custom Items](MMOItems-and-Custom-Items) |
-| AdvancedEnchantments and CrazyEnchantments | [AdvancedEnchantments and CrazyEnchantments](AdvancedEnchantments-and-CrazyEnchantments) |
+| External enchantment plugins | [External Enchantment Plugins](AdvancedEnchantments-and-CrazyEnchantments) |
 | Anvils and extraction | [Anvils and Extractors](Anvils-and-Extractors) |
 | Developer modules and addon jars | [Developer API and Addons](Developer-API-and-Addons) |
 | Known problems and fixes | [Troubleshooting](Troubleshooting) |
@@ -84,7 +84,6 @@ Always include this information when reporting issues:
 - SinceEnchantments version
 - PacketEvents version
 - Whether Folia is used
-- Whether MMOItems, MythicLib, AdvancedEnchantments, or CrazyEnchantments are installed
+- Whether MMOItems, MythicLib, AdvancedEnchantments, CrazyEnchantments, NightCore, or ExcellentEnchants are installed
 - Full console logs from startup and the failed action
 - Relevant config snippets
-

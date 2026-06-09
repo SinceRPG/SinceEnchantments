@@ -93,10 +93,11 @@ custom-enchants:
       activate: "&fSuccessfully dodged an attack!"
 
   # --- EXTERNAL ENCHANTMENT HOOKS ---
-  # AdvancedEnchantments and CrazyEnchantments are auto-detected at startup.
+  # AdvancedEnchantments, CrazyEnchantments, and ExcellentEnchants are auto-detected at startup.
   # SinceEnchantments will register missing external enchants in memory using:
   #   AdvancedEnchantments: "ae:<enchant_name>"
   #   CrazyEnchantments: "ce:<enchant_name>"
+  #   ExcellentEnchants: "excellentenchants:<enchant_name>"
   # You do not need to add entries here for the hooks to work.
   # Add an entry only when you want to override the display name, max level,
   # rarity, target, conflicts, requirements, or description.
@@ -148,6 +149,16 @@ custom-enchants:
   #   target: "WEAPON"
   #   description:
   #     - "&7Example CrazyEnchantments override."
+
+  # --- EXCELLENT ENCHANTS OVERRIDES ---
+  # Example:
+  # "excellentenchants:tunnel":
+  #   name: "Tunnel"
+  #   rarity: "RARE"
+  #   max-level: 3
+  #   target: "TOOL"
+  #   description:
+  #     - "&7Example ExcellentEnchants override."
 
 # ==========================================
 # VANILLA ENCHANTS

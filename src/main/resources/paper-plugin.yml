@@ -23,3 +23,6 @@ dependencies:
     CrazyEnchantments:
       load: BEFORE
       required: false
+    ExcellentEnchants:
+      load: BEFORE
+      required: false
