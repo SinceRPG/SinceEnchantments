@@ -279,8 +279,14 @@ public class SinceCommand {
                 case "-rarity" -> options.rarity = value.toUpperCase(Locale.ROOT);
                 case "-target" -> options.target = value.toUpperCase(Locale.ROOT);
                 case "-type" -> options.type = normalizeType(value);
-                case "-success" -> options.success = IntRange.parse(value, 0, 100, options.success);
-                case "-failure", "-destroy" -> options.failure = IntRange.parse(value, 0, 100, options.failure);
+                case "-success" -> {
+                    options.success = IntRange.parse(value, 0, 100, options.success);
+                    options.hasSuccess = true;
+                }
+                case "-failure", "-destroy" -> {
+                    options.failure = IntRange.parse(value, 0, 100, options.failure);
+                    options.hasFailure = true;
+                }
                 case "-amount" -> options.amount = IntRange.parse(value, 1, 64, options.amount);
             }
         }
@@ -312,8 +318,21 @@ public class SinceCommand {
         for (int i = 0; i < amount; i++) {
             String enchantId = candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
             int level = options.level == null ? ThreadLocalRandom.current().nextInt(1, plugin.getEnchantManager().getMaxLevel(enchantId) + 1) : options.level;
-            int success = options.success.roll();
-            int failure = options.failure.roll();
+            int success;
+            int failure;
+            if (options.hasSuccess && !options.hasFailure) {
+                success = options.success.roll();
+                failure = 100 - success;
+            } else if (!options.hasSuccess && options.hasFailure) {
+                failure = options.failure.roll();
+                success = 100 - failure;
+            } else if (!options.hasSuccess && !options.hasFailure) {
+                success = ThreadLocalRandom.current().nextInt(0, 101);
+                failure = 100 - success;
+            } else {
+                success = options.success.roll();
+                failure = options.failure.roll();
+            }
             ItemStack book = plugin.getItemFactory().createEnchantBook(enchantId, level, success, failure);
             target.getInventory().addItem(book);
         }
@@ -357,6 +376,8 @@ public class SinceCommand {
         private IntRange success = new IntRange(100, 100);
         private IntRange failure = new IntRange(0, 0);
         private IntRange amount = new IntRange(1, 1);
+        private boolean hasSuccess = false;
+        private boolean hasFailure = false;
     }
 
     private record IntRange(int min, int max) {
