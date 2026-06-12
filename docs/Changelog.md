@@ -9,19 +9,19 @@ This page is maintained as a high-level documentation changelog. Release artifac
 - Added a dedicated random enchantment book command:
 
 ```text
-/se giverandombook <player> [options]
+/se giverandombook <player> [filters]
 ```
 
 - Added random book filters that can be combined in one command:
-  - `-level:<number>` selects a random enchantment book at the exact requested level and rejects matches whose max level is lower.
-  - `-rarity:<rarity>` selects only enchantments with matching rarity metadata.
-  - `-target:<target>` selects only enchantments with matching target metadata.
-  - `-type:<type>` selects only enchantments from a specific source.
-  - `-success:<number|numbertoNumber>` sets fixed or randomized success rates.
-  - `-failure:<number|numbertoNumber>` sets fixed or randomized failure/destroy rates.
-  - `-amount:<number|numbertoNumber>` sets fixed or randomized book amounts.
+  - `-level <number>` selects a random enchantment book at the exact requested level and rejects matches whose max level is lower.
+  - `-rarity <rarity>` selects only enchantments with matching rarity metadata.
+  - `-target <target>` selects only enchantments with matching target metadata.
+  - `-type <type>` selects only enchantments from a specific source.
+  - `-success <number|numbertoNumber>` sets fixed or randomized success rates.
+  - `-failure <number|numbertoNumber>` sets fixed or randomized failure/destroy rates.
+  - `-amount <number|numbertoNumber>` sets fixed or randomized book amounts.
 - Added `-s` silent mode for `/se givebook` and `/se giverandombook` to suppress command-executor feedback, useful for console rewards or automation.
-- Added tab completion for random filters, filter values, ranges, and silent mode.
+- Added natural tab completion for random filters, filter values, ranges, and silent mode after each completed filter.
 - Added source type aliases for random filtering:
   - `vanilla`, `minecraft`, `mc`
   - `since`, `se`, `custom`
@@ -57,13 +57,14 @@ settings:
 - Random book selection now uses the same metadata accessors as normal book creation, so SinceEnchantments, vanilla Bukkit enchantments, AdvancedEnchantments, CrazyEnchantments, and ExcellentEnchants can all participate in filtered random results.
 - Book creation now validates the requested level against the selected enchantment max level before giving the item.
 - Help text and command docs now show the dedicated random book syntax.
+- Random book filters now use space-separated option/value pairs, such as `-level 1`, so tab completion can advance naturally from filter names to values and back to remaining filters.
 
 ### Examples
 
 ```text
 /se giverandombook Steve
-/se giverandombook Steve -level:1 -target:WEAPON -type:ae
-/se giverandombook Steve -rarity:LEGENDARY -type:ee -success:40to90 -failure:10to30 -amount:1to2 -s
+/se giverandombook Steve -level 1 -target WEAPON -type ae
+/se giverandombook Steve -rarity LEGENDARY -type ee -success 40to90 -failure 10to30 -amount 1to2 -s
 /se givebook Steve "minecraft:sharpness" 5 60 40 -s
 ```
 

@@ -41,8 +41,8 @@ Behavior:
 - Uses success chance.
 - Stores book data in PDC.
 - Supports vanilla, custom, AdvancedEnchantments, CrazyEnchantments, and ExcellentEnchants IDs.
-- Use `/se giverandombook <player> [options]` for filtered random books.
-- Random book options include `-level:1`, `-rarity:LEGENDARY`, `-target:WEAPON`, `-type:ee`, `-success:40to90`, `-failure:10to30`, `-amount:1to2`, and `-s`.
+- Use `/se giverandombook <player> [filters]` for filtered random books.
+- Random book filters include `-level 1`, `-rarity LEGENDARY`, `-target WEAPON`, `-type ee`, `-success 40to90`, `-failure 10to30`, `-amount 1to2`, and `-s`.
 
 Placeholders:
 

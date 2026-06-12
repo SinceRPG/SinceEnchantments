@@ -4,6 +4,7 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -27,6 +28,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class SinceCommand {
+    private static final int RANDOM_BOOK_OPTION_LIMIT = 8;
+    private static final List<String> RANDOM_BOOK_FILTERS = List.of("-level", "-rarity", "-target", "-type", "-success", "-failure", "-amount");
     private final SinceEnchantments plugin;
 
     public SinceCommand(SinceEnchantments plugin) {
@@ -64,11 +67,7 @@ public class SinceCommand {
                     return Command.SINGLE_SUCCESS;
                 }))
                 .then(Commands.literal("givebook").then(buildGiveBookCommand()))
-                .then(Commands.literal("giverandombook").then(Commands.argument("target", ArgumentTypes.player())
-                        .executes(context -> executeGiveRandomBook(context, ""))
-                        .then(Commands.argument("options", StringArgumentType.greedyString())
-                                .suggests(this::suggestRandomBookOptions)
-                                .executes(context -> executeGiveRandomBook(context, StringArgumentType.getString(context, "options"))))))
+                .then(Commands.literal("giverandombook").then(buildGiveRandomBookCommand()))
                 .then(Commands.literal("giveextractor").then(Commands.argument("target", ArgumentTypes.player()).then(Commands.argument("type", StringArgumentType.word())
                         .suggests((context, builder) -> {
                             builder.suggest("random");
@@ -106,6 +105,31 @@ public class SinceCommand {
                                         .then(Commands.literal("-s").executes(context -> executeGiveBook(context, IntegerArgumentType.getInteger(context, "success"), IntegerArgumentType.getInteger(context, "destroy"), true)))))));
     }
 
+    private RequiredArgumentBuilder<CommandSourceStack, PlayerSelectorArgumentResolver> buildGiveRandomBookCommand() {
+        RequiredArgumentBuilder<CommandSourceStack, PlayerSelectorArgumentResolver> target = Commands.argument("target", ArgumentTypes.player())
+                .executes(context -> executeGiveRandomBook(context, new RandomBookOptions()));
+        addRandomBookOptionStage(target, 1);
+        return target;
+    }
+
+    private void addRandomBookOptionStage(ArgumentBuilder<CommandSourceStack, ?> parent, int index) {
+        if (index > RANDOM_BOOK_OPTION_LIMIT) return;
+
+        ArgumentBuilder<CommandSourceStack, ?> silent = Commands.literal("-s")
+                .executes(context -> executeGiveRandomBook(context, getRandomBookOptions(context)));
+        addRandomBookOptionStage(silent, index + 1);
+        parent.then(silent);
+
+        RequiredArgumentBuilder<CommandSourceStack, String> filter = Commands.argument("randomBookFilter" + index, StringArgumentType.word())
+                .suggests(this::suggestRandomBookFilterNames);
+        RequiredArgumentBuilder<CommandSourceStack, String> value = Commands.argument("randomBookValue" + index, StringArgumentType.word())
+                .suggests((context, builder) -> suggestRandomBookFilterValue(context, builder, index))
+                .executes(context -> executeGiveRandomBook(context, getRandomBookOptions(context)));
+        addRandomBookOptionStage(value, index + 1);
+        filter.then(value);
+        parent.then(filter);
+    }
+
     private int executeHelp(CommandContext<CommandSourceStack> context) {
         sendMessage(context.getSource(), "help-header");
         for (String line : plugin.getMessagesFile().getStringList("help-commands")) {
@@ -122,44 +146,79 @@ public class SinceCommand {
         return builder.buildFuture();
     }
 
-    private CompletableFuture<Suggestions> suggestRandomBookOptions(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
-        String remaining = builder.getRemainingLowerCase();
-        String current = remaining.contains(" ") ? remaining.substring(remaining.lastIndexOf(' ') + 1) : remaining;
-        String prefix = remaining.contains(" ") ? remaining.substring(0, remaining.lastIndexOf(' ') + 1) : "";
+    private CompletableFuture<Suggestions> suggestRandomBookLevels(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return suggestValues(builder, List.of("1", "2", "3", "4", "5"));
+    }
 
-        if (current.startsWith("-type:")) {
-            suggestMatching(builder, prefix, current, "-type:", List.of("vanilla", "since", "ae", "ce", "ee", "advancedenchantments", "crazyenchantments", "excellentenchants"));
-        } else if (current.startsWith("-rarity:")) {
-            suggestMatching(builder, prefix, current, "-rarity:", getKnownRarities());
-        } else if (current.startsWith("-target:")) {
-            suggestMatching(builder, prefix, current, "-target:", getKnownTargets());
-        } else if (current.startsWith("-level:")) {
-            suggestMatching(builder, prefix, current, "-level:", List.of("1", "2", "3", "4", "5"));
-        } else if (current.startsWith("-success:")) {
-            suggestMatching(builder, prefix, current, "-success:", List.of("100", "80to100", "40to90"));
-        } else if (current.startsWith("-failure:")) {
-            suggestMatching(builder, prefix, current, "-failure:", List.of("0", "0to20", "10to30"));
-        } else if (current.startsWith("-amount:")) {
-            suggestMatching(builder, prefix, current, "-amount:", List.of("1", "1to2", "1to3"));
-        } else {
-            List<String> suggestions = new ArrayList<>(List.of("-level:", "-rarity:", "-target:", "-type:", "-success:", "-failure:", "-amount:", "-s"));
-            for (String suggestion : suggestions) {
-                if (suggestion.toLowerCase(Locale.ROOT).startsWith(current)) {
-                    builder.suggest(prefix + suggestion);
-                }
+    private CompletableFuture<Suggestions> suggestRandomBookRarities(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return suggestValues(builder, getKnownRarities());
+    }
+
+    private CompletableFuture<Suggestions> suggestRandomBookTargets(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return suggestValues(builder, getKnownTargets());
+    }
+
+    private CompletableFuture<Suggestions> suggestRandomBookTypes(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return suggestValues(builder, List.of("vanilla", "since", "ae", "ce", "ee", "advancedenchantments", "crazyenchantments", "excellentenchants"));
+    }
+
+    private CompletableFuture<Suggestions> suggestRandomBookSuccessRanges(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return suggestValues(builder, List.of("100", "80to100", "40to90"));
+    }
+
+    private CompletableFuture<Suggestions> suggestRandomBookFailureRanges(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return suggestValues(builder, List.of("0", "0to20", "10to30"));
+    }
+
+    private CompletableFuture<Suggestions> suggestRandomBookAmounts(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return suggestValues(builder, List.of("1", "1to2", "1to3"));
+    }
+
+    private CompletableFuture<Suggestions> suggestValues(SuggestionsBuilder builder, List<String> values) {
+        String remaining = builder.getRemainingLowerCase();
+        for (String value : values) {
+            if (value.toLowerCase(Locale.ROOT).startsWith(remaining)) {
+                builder.suggest(value);
             }
         }
-
         return builder.buildFuture();
     }
 
-    private void suggestMatching(SuggestionsBuilder builder, String prefix, String current, String optionPrefix, List<String> values) {
-        String typed = current.substring(optionPrefix.length()).toLowerCase(Locale.ROOT);
-        for (String value : values) {
-            if (value.toLowerCase(Locale.ROOT).startsWith(typed)) {
-                builder.suggest(prefix + optionPrefix + value);
+    private CompletableFuture<Suggestions> suggestRandomBookFilterNames(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        String remaining = builder.getRemainingLowerCase();
+        List<String> usedFilters = getParsedRandomBookFilters(context);
+        for (String filter : RANDOM_BOOK_FILTERS) {
+            if (!usedFilters.contains(filter) && filter.startsWith(remaining)) {
+                builder.suggest(filter);
             }
         }
+        return builder.buildFuture();
+    }
+
+    private CompletableFuture<Suggestions> suggestRandomBookFilterValue(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder, int index) {
+        String filter = getOptionalString(context, "randomBookFilter" + index);
+        if (filter == null) return builder.buildFuture();
+        return switch (filter.toLowerCase(Locale.ROOT)) {
+            case "-level" -> suggestRandomBookLevels(context, builder);
+            case "-rarity" -> suggestRandomBookRarities(context, builder);
+            case "-target" -> suggestRandomBookTargets(context, builder);
+            case "-type" -> suggestRandomBookTypes(context, builder);
+            case "-success" -> suggestRandomBookSuccessRanges(context, builder);
+            case "-failure", "-destroy" -> suggestRandomBookFailureRanges(context, builder);
+            case "-amount" -> suggestRandomBookAmounts(context, builder);
+            default -> builder.buildFuture();
+        };
+    }
+
+    private List<String> getParsedRandomBookFilters(CommandContext<CommandSourceStack> context) {
+        List<String> filters = new ArrayList<>();
+        for (int i = 1; i <= RANDOM_BOOK_OPTION_LIMIT; i++) {
+            String filter = getOptionalString(context, "randomBookFilter" + i);
+            if (filter != null) {
+                filters.add(filter.toLowerCase(Locale.ROOT));
+            }
+        }
+        return filters;
     }
 
     private List<String> getKnownRarities() {
@@ -201,9 +260,47 @@ public class SinceCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private int executeGiveRandomBook(CommandContext<CommandSourceStack> context, String rawOptions) throws CommandSyntaxException {
+    private RandomBookOptions getRandomBookOptions(CommandContext<CommandSourceStack> context) {
+        RandomBookOptions options = new RandomBookOptions();
+        options.silent = hasNode(context, "-s");
+
+        for (int i = 1; i <= RANDOM_BOOK_OPTION_LIMIT; i++) {
+            String filter = getOptionalString(context, "randomBookFilter" + i);
+            String value = getOptionalString(context, "randomBookValue" + i);
+            if (filter == null || value == null) continue;
+
+            switch (filter.toLowerCase(Locale.ROOT)) {
+                case "-level" -> {
+                    try {
+                        options.level = Math.max(1, Integer.parseInt(value));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                case "-rarity" -> options.rarity = value.toUpperCase(Locale.ROOT);
+                case "-target" -> options.target = value.toUpperCase(Locale.ROOT);
+                case "-type" -> options.type = normalizeType(value);
+                case "-success" -> options.success = IntRange.parse(value, 0, 100, options.success);
+                case "-failure", "-destroy" -> options.failure = IntRange.parse(value, 0, 100, options.failure);
+                case "-amount" -> options.amount = IntRange.parse(value, 1, 64, options.amount);
+            }
+        }
+        return options;
+    }
+
+    private boolean hasNode(CommandContext<CommandSourceStack> context, String nodeName) {
+        return context.getNodes().stream().anyMatch(node -> node.getNode().getName().equals(nodeName));
+    }
+
+    private String getOptionalString(CommandContext<CommandSourceStack> context, String argumentName) {
+        try {
+            return StringArgumentType.getString(context, argumentName);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+
+    private int executeGiveRandomBook(CommandContext<CommandSourceStack> context, RandomBookOptions options) throws CommandSyntaxException {
         Player target = context.getArgument("target", PlayerSelectorArgumentResolver.class).resolve(context.getSource()).getFirst();
-        RandomBookOptions options = parseRandomBookOptions(rawOptions);
         List<String> candidates = getRandomBookCandidates(options);
 
         if (candidates.isEmpty()) {
@@ -225,39 +322,6 @@ public class SinceCommand {
             sendMessage(context.getSource(), "give-random-book-success", "%amount%", String.valueOf(amount), "%player%", target.getName());
         }
         return Command.SINGLE_SUCCESS;
-    }
-
-    private RandomBookOptions parseRandomBookOptions(String rawOptions) {
-        RandomBookOptions options = new RandomBookOptions();
-        if (rawOptions == null || rawOptions.isBlank()) return options;
-
-        for (String token : rawOptions.trim().split("\\s+")) {
-            if (token.equalsIgnoreCase("-s")) {
-                options.silent = true;
-                continue;
-            }
-
-            String[] split = token.split(":", 2);
-            if (split.length != 2) continue;
-            String key = split[0].toLowerCase(Locale.ROOT);
-            String value = split[1].replace("\"", "");
-
-            switch (key) {
-                case "-level" -> {
-                    try {
-                        options.level = Math.max(1, Integer.parseInt(value));
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-                case "-rarity" -> options.rarity = value.toUpperCase(Locale.ROOT);
-                case "-target" -> options.target = value.toUpperCase(Locale.ROOT);
-                case "-type" -> options.type = normalizeType(value);
-                case "-success" -> options.success = IntRange.parse(value, 0, 100, options.success);
-                case "-failure", "-destroy" -> options.failure = IntRange.parse(value, 0, 100, options.failure);
-                case "-amount" -> options.amount = IntRange.parse(value, 1, 64, options.amount);
-            }
-        }
-        return options;
     }
 
     private List<String> getRandomBookCandidates(RandomBookOptions options) {

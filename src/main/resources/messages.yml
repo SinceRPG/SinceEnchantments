@@ -8,7 +8,7 @@ help-commands:
   - "&b/se help &7- Displays this help menu."
   - "&b/se reload &7- Reloads the plugin configuration."
   - "&b/se givebook <player> <enchant> <level> [success] [destroy] [-s] &7- Gives an enchantment book."
-  - "&b/se giverandombook <player> [options] &7- Gives filtered random enchantment books."
+  - "&b/se giverandombook <player> [filters] &7- Gives filtered random enchantment books."
   - "&b/se giveextractor <player> <random|specific> <amount> &7- Gives an extractor."
   - "&b/se givecharm <player> <bonus> [amount] &7- Gives a success charm."
   - "&b/se giveslotgem <player> <modifier> [amount] &7- Gives a Slot Gem."
