@@ -32,6 +32,7 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.lang.reflect.Method;
 
 /**
  * ITEM PACKET LISTENER
@@ -51,6 +52,12 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
      * The cache uses the Bukkit ItemStack hash to ensure 1.21+ Data Components are distinctly recognized.
      */
     private final Cache<Integer, Optional<com.github.retrooper.packetevents.protocol.item.ItemStack>> itemCache;
+    private final Cache<UUID, Boolean> bedrockCache;
+    
+    private Object floodgateInstance = null;
+    private Method isFloodgatePlayerMethod = null;
+    private Object geyserInstance = null;
+    private Method isBedrockPlayerMethod = null;
 
     public ItemPacketListener() {
         ConfigUtils settings = SinceEnchantments.getInstance().getSettingsFile();
@@ -60,10 +67,52 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
                 .expireAfterWrite(cacheExpireMillis, TimeUnit.MILLISECONDS)
                 .maximumSize(cacheMaxSize)
                 .build();
+        this.bedrockCache = CacheBuilder.newBuilder()
+                .expireAfterAccess(10, TimeUnit.MINUTES)
+                .build();
+                
+        initBedrockApis();
+    }
+    
+    private void initBedrockApis() {
+        try {
+            if (Bukkit.getPluginManager().isPluginEnabled("floodgate")) {
+                Class<?> apiClass = Class.forName("org.geysermc.floodgate.api.FloodgateApi");
+                floodgateInstance = apiClass.getMethod("getInstance").invoke(null);
+                isFloodgatePlayerMethod = apiClass.getMethod("isFloodgatePlayer", UUID.class);
+            }
+        } catch (Exception ignored) {}
+        try {
+            if (Bukkit.getPluginManager().isPluginEnabled("Geyser-Spigot")) {
+                Class<?> apiClass = Class.forName("org.geysermc.geyser.api.GeyserApi");
+                geyserInstance = apiClass.getMethod("api").invoke(null);
+                isBedrockPlayerMethod = apiClass.getMethod("isBedrockPlayer", UUID.class);
+            }
+        } catch (Exception ignored) {}
+    }
+    
+    private boolean isBedrockPlayer(Player player) {
+        if (player == null) return false;
+        UUID uuid = player.getUniqueId();
+        Boolean cached = bedrockCache.getIfPresent(uuid);
+        if (cached != null) return cached;
+        
+        boolean isBedrock = false;
+        try {
+            if (isFloodgatePlayerMethod != null && floodgateInstance != null) {
+                isBedrock = (boolean) isFloodgatePlayerMethod.invoke(floodgateInstance, uuid);
+            } else if (isBedrockPlayerMethod != null && geyserInstance != null) {
+                isBedrock = (boolean) isBedrockPlayerMethod.invoke(geyserInstance, uuid);
+            }
+        } catch (Exception ignored) {}
+        
+        bedrockCache.put(uuid, isBedrock);
+        return isBedrock;
     }
 
     public void clearCache() {
         itemCache.invalidateAll();
+        bedrockCache.invalidateAll();
     }
 
     /**
@@ -166,7 +215,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         }
 
         ItemStack originalItem = bukkitItem.clone();
-        boolean modified = formatSkyblockItem(bukkitItem);
+        boolean modified = formatSkyblockItem(bukkitItem, isBedrockPlayer(player));
 
         if (!modified && bukkitItem.equals(originalItem)) {
             itemCache.put(cacheKey, Optional.empty());
@@ -196,7 +245,7 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
      * @param item The Bukkit ItemStack to format.
      * @return TRUE if the item was modified, FALSE otherwise.
      */
-    private boolean formatSkyblockItem(ItemStack item) {
+    private boolean formatSkyblockItem(ItemStack item, boolean isBedrock) {
         EnchantManager manager = SinceEnchantments.getInstance().getEnchantManager();
         boolean cleaned = manager.cleanItemLore(item);
 
@@ -230,6 +279,12 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             }
         }
         boolean overrideVanilla = settings.getBoolean("settings.override-vanilla-enchants", true);
+        String bedrockFixMode = settings.getString("settings.bedrock-duplicate-enchant-fix-mode", "STRIP_ENCHANTS").toUpperCase();
+        
+        if (isBedrock && bedrockFixMode.equals("SKIP_CUSTOM_LORE")) {
+            overrideVanilla = false;
+        }
+        
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
 
         boolean hasProtect = pdc.has(manager.PROTECTED_ITEM_KEY, PersistentDataType.BYTE);
@@ -256,6 +311,22 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
         if (overrideVanilla && !meta.hasItemFlag(ItemFlag.HIDE_ENCHANTS)) {
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             pdc.set(new NamespacedKey(SinceEnchantments.getInstance(), PersistentKeyNames.LORE_HID_ENCHANTS), PersistentDataType.BYTE, (byte) 1);
+        }
+        
+        if (isBedrock && overrideVanilla && bedrockFixMode.equals("STRIP_ENCHANTS")) {
+            // Bedrock completely ignores HIDE_ENCHANTS for functional enchants.
+            // We must strip them from the visual packet so they don't show at the top!
+            for (Enchantment ench : vanillaEnchants.keySet()) {
+                meta.removeEnchant(ench);
+            }
+            // Add glint override to keep it glowing
+            try {
+                meta.setEnchantmentGlintOverride(true);
+            } catch (NoSuchMethodError ignored) {
+                // Fallback for older versions
+                meta.addEnchant(Enchantment.UNBREAKING, 1, true);
+                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            }
         }
 
         if (hasProtect) {

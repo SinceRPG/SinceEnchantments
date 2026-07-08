@@ -18,6 +18,15 @@ settings:
   #        into the {enchants} placeholder. Set this to FALSE if you use MMOItems stats or EcoEnchants.
   override-vanilla-enchants: true
 
+  # How to handle the duplicate enchantment lore specifically for Bedrock/Geyser players?
+  # Bedrock clients require enchantments to be on the item for mining speed predictions.
+  # STRIP_ENCHANTS: Visually removes the vanilla enchantments from the top of the tooltip. 
+  #                 Looks best (no duplicates), BUT causes Bedrock players to have "Ghost Blocks" and mining lag!
+  # SKIP_CUSTOM_LORE: Keeps vanilla enchantments at the top to prevent mining lag, but skips adding them 
+  #                   to the custom lore at the bottom. (No duplicates, but no custom descriptions for vanilla enchants).
+  # NONE: Does nothing (Bedrock players will see duplicate enchants: one at the top, one at the bottom).
+  bedrock-duplicate-enchant-fix-mode: "STRIP_ENCHANTS"
+
   # How many enchantments should be displayed on a single line of lore?
   # Setting this to 1 makes it look like Vanilla. Setting it to 2 or 3 saves lore space.
   enchants-per-line: 2
