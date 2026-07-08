@@ -112,14 +112,15 @@ packet-cache-expire-ms: 250
 
 ## Creative Mode Safety
 
-Creative inventory packets are cleaned before reaching the server. This prevents packet-injected lore from being saved into real item data by creative actions.
+Creative inventory packets are cleaned before reaching the server. This prevents packet-injected lore from being saved
+into real item data by creative actions.
 
 ## Common Lore Problems
 
-| Symptom | Likely Cause | Fix |
-| --- | --- | --- |
-| Lore does not show on MMOItems item | Missing `{enchants}` placeholder | Add placeholder to MMOItems lore |
-| Lore only appears after reopening inventory | Client slot sync race | Update to latest build; cache is cleared on click/drag |
-| Vanilla enchant lines duplicate | `override-vanilla-enchants` conflict or another plugin rewriting lore | Test with override false |
-| Item stats disappear | Another plugin stores stats in lore and no placeholder is used | Use placeholder mode |
+| Symptom                                     | Likely Cause                                                          | Fix                                                    |
+|---------------------------------------------|-----------------------------------------------------------------------|--------------------------------------------------------|
+| Lore does not show on MMOItems item         | Missing `{enchants}` placeholder                                      | Add placeholder to MMOItems lore                       |
+| Lore only appears after reopening inventory | Client slot sync race                                                 | Update to latest build; cache is cleared on click/drag |
+| Vanilla enchant lines duplicate             | `override-vanilla-enchants` conflict or another plugin rewriting lore | Test with override false                               |
+| Item stats disappear                        | Another plugin stores stats in lore and no placeholder is used        | Use placeholder mode                                   |
 

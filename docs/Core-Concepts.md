@@ -4,13 +4,13 @@
 
 SinceEnchantments uses namespaced IDs everywhere.
 
-| Type | Example |
-| --- | --- |
-| Built-in custom enchant | `since:lifesteal` |
-| Vanilla enchant | `minecraft:sharpness` |
-| AdvancedEnchantments enchant | `ae:harvest` |
-| CrazyEnchantments enchant | `ce:lifesteal` |
-| ExcellentEnchants enchant | `excellentenchants:tunnel` |
+| Type                         | Example                    |
+|------------------------------|----------------------------|
+| Built-in custom enchant      | `since:lifesteal`          |
+| Vanilla enchant              | `minecraft:sharpness`      |
+| AdvancedEnchantments enchant | `ae:harvest`               |
+| CrazyEnchantments enchant    | `ce:lifesteal`             |
+| ExcellentEnchants enchant    | `excellentenchants:tunnel` |
 
 Always use lowercase IDs in commands and configs unless a page explicitly says otherwise.
 
@@ -85,7 +85,8 @@ conflicts:
   - "minecraft:smite"
 ```
 
-Vanilla enchantment conflicts are also respected when applying vanilla enchantments unless overridden by config behavior.
+Vanilla enchantment conflicts are also respected when applying vanilla enchantments unless overridden by config
+behavior.
 
 ## Targets
 
@@ -109,13 +110,13 @@ enchant-targets:
 
 Patterns support:
 
-| Pattern | Meaning |
-| --- | --- |
-| `*` | Everything |
-| `*_SWORD` | Ends with `_SWORD` |
+| Pattern     | Meaning                |
+|-------------|------------------------|
+| `*`         | Everything             |
+| `*_SWORD`   | Ends with `_SWORD`     |
 | `DIAMOND_*` | Starts with `DIAMOND_` |
-| `*DIAMOND*` | Contains `DIAMOND` |
-| `BOW` | Exact match |
+| `*DIAMOND*` | Contains `DIAMOND`     |
+| `BOW`       | Exact match            |
 
 ## External Enchants
 

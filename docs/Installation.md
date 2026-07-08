@@ -4,19 +4,19 @@ This page covers server requirements, dependencies, install order, update safety
 
 ## Requirements
 
-| Requirement | Status | Notes |
-| --- | --- | --- |
-| Paper | Required | `api-version: 1.21`; designed for modern Paper |
-| Java | Required | Build uses modern Java tooling; run with the Java version required by your Paper server |
-| PacketEvents | Required | Must load before SinceEnchantments |
-| Folia | Supported | Plugin declares `folia-supported: true` and uses Folia-aware schedulers |
-| MythicLib | Optional | Used for MMOItems item detection |
-| MMOItems | Optional | Supported through PDC and MythicLib NBT detection |
-| MMOCore | Optional | Used for anvil experience sync |
-| AdvancedEnchantments | Optional | Auto-hooked through runtime reflection |
-| CrazyEnchantments | Optional | Auto-hooked through its public API dependency |
-| NightCore | Optional | Required by ExcellentEnchants when that hook is used |
-| ExcellentEnchants | Optional | Auto-hooked through its public API dependency |
+| Requirement          | Status    | Notes                                                                                   |
+|----------------------|-----------|-----------------------------------------------------------------------------------------|
+| Paper                | Required  | `api-version: 1.21`; designed for modern Paper                                          |
+| Java                 | Required  | Build uses modern Java tooling; run with the Java version required by your Paper server |
+| PacketEvents         | Required  | Must load before SinceEnchantments                                                      |
+| Folia                | Supported | Plugin declares `folia-supported: true` and uses Folia-aware schedulers                 |
+| MythicLib            | Optional  | Used for MMOItems item detection                                                        |
+| MMOItems             | Optional  | Supported through PDC and MythicLib NBT detection                                       |
+| MMOCore              | Optional  | Used for anvil experience sync                                                          |
+| AdvancedEnchantments | Optional  | Auto-hooked through runtime reflection                                                  |
+| CrazyEnchantments    | Optional  | Auto-hooked through its public API dependency                                           |
+| NightCore            | Optional  | Required by ExcellentEnchants when that hook is used                                    |
+| ExcellentEnchants    | Optional  | Auto-hooked through its public API dependency                                           |
 
 ## Plugin Load Order
 
@@ -49,7 +49,8 @@ dependencies:
 
 1. Stop the server.
 2. Install PacketEvents into `plugins/`.
-3. Install optional plugins you use, such as MythicLib, MMOItems, MMOCore, AdvancedEnchantments, CrazyEnchantments, NightCore, or ExcellentEnchants.
+3. Install optional plugins you use, such as MythicLib, MMOItems, MMOCore, AdvancedEnchantments, CrazyEnchantments,
+   NightCore, or ExcellentEnchants.
 4. Put `SinceEnchantments.jar` into `plugins/`.
 5. Start the server.
 6. Confirm startup logs mention PacketEvents initialization and SinceEnchantments version support.
@@ -61,15 +62,15 @@ dependencies:
 
 The plugin creates these files:
 
-| File | Purpose |
-| --- | --- |
-| `settings.yml` | Global behavior, lore display, slots, tracker categories, target categories |
-| `enchants.yml` | Built-in custom enchants, external enchant overrides, vanilla enchant display metadata |
-| `limits.yml` | Item slot limits, slot modifier limits, whitelists |
-| `items.yml` | Enchantment books and utility item templates |
-| `gui.yml` | Extractor Dialog and legacy GUI display settings |
-| `messages.yml` | Player messages and startup/hook logs |
-| `custom-items.yml` | Custom item detection hooks for third-party plugins |
+| File               | Purpose                                                                                |
+|--------------------|----------------------------------------------------------------------------------------|
+| `settings.yml`     | Global behavior, lore display, slots, tracker categories, target categories            |
+| `enchants.yml`     | Built-in custom enchants, external enchant overrides, vanilla enchant display metadata |
+| `limits.yml`       | Item slot limits, slot modifier limits, whitelists                                     |
+| `items.yml`        | Enchantment books and utility item templates                                           |
+| `gui.yml`          | Extractor Dialog and legacy GUI display settings                                       |
+| `messages.yml`     | Player messages and startup/hook logs                                                  |
+| `custom-items.yml` | Custom item detection hooks for third-party plugins                                    |
 
 ## Updating
 
@@ -115,7 +116,8 @@ Not every optional hook must be present. Missing optional plugins should log a s
 
 ## Important Security Note for Premium Jars
 
-Do not commit premium plugin jars such as AdvancedEnchantments to GitHub. SinceEnchantments does not need to ship the AdvancedEnchantments jar. The hook uses runtime reflection and reads the installed plugin on the server.
+Do not commit premium plugin jars such as AdvancedEnchantments to GitHub. SinceEnchantments does not need to ship the
+AdvancedEnchantments jar. The hook uses runtime reflection and reads the installed plugin on the server.
 
 ExcellentEnchants is integrated through compile-time API dependencies:
 

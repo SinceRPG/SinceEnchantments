@@ -4,11 +4,11 @@ SinceEnchantments can display, apply, extract, and slot-count enchantments from 
 
 ## ID Format
 
-| Plugin | ID Format |
-| --- | --- |
-| AdvancedEnchantments | `ae:<enchant_name>` |
-| CrazyEnchantments | `ce:<enchant_name>` |
-| ExcellentEnchants | `excellentenchants:<enchant_name>` |
+| Plugin               | ID Format                          |
+|----------------------|------------------------------------|
+| AdvancedEnchantments | `ae:<enchant_name>`                |
+| CrazyEnchantments    | `ce:<enchant_name>`                |
+| ExcellentEnchants    | `excellentenchants:<enchant_name>` |
 
 Examples:
 
@@ -140,15 +140,18 @@ Use books as usual:
 /se givebook Steve "excellentenchants:tunnel" 1 100 0
 ```
 
-When hooks are active, SinceEnchantments delegates AdvancedEnchantments and CrazyEnchantments apply/remove behavior to those plugins. ExcellentEnchants registers its enchantments in Bukkit's enchantment registry, so SinceEnchantments applies those books through the normal Bukkit enchantment path while using the ExcellentEnchants API for metadata and random filtering.
+When hooks are active, SinceEnchantments delegates AdvancedEnchantments and CrazyEnchantments apply/remove behavior to
+those plugins. ExcellentEnchants registers its enchantments in Bukkit's enchantment registry, so SinceEnchantments
+applies those books through the normal Bukkit enchantment path while using the ExcellentEnchants API for metadata and
+random filtering.
 
 ## Troubleshooting External Hooks
 
-| Symptom | Cause | Fix |
-| --- | --- | --- |
-| `Found 0 enchantments` for AE | AE has not finished loading enchant config yet | Update to latest build; retry and config fallback handle this |
-| `ae:` commands do not suggest | AE not installed, disabled, or fallback config missing | Check startup logs and `plugins/AdvancedEnchantments/enchantments.yml` |
-| Book applies but effect does not work | External plugin rejected apply or item is not valid for that plugin | Check console warning and external plugin rules |
-| CE hook fails | CrazyManager not ready or API changed | Check CE version and startup logs |
-| EE hook fails at startup | ExcellentEnchants or NightCore version mismatch | Use matching ExcellentEnchants and NightCore versions, then rebuild with the Gradle dependency versions documented above |
-| `excellentenchants:` commands do not suggest | EE is not installed, disabled, or registry is empty | Check `ExcellentEnchants detected ...` and `Successfully hooked into ExcellentEnchants API!` startup logs |
+| Symptom                                      | Cause                                                               | Fix                                                                                                                      |
+|----------------------------------------------|---------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| `Found 0 enchantments` for AE                | AE has not finished loading enchant config yet                      | Update to latest build; retry and config fallback handle this                                                            |
+| `ae:` commands do not suggest                | AE not installed, disabled, or fallback config missing              | Check startup logs and `plugins/AdvancedEnchantments/enchantments.yml`                                                   |
+| Book applies but effect does not work        | External plugin rejected apply or item is not valid for that plugin | Check console warning and external plugin rules                                                                          |
+| CE hook fails                                | CrazyManager not ready or API changed                               | Check CE version and startup logs                                                                                        |
+| EE hook fails at startup                     | ExcellentEnchants or NightCore version mismatch                     | Use matching ExcellentEnchants and NightCore versions, then rebuild with the Gradle dependency versions documented above |
+| `excellentenchants:` commands do not suggest | EE is not installed, disabled, or registry is empty                 | Check `ExcellentEnchants detected ...` and `Successfully hooked into ExcellentEnchants API!` startup logs                |

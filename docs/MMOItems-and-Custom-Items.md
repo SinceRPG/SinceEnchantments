@@ -9,13 +9,13 @@ MMOItems is supported out of the box.
 Detection methods:
 
 1. PersistentDataContainer keys:
-   - `mmoitems:type`
-   - `mmoitems:id`
+    - `mmoitems:type`
+    - `mmoitems:id`
 2. MythicLib NBT API fallback:
-   - `NBTItem.get(item)`
-   - `hasType()`
-   - `getType()`
-   - `getString("MMOITEMS_ITEM_ID")`
+    - `NBTItem.get(item)`
+    - `hasType()`
+    - `getType()`
+    - `getString("MMOITEMS_ITEM_ID")`
 
 Detected format:
 
@@ -93,13 +93,13 @@ ITEMSADDER:RUBY_SWORD
 
 ## Built-In Hook Examples
 
-| Hook | PDC Keys | Format |
-| --- | --- | --- |
-| MythicMobs | `mythicmobs:type`, `mythic-type` | `{id}` |
-| ItemsAdder | `itemsadder:id` | `ITEMSADDER:{id}` |
-| Oraxen | `oraxen:id` | `ORAXEN:{id}` |
-| EcoItems | `eco:id` | `ECOITEMS:{id}` |
-| ExecutableItems | `executableitems:id` | `EXECUTABLEITEMS:{id}` |
+| Hook            | PDC Keys                         | Format                 |
+|-----------------|----------------------------------|------------------------|
+| MythicMobs      | `mythicmobs:type`, `mythic-type` | `{id}`                 |
+| ItemsAdder      | `itemsadder:id`                  | `ITEMSADDER:{id}`      |
+| Oraxen          | `oraxen:id`                      | `ORAXEN:{id}`          |
+| EcoItems        | `eco:id`                         | `ECOITEMS:{id}`        |
+| ExecutableItems | `executableitems:id`             | `EXECUTABLEITEMS:{id}` |
 
 ## Adding a New Custom Item Plugin
 
@@ -129,11 +129,11 @@ custom-item-whitelist:
 
 ## Common MMOItems Issues
 
-| Problem | Fix |
-| --- | --- |
-| Enchant applies but lore appears in wrong place | Add `{enchants}` to MMOItems lore |
-| Enchant says not whitelisted | Add `TYPE:ID` or `TYPE:*` to `mmoitems-whitelist` |
-| Slot limit is wrong | Add `mmoitems-max-slots` rule |
-| Stat tracker rejects item | Add MMOItems type to `settings.stat-tracker-categories` |
-| Lore appears only after reopening inventory | Update to latest build and lower packet cache if needed |
+| Problem                                         | Fix                                                     |
+|-------------------------------------------------|---------------------------------------------------------|
+| Enchant applies but lore appears in wrong place | Add `{enchants}` to MMOItems lore                       |
+| Enchant says not whitelisted                    | Add `TYPE:ID` or `TYPE:*` to `mmoitems-whitelist`       |
+| Slot limit is wrong                             | Add `mmoitems-max-slots` rule                           |
+| Stat tracker rejects item                       | Add MMOItems type to `settings.stat-tracker-categories` |
+| Lore appears only after reopening inventory     | Update to latest build and lower packet cache if needed |
 

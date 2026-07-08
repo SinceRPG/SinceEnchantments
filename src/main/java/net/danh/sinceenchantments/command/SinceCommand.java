@@ -250,13 +250,15 @@ public class SinceCommand {
         }
         int maxLevel = plugin.getEnchantManager().getMaxLevel(enchantId);
         if (level > maxLevel) {
-            if (!silent) sendMessage(context.getSource(), "give-book-level-too-high", "%enchant%", enchantId, "%level%", String.valueOf(level), "%max%", String.valueOf(maxLevel));
+            if (!silent)
+                sendMessage(context.getSource(), "give-book-level-too-high", "%enchant%", enchantId, "%level%", String.valueOf(level), "%max%", String.valueOf(maxLevel));
             return Command.SINGLE_SUCCESS;
         }
 
         ItemStack book = plugin.getItemFactory().createEnchantBook(enchantId, level, success, destroy);
         target.getInventory().addItem(book);
-        if (!silent) sendMessage(context.getSource(), "give-book-success", "%enchant%", enchantId, "%level%", String.valueOf(level), "%player%", target.getName());
+        if (!silent)
+            sendMessage(context.getSource(), "give-book-success", "%enchant%", enchantId, "%level%", String.valueOf(level), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
     }
 
@@ -348,9 +350,12 @@ public class SinceCommand {
         for (String id : plugin.getEnchantManager().getAllKnownEnchantIds()) {
             if (!plugin.getEnchantManager().enchantExists(id)) continue;
             if (options.level != null && options.level > plugin.getEnchantManager().getMaxLevel(id)) continue;
-            if (options.rarity != null && !plugin.getEnchantManager().getRarity(id).equalsIgnoreCase(options.rarity)) continue;
-            if (options.target != null && !plugin.getEnchantManager().getTarget(id).equalsIgnoreCase(options.target)) continue;
-            if (options.type != null && !plugin.getEnchantManager().getEnchantType(id).equalsIgnoreCase(options.type)) continue;
+            if (options.rarity != null && !plugin.getEnchantManager().getRarity(id).equalsIgnoreCase(options.rarity))
+                continue;
+            if (options.target != null && !plugin.getEnchantManager().getTarget(id).equalsIgnoreCase(options.target))
+                continue;
+            if (options.type != null && !plugin.getEnchantManager().getEnchantType(id).equalsIgnoreCase(options.type))
+                continue;
             candidates.add(id);
         }
         return candidates;
@@ -365,49 +370,6 @@ public class SinceCommand {
             case "sinceenchantments", "since", "se", "custom" -> "since";
             default -> type.toLowerCase(Locale.ROOT);
         };
-    }
-
-    private static class RandomBookOptions {
-        private boolean silent = false;
-        private Integer level;
-        private String rarity;
-        private String target;
-        private String type;
-        private IntRange success = new IntRange(100, 100);
-        private IntRange failure = new IntRange(0, 0);
-        private IntRange amount = new IntRange(1, 1);
-        private boolean hasSuccess = false;
-        private boolean hasFailure = false;
-    }
-
-    private record IntRange(int min, int max) {
-        private int roll() {
-            if (min == max) return min;
-            return ThreadLocalRandom.current().nextInt(min, max + 1);
-        }
-
-        private static IntRange parse(String raw, int minAllowed, int maxAllowed, IntRange fallback) {
-            String value = raw.toLowerCase(Locale.ROOT).replace(" ", "");
-            String[] parts = value.split("to", 2);
-            try {
-                int min = Integer.parseInt(parts[0]);
-                int max = parts.length == 2 ? Integer.parseInt(parts[1]) : min;
-                min = clamp(min, minAllowed, maxAllowed);
-                max = clamp(max, minAllowed, maxAllowed);
-                if (min > max) {
-                    int tmp = min;
-                    min = max;
-                    max = tmp;
-                }
-                return new IntRange(min, max);
-            } catch (NumberFormatException ignored) {
-                return fallback;
-            }
-        }
-
-        private static int clamp(int value, int min, int max) {
-            return Math.max(min, Math.min(max, value));
-        }
     }
 
     private int executeGiveExtractor(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
@@ -481,5 +443,48 @@ public class SinceCommand {
         target.getInventory().addItem(item);
         sendMessage(context.getSource(), "give-tracker-success", "%amount%", String.valueOf(amount), "%player%", target.getName());
         return Command.SINGLE_SUCCESS;
+    }
+
+    private static class RandomBookOptions {
+        private boolean silent = false;
+        private Integer level;
+        private String rarity;
+        private String target;
+        private String type;
+        private IntRange success = new IntRange(100, 100);
+        private IntRange failure = new IntRange(0, 0);
+        private IntRange amount = new IntRange(1, 1);
+        private boolean hasSuccess = false;
+        private boolean hasFailure = false;
+    }
+
+    private record IntRange(int min, int max) {
+        private static IntRange parse(String raw, int minAllowed, int maxAllowed, IntRange fallback) {
+            String value = raw.toLowerCase(Locale.ROOT).replace(" ", "");
+            String[] parts = value.split("to", 2);
+            try {
+                int min = Integer.parseInt(parts[0]);
+                int max = parts.length == 2 ? Integer.parseInt(parts[1]) : min;
+                min = clamp(min, minAllowed, maxAllowed);
+                max = clamp(max, minAllowed, maxAllowed);
+                if (min > max) {
+                    int tmp = min;
+                    min = max;
+                    max = tmp;
+                }
+                return new IntRange(min, max);
+            } catch (NumberFormatException ignored) {
+                return fallback;
+            }
+        }
+
+        private static int clamp(int value, int min, int max) {
+            return Math.max(min, Math.min(max, value));
+        }
+
+        private int roll() {
+            if (min == max) return min;
+            return ThreadLocalRandom.current().nextInt(min, max + 1);
+        }
     }
 }

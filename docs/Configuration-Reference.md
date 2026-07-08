@@ -4,15 +4,15 @@ This page is the index for every generated config file.
 
 ## File Overview
 
-| File | Purpose |
-| --- | --- |
-| `settings.yml` | Global mechanics and visual rules |
-| `enchants.yml` | Custom enchant definitions and vanilla display metadata |
-| `limits.yml` | Slot caps, slot gem caps, and item whitelists |
-| `items.yml` | Utility item templates |
-| `gui.yml` | Extractor Dialog and GUI settings |
-| `messages.yml` | Player-facing messages and console logs |
-| `custom-items.yml` | Third-party custom item PDC detection |
+| File               | Purpose                                                 |
+|--------------------|---------------------------------------------------------|
+| `settings.yml`     | Global mechanics and visual rules                       |
+| `enchants.yml`     | Custom enchant definitions and vanilla display metadata |
+| `limits.yml`       | Slot caps, slot gem caps, and item whitelists           |
+| `items.yml`        | Utility item templates                                  |
+| `gui.yml`          | Extractor Dialog and GUI settings                       |
+| `messages.yml`     | Player-facing messages and console logs                 |
+| `custom-items.yml` | Third-party custom item PDC detection                   |
 
 ## settings.yml
 
@@ -94,10 +94,10 @@ extractor-mode: "DIALOG"
 
 Values:
 
-| Value | Behavior |
-| --- | --- |
+| Value    | Behavior                       |
+|----------|--------------------------------|
 | `DIALOG` | Uses Paper's modern Dialog API |
-| `GUI` | Uses legacy chest GUI |
+| `GUI`    | Uses legacy chest GUI          |
 
 ### Protection and Tracker
 

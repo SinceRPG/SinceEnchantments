@@ -1,7 +1,7 @@
 name: Compatibility report
 description: Report an issue with another enchantment, item, packet, or RPG plugin.
 title: "[Compatibility]: "
-labels: ["compatibility"]
+labels: [ "compatibility" ]
 body:
   - type: dropdown
     id: integration

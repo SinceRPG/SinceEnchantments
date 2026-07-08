@@ -33,24 +33,24 @@ public final class ExampleEnchant extends SinceEnchant {
 
 ## Useful SinceEnchant Methods
 
-| Method | Purpose |
-| --- | --- |
-| `getId()` | Returns enchant ID |
-| `getLevel(ItemStack item)` | Reads enchant level on an item |
-| `getName()` | Config display name |
-| `getMaxLevel()` | Config max level |
-| `getRarity()` | Config rarity |
-| `isApplicable(Material material)` | Target check |
-| `hasConflict(ItemStack item)` | Conflict check |
+| Method                            | Purpose                        |
+|-----------------------------------|--------------------------------|
+| `getId()`                         | Returns enchant ID             |
+| `getLevel(ItemStack item)`        | Reads enchant level on an item |
+| `getName()`                       | Config display name            |
+| `getMaxLevel()`                   | Config max level               |
+| `getRarity()`                     | Config rarity                  |
+| `isApplicable(Material material)` | Target check                   |
+| `hasConflict(ItemStack item)`     | Conflict check                 |
 
 Protected config helpers:
 
-| Method | Reads |
-| --- | --- |
-| `getInt(key, def)` | `custom-enchants.<id>.settings.<key>` |
-| `getDouble(key, def)` | Same |
-| `getString(key, def)` | Same |
-| `getBoolean(key, def)` | Same |
+| Method                                      | Reads                                 |
+|---------------------------------------------|---------------------------------------|
+| `getInt(key, def)`                          | `custom-enchants.<id>.settings.<key>` |
+| `getDouble(key, def)`                       | Same                                  |
+| `getString(key, def)`                       | Same                                  |
+| `getBoolean(key, def)`                      | Same                                  |
 | `sendMessage(player, key, replacements...)` | `custom-enchants.<id>.messages.<key>` |
 
 ## Internal Modules
@@ -111,23 +111,24 @@ custom-enchants:
 
 The registry stores active `SinceEnchant` modules and registers them as event listeners.
 
-Dynamic external plugin hooks such as `ae:` and `ce:` are registered in `EnchantManager`, not as `SinceEnchant` event modules.
+Dynamic external plugin hooks such as `ae:` and `ce:` are registered in `EnchantManager`, not as `SinceEnchant` event
+modules.
 
 ## Persistent Data
 
 Important key concepts:
 
-| Data | Meaning |
-| --- | --- |
-| `custom_enchants` | SinceEnchantments custom enchant map |
-| `book_enchant_id` | Book enchant ID |
-| `book_enchant_level` | Book level |
-| `book_success_rate` | Book success rate |
-| `book_destroy_rate` | Book failure/destroy metadata |
-| `slot_modifier` | Slot gem modifier value |
-| `item_locked` | Lock state |
-| `item_is_protected` | Protection gem state |
-| `stat_tracker_applied` | Stat tracker state |
+| Data                   | Meaning                              |
+|------------------------|--------------------------------------|
+| `custom_enchants`      | SinceEnchantments custom enchant map |
+| `book_enchant_id`      | Book enchant ID                      |
+| `book_enchant_level`   | Book level                           |
+| `book_success_rate`    | Book success rate                    |
+| `book_destroy_rate`    | Book failure/destroy metadata        |
+| `slot_modifier`        | Slot gem modifier value              |
+| `item_locked`          | Lock state                           |
+| `item_is_protected`    | Protection gem state                 |
+| `stat_tracker_applied` | Stat tracker state                   |
 
 Do not manually edit these keys unless you understand the storage format.
 

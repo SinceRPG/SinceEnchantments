@@ -32,20 +32,20 @@ sinceenchantments.admin
 
 ## Command Reference
 
-| Command | Description |
-| --- | --- |
-| `/se help` | Shows the help menu |
-| `/se reload` | Reloads configuration files and dynamic hook registrations |
-| `/se givebook <player> <enchant> <level> [success] [destroy] [-s]` | Gives a specific enchantment book |
-| `/se giverandombook <player> [filters]` | Gives filtered random enchantment books |
-| `/se giveextractor <player> <random\|specific> <amount>` | Gives an extractor |
-| `/se givecharm <player> <bonus> [amount]` | Gives a success charm |
-| `/se giveslotgem <player> <modifier> [amount]` | Gives a slot gem |
-| `/se givelock <player> [amount]` | Gives a lock scroll |
-| `/se givepurge <player> <return_books> [amount]` | Gives a purge scroll |
-| `/se giverandomizer <player> [amount]` | Gives a randomizer stone |
-| `/se giveprotector <player> [amount]` | Gives a protection gem |
-| `/se givetracker <player> [amount]` | Gives a stat tracker |
+| Command                                                            | Description                                                |
+|--------------------------------------------------------------------|------------------------------------------------------------|
+| `/se help`                                                         | Shows the help menu                                        |
+| `/se reload`                                                       | Reloads configuration files and dynamic hook registrations |
+| `/se givebook <player> <enchant> <level> [success] [destroy] [-s]` | Gives a specific enchantment book                          |
+| `/se giverandombook <player> [filters]`                            | Gives filtered random enchantment books                    |
+| `/se giveextractor <player> <random\|specific> <amount>`           | Gives an extractor                                         |
+| `/se givecharm <player> <bonus> [amount]`                          | Gives a success charm                                      |
+| `/se giveslotgem <player> <modifier> [amount]`                     | Gives a slot gem                                           |
+| `/se givelock <player> [amount]`                                   | Gives a lock scroll                                        |
+| `/se givepurge <player> <return_books> [amount]`                   | Gives a purge scroll                                       |
+| `/se giverandomizer <player> [amount]`                             | Gives a randomizer stone                                   |
+| `/se giveprotector <player> [amount]`                              | Gives a protection gem                                     |
+| `/se givetracker <player> [amount]`                                | Gives a stat tracker                                       |
 
 ## Examples
 
@@ -149,7 +149,7 @@ The enchantment argument suggests:
 - Auto-loaded `ce:` IDs
 - Auto-loaded `excellentenchants:` IDs
 - Bukkit vanilla enchant IDs
-`giverandombook` filters are suggested after the player argument and after each completed filter:
+  `giverandombook` filters are suggested after the player argument and after each completed filter:
 
 - `-level <number>` limits random selection to enchantments that support the exact level and gives books at that level
 - `-rarity <rarity>` limits random selection to matching rarity metadata
@@ -162,15 +162,16 @@ The enchantment argument suggests:
 
 Supported built-in type aliases:
 
-| Alias | Source |
-| --- | --- |
-| `vanilla`, `minecraft`, `mc` | Bukkit/Minecraft enchantments |
-| `since`, `se`, `custom` | SinceEnchantments custom/addon enchantments |
-| `ae`, `advancedenchantments` | AdvancedEnchantments |
-| `ce`, `crazyenchantments` | CrazyEnchantments |
-| `ee`, `excellentenchants` | ExcellentEnchants |
+| Alias                        | Source                                      |
+|------------------------------|---------------------------------------------|
+| `vanilla`, `minecraft`, `mc` | Bukkit/Minecraft enchantments               |
+| `since`, `se`, `custom`      | SinceEnchantments custom/addon enchantments |
+| `ae`, `advancedenchantments` | AdvancedEnchantments                        |
+| `ce`, `crazyenchantments`    | CrazyEnchantments                           |
+| `ee`, `excellentenchants`    | ExcellentEnchants                           |
 
-Multiple random filters can be combined. For example, `-level 1 -type ae -target WEAPON` only chooses AdvancedEnchantments entries that are known as weapon enchantments and support level 1.
+Multiple random filters can be combined. For example, `-level 1 -type ae -target WEAPON` only chooses
+AdvancedEnchantments entries that are known as weapon enchantments and support level 1.
 
 If `-level` is omitted, the command chooses a random valid level between `1` and the selected enchantment's max level.
 
@@ -180,4 +181,5 @@ If an external enchant does not appear:
 2. Confirm the external plugin loaded before SinceEnchantments.
 3. Run `/se reload`.
 4. For AdvancedEnchantments, confirm its `enchantments.yml` exists and contains enchant sections with `levels`.
-5. For ExcellentEnchants, confirm the plugin is enabled and its enchant files exist under `plugins/ExcellentEnchants/enchants`.
+5. For ExcellentEnchants, confirm the plugin is enabled and its enchant files exist under
+   `plugins/ExcellentEnchants/enchants`.

@@ -13,12 +13,12 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 
 /**
  * INVENTORY FIX LISTENER
- *
+ * <p>
  * Functionality:
  * This class monitors inventory interactions to prevent packet-injected visual lore
  * from being accidentally saved to the server's permanent item data. It intercepts
  * clicks and drags, stripping the fake lore before Bukkit processes the event.
- *
+ * <p>
  * Lag Optimization Applied:
  * Removed manual `updateInventory()` calls. Bukkit naturally sends a highly-optimized
  * SET_SLOT packet for items modified during an InventoryClickEvent. Forcing a manual

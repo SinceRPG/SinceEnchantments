@@ -6,26 +6,26 @@ SinceEnchantments ships a full item utility system. All utility item visuals are
 
 Most item templates support:
 
-| Field | Meaning |
-| --- | --- |
-| `material` | Bukkit material |
-| `name` | Display name with legacy colors or MiniMessage |
-| `item-name` | Paper 1.21 item name |
-| `item-model` | Namespaced item model key |
-| `tooltip-style` | Paper tooltip style key |
-| `lore` | Lore lines |
-| `custom-model-data` | Legacy integer or Paper component map |
-| `unbreakable` | Makes item unbreakable |
-| `hide-tooltip` | Hides tooltip |
-| `glint-override` | Forces or removes enchantment glint |
-| `glider` | Enables glider behavior where supported |
-| `enchantable` | Overrides vanilla enchantability |
-| `max-stack-size` | Sets max stack size where supported |
-| `rarity` | Vanilla item rarity |
-| `damage` | Initial durability damage |
-| `flags` | Bukkit ItemFlags |
-| `enchants` | Vanilla enchantments on the utility item |
-| `attributes` | Bukkit attribute modifiers |
+| Field               | Meaning                                        |
+|---------------------|------------------------------------------------|
+| `material`          | Bukkit material                                |
+| `name`              | Display name with legacy colors or MiniMessage |
+| `item-name`         | Paper 1.21 item name                           |
+| `item-model`        | Namespaced item model key                      |
+| `tooltip-style`     | Paper tooltip style key                        |
+| `lore`              | Lore lines                                     |
+| `custom-model-data` | Legacy integer or Paper component map          |
+| `unbreakable`       | Makes item unbreakable                         |
+| `hide-tooltip`      | Hides tooltip                                  |
+| `glint-override`    | Forces or removes enchantment glint            |
+| `glider`            | Enables glider behavior where supported        |
+| `enchantable`       | Overrides vanilla enchantability               |
+| `max-stack-size`    | Sets max stack size where supported            |
+| `rarity`            | Vanilla item rarity                            |
+| `damage`            | Initial durability damage                      |
+| `flags`             | Bukkit ItemFlags                               |
+| `enchants`          | Vanilla enchantments on the utility item       |
+| `attributes`        | Bukkit attribute modifiers                     |
 
 ## Enchantment Book
 
@@ -42,19 +42,20 @@ Behavior:
 - Stores book data in PDC.
 - Supports vanilla, custom, AdvancedEnchantments, CrazyEnchantments, and ExcellentEnchants IDs.
 - Use `/se giverandombook <player> [filters]` for filtered random books.
-- Random book filters include `-level 1`, `-rarity LEGENDARY`, `-target WEAPON`, `-type ee`, `-success 40to90`, `-failure 10to30`, `-amount 1to2`, and `-s`.
+- Random book filters include `-level 1`, `-rarity LEGENDARY`, `-target WEAPON`, `-type ee`, `-success 40to90`,
+  `-failure 10to30`, `-amount 1to2`, and `-s`.
 
 Placeholders:
 
-| Placeholder | Meaning |
-| --- | --- |
-| `%enchant_name%` | Display name |
-| `%level%` | Book level |
-| `%success%` | Success rate |
-| `%destroy%` | Failure/destroy rate |
-| `%rarity_name%` | Rarity key |
-| `%rarity_color%` | Rarity color |
-| `%description%` | Multi-line enchant description |
+| Placeholder      | Meaning                        |
+|------------------|--------------------------------|
+| `%enchant_name%` | Display name                   |
+| `%level%`        | Book level                     |
+| `%success%`      | Success rate                   |
+| `%destroy%`      | Failure/destroy rate           |
+| `%rarity_name%`  | Rarity key                     |
+| `%rarity_color%` | Rarity color                   |
+| `%description%`  | Multi-line enchant description |
 
 ## Success Charm
 

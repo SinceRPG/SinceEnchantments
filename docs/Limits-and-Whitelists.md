@@ -8,14 +8,14 @@ plugins/SinceEnchantments/limits.yml
 
 ## Pattern Syntax
 
-| Pattern | Matches |
-| --- | --- |
-| `*` | Everything |
-| `*_SWORD` | Any material ending in `_SWORD` |
-| `DIAMOND_*` | Any material starting with `DIAMOND_` |
-| `*DIAMOND*` | Any value containing `DIAMOND` |
-| `BOW` | Exact value |
-| `SWORD:*` | Any MMOItems item of type `SWORD` |
+| Pattern         | Matches                                       |
+|-----------------|-----------------------------------------------|
+| `*`             | Everything                                    |
+| `*_SWORD`       | Any material ending in `_SWORD`               |
+| `DIAMOND_*`     | Any material starting with `DIAMOND_`         |
+| `*DIAMOND*`     | Any value containing `DIAMOND`                |
+| `BOW`           | Exact value                                   |
+| `SWORD:*`       | Any MMOItems item of type `SWORD`             |
 | `*:LEGENDARY_*` | Any custom item ID starting with `LEGENDARY_` |
 
 ## Vanilla Item Max Slots

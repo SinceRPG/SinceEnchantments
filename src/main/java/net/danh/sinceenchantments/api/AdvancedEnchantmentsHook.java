@@ -12,13 +12,7 @@ import org.bukkit.plugin.Plugin;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class AdvancedEnchantmentsHook {
     private static final int MAX_LOAD_ATTEMPTS = 5;

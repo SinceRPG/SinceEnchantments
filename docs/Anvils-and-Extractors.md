@@ -93,10 +93,10 @@ settings:
   extractor-mode: "DIALOG"
 ```
 
-| Mode | Description |
-| --- | --- |
+| Mode     | Description            |
+|----------|------------------------|
 | `DIALOG` | Modern Paper Dialog UI |
-| `GUI` | Legacy chest GUI |
+| `GUI`    | Legacy chest GUI       |
 
 ## Dialog Config
 

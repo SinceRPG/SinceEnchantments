@@ -81,7 +81,8 @@ Check:
 
 ## AdvancedEnchantments Shows 0 Enchants
 
-Since AE can finish enchant loading after plugin enable, SinceEnchantments retries and then falls back to config scanning.
+Since AE can finish enchant loading after plugin enable, SinceEnchantments retries and then falls back to config
+scanning.
 
 Look for:
 
@@ -114,7 +115,8 @@ Check:
 - Startup log mentions `Successfully hooked into ExcellentEnchants API`.
 - ExcellentEnchants has registered enchantments before SinceEnchantments runs `/se reload`.
 
-If `-rarity <rarity>` filters do not match ExcellentEnchants books, add an override in `enchants.yml` or confirm the ExcellentEnchants enchant config has a supported rarity-style key such as `Rarity`, `Tier`, or `Group`.
+If `-rarity <rarity>` filters do not match ExcellentEnchants books, add an override in `enchants.yml` or confirm the
+ExcellentEnchants enchant config has a supported rarity-style key such as `Rarity`, `Tier`, or `Group`.
 
 ## Vanilla Enchants Duplicate
 

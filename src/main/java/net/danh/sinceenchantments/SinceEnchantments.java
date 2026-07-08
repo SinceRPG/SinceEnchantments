@@ -2,26 +2,10 @@ package net.danh.sinceenchantments;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
-import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import net.danh.sinceenchantments.api.AddonLoader;
-import net.danh.sinceenchantments.api.AdvancedEnchantmentsHook;
-import net.danh.sinceenchantments.api.CrazyEnchantmentsHook;
-import net.danh.sinceenchantments.api.EnchantManager;
-import net.danh.sinceenchantments.api.EnchantRegistry;
-import net.danh.sinceenchantments.api.ExcellentEnchantsHook;
-import net.danh.sinceenchantments.api.InternalModuleLoader;
-import net.danh.sinceenchantments.api.ItemFactory;
-import net.danh.sinceenchantments.api.MMOCoreHook;
-import net.danh.sinceenchantments.api.MythicLibHook;
+import net.danh.sinceenchantments.api.*;
 import net.danh.sinceenchantments.command.SinceCommand;
-import net.danh.sinceenchantments.listener.AnvilListener;
-import net.danh.sinceenchantments.listener.EnchantApplyListener;
-import net.danh.sinceenchantments.listener.ExtractorListener;
-import net.danh.sinceenchantments.listener.InventoryFixListener;
-import net.danh.sinceenchantments.listener.ItemPacketListener;
-import net.danh.sinceenchantments.listener.ProtectionListener;
-import net.danh.sinceenchantments.listener.StatTrackerListener;
+import net.danh.sinceenchantments.listener.*;
 import net.danh.sinceenchantments.utils.ConfigUtils;
 import net.danh.sinceenchantments.utils.ServerVersion;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -64,9 +48,7 @@ public class SinceEnchantments extends JavaPlugin {
     @Override
     public void onLoad() {
         instance = this;
-        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
-        PacketEvents.getAPI().getSettings().reEncodeByDefault(true).checkForUpdates(true);
-        PacketEvents.getAPI().load();
+
     }
 
     @Override
@@ -110,7 +92,7 @@ public class SinceEnchantments extends JavaPlugin {
             event.registrar().register(commandClass.buildCommand(), desc, aliases);
         });
 
-        PacketEvents.getAPI().init();
+
         this.itemPacketListener = new ItemPacketListener();
         PacketEvents.getAPI().getEventManager().registerListener(itemPacketListener, PacketListenerPriority.NORMAL);
 
@@ -128,7 +110,7 @@ public class SinceEnchantments extends JavaPlugin {
             itemPacketListener.clearCache();
             itemPacketListener = null;
         }
-        PacketEvents.getAPI().terminate();
+
         instance = null;
     }
 

@@ -10,13 +10,13 @@ This page gets a fresh server from install to a working enchantment flow.
 
 Arguments:
 
-| Argument | Meaning |
-| --- | --- |
-| `YourName` | Target player |
-| `"since:lifesteal"` | Enchantment ID |
-| `1` | Book level |
-| `100` | Success chance |
-| `0` | Destroy/failure chance metadata |
+| Argument            | Meaning                         |
+|---------------------|---------------------------------|
+| `YourName`          | Target player                   |
+| `"since:lifesteal"` | Enchantment ID                  |
+| `1`                 | Book level                      |
+| `100`               | Success chance                  |
+| `0`                 | Destroy/failure chance metadata |
 
 Quotes are recommended because Brigadier suggestions include namespaced IDs.
 

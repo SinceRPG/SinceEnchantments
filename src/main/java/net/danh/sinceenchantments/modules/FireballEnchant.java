@@ -13,7 +13,7 @@ import java.util.UUID;
 
 /**
  * FIREBALL ENCHANT MODULE
- *
+ * <p>
  * Functionality:
  * A combat enchantment that allows players to shoot a high-yield explosive fireball
  * upon left-clicking. Handles independent player cooldown tracking dynamically.

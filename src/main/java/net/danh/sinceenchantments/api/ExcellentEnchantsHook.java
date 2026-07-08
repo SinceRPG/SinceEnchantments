@@ -14,18 +14,13 @@ import su.nightexpress.excellentenchants.api.item.ItemSet;
 import su.nightexpress.excellentenchants.enchantment.EnchantRegistry;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ExcellentEnchantsHook {
     private final SinceEnchantments plugin;
+    private final Map<String, YamlConfiguration> configCache = new HashMap<>();
     private boolean hooked = false;
     private Plugin excellentEnchants;
-    private final Map<String, YamlConfiguration> configCache = new HashMap<>();
 
     public ExcellentEnchantsHook(SinceEnchantments plugin) {
         this.plugin = plugin;
@@ -231,17 +226,23 @@ public class ExcellentEnchantsHook {
         String joined = String.join(" ", values).toUpperCase(Locale.ROOT);
         if (joined.contains("BOW") || joined.contains("CROSSBOW")) return "BOW";
         if (joined.contains("SWORD")) return "SWORD";
-        if (joined.contains("WEAPON") || joined.contains("AXE") || joined.contains("TRIDENT") || joined.contains("MACE")) return "WEAPON";
-        if (joined.contains("PICKAXE") || joined.contains("SHOVEL") || joined.contains("HOE") || joined.contains("TOOL") || joined.contains("MINING")) return "TOOL";
-        if (joined.contains("HELMET") || joined.contains("CHESTPLATE") || joined.contains("LEGGINGS") || joined.contains("BOOTS") || joined.contains("ARMOR")) return "ARMOR";
+        if (joined.contains("WEAPON") || joined.contains("AXE") || joined.contains("TRIDENT") || joined.contains("MACE"))
+            return "WEAPON";
+        if (joined.contains("PICKAXE") || joined.contains("SHOVEL") || joined.contains("HOE") || joined.contains("TOOL") || joined.contains("MINING"))
+            return "TOOL";
+        if (joined.contains("HELMET") || joined.contains("CHESTPLATE") || joined.contains("LEGGINGS") || joined.contains("BOOTS") || joined.contains("ARMOR"))
+            return "ARMOR";
         return "ALL";
     }
 
     private String inferTarget(Enchantment enchantment) {
-        if (canEnchantAny(enchantment, Material.DIAMOND_SWORD, Material.NETHERITE_AXE, Material.TRIDENT, Material.MACE)) return "WEAPON";
+        if (canEnchantAny(enchantment, Material.DIAMOND_SWORD, Material.NETHERITE_AXE, Material.TRIDENT, Material.MACE))
+            return "WEAPON";
         if (canEnchantAny(enchantment, Material.BOW, Material.CROSSBOW)) return "BOW";
-        if (canEnchantAny(enchantment, Material.DIAMOND_PICKAXE, Material.DIAMOND_SHOVEL, Material.DIAMOND_HOE)) return "TOOL";
-        if (canEnchantAny(enchantment, Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS)) return "ARMOR";
+        if (canEnchantAny(enchantment, Material.DIAMOND_PICKAXE, Material.DIAMOND_SHOVEL, Material.DIAMOND_HOE))
+            return "TOOL";
+        if (canEnchantAny(enchantment, Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS))
+            return "ARMOR";
         return "ALL";
     }
 

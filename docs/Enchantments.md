@@ -1,6 +1,7 @@
 # Enchantments
 
-This page explains custom enchant configuration, vanilla enchant display metadata, external overrides, built-in modules, and book behavior.
+This page explains custom enchant configuration, vanilla enchant display metadata, external overrides, built-in modules,
+and book behavior.
 
 ## File
 
@@ -32,27 +33,27 @@ custom-enchants:
 
 ## Fields
 
-| Field | Required | Meaning |
-| --- | --- | --- |
-| `name` | Recommended | Display name shown in books and lore |
-| `rarity` | Recommended | Key from `settings.yml` `rarities` |
-| `max-level` | Recommended | Highest level allowed |
-| `target` | Recommended | Target category from `settings.enchant-targets` |
-| `requires` | Optional | Enchants that must already exist on the item |
-| `conflicts` | Optional | Enchants that cannot coexist |
-| `description` | Optional | Lines shown in detailed lore and books |
-| `settings` | Module-specific | Values read by built-in or addon code |
-| `messages` | Module-specific | Messages read by built-in or addon code |
+| Field         | Required        | Meaning                                         |
+|---------------|-----------------|-------------------------------------------------|
+| `name`        | Recommended     | Display name shown in books and lore            |
+| `rarity`      | Recommended     | Key from `settings.yml` `rarities`              |
+| `max-level`   | Recommended     | Highest level allowed                           |
+| `target`      | Recommended     | Target category from `settings.enchant-targets` |
+| `requires`    | Optional        | Enchants that must already exist on the item    |
+| `conflicts`   | Optional        | Enchants that cannot coexist                    |
+| `description` | Optional        | Lines shown in detailed lore and books          |
+| `settings`    | Module-specific | Values read by built-in or addon code           |
+| `messages`    | Module-specific | Messages read by built-in or addon code         |
 
 ## Built-In Enchantments
 
-| ID | Target | Behavior |
-| --- | --- | --- |
+| ID                | Target   | Behavior                                          |
+|-------------------|----------|---------------------------------------------------|
 | `since:lifesteal` | `WEAPON` | Heals the attacker for a configured amount on hit |
-| `since:fireball` | `SWORD` | Lets players launch fireballs with cooldown |
-| `since:thunder` | `WEAPON` | Chance to strike lightning and deal extra damage |
-| `since:excavator` | `TOOL` | Mines an area around the broken block |
-| `since:dodge` | `ARMOR` | Chance to evade incoming damage |
+| `since:fireball`  | `SWORD`  | Lets players launch fireballs with cooldown       |
+| `since:thunder`   | `WEAPON` | Chance to strike lightning and deal extra damage  |
+| `since:excavator` | `TOOL`   | Mines an area around the broken block             |
+| `since:dodge`     | `ARMOR`  | Chance to evade incoming damage                   |
 
 ## Rarities
 
@@ -125,7 +126,8 @@ vanilla-enchants:
       - "&7Increases melee damage against all targets."
 ```
 
-This does not create vanilla enchantments. It controls how existing vanilla enchantments are displayed by the visual lore engine.
+This does not create vanilla enchantments. It controls how existing vanilla enchantments are displayed by the visual
+lore engine.
 
 ## External Enchant Overrides
 

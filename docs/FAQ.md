@@ -43,11 +43,13 @@ Yes. Use Bukkit registry IDs like:
 excellentenchants:<enchant_name>
 ```
 
-ExcellentEnchants is hooked through its real API dependency and requires NightCore on the server, the same as ExcellentEnchants itself.
+ExcellentEnchants is hooked through its real API dependency and requires NightCore on the server, the same as
+ExcellentEnchants itself.
 
 ## Why are external enchant entries not written into enchants.yml automatically?
 
-They are registered in memory to avoid modifying server configs unexpectedly. Add overrides only for display customization.
+They are registered in memory to avoid modifying server configs unexpectedly. Add overrides only for display
+customization.
 
 ## Can locked items still be extracted or purged?
 
@@ -67,4 +69,5 @@ Yes. It declares Folia support and uses Folia-aware scheduling helpers.
 
 ## Does `/se reload` reload everything?
 
-It reloads SinceEnchantments configs and re-runs external auto-load registration. For dependency changes, restart the server.
+It reloads SinceEnchantments configs and re-runs external auto-load registration. For dependency changes, restart the
+server.
