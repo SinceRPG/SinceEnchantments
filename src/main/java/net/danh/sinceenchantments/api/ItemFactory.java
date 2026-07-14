@@ -51,11 +51,15 @@ public class ItemFactory {
     }
 
 
-    private void applyItemMeta(ItemStack item, String configPath, String defName, String... replacements) {
+    public void applyItemMeta(ItemStack item, String configPath, String defName, String... replacements) {
+        ConfigurationSection cfg = plugin.getItemsFile().getConfig().getConfigurationSection(configPath);
+        applyItemMeta(item, cfg, defName, replacements);
+    }
+
+    public void applyItemMeta(ItemStack item, ConfigurationSection cfg, String defName, String... replacements) {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return;
 
-        ConfigurationSection cfg = plugin.getItemsFile().getConfig().getConfigurationSection(configPath);
         if (cfg == null) {
             meta.displayName(ColorUtils.parse(defName).decoration(TextDecoration.ITALIC, false));
             item.setItemMeta(meta);
@@ -251,7 +255,7 @@ public class ItemFactory {
                                 AttributeModifier modifier = new AttributeModifier(modKey, amount, op, slotGroup);
                                 meta.addAttributeModifier(attribute, modifier);
                             } catch (Exception e) {
-                                plugin.getLogger().warning("Failed to parse attribute modifier for " + key + " in " + configPath);
+                                plugin.getLogger().warning("Failed to parse attribute modifier for " + key + " in " + cfg.getCurrentPath());
                             }
                         }
                     }

@@ -30,6 +30,54 @@ dialog:
 # GUI CONFIGURATIONS (LEGACY CHEST MENU)
 # ==========================================
 # Note: Uses legacy color codes (&a, &b, &c, etc.).
+# ALL ITEMS IN THIS GUI SUPPORT THE FOLLOWING ADVANCED ITEM META OPTIONS:
+#
+# material: "DIAMOND_SWORD"         # The Bukkit material name
+# name: "&cCustom Display Name"     # Display name of the item
+# item-name: "Stable Name"          # 1.21+ true item name (cannot be renamed in anvil)
+# lore:                             # The lore of the item
+#   - "&7Line 1"
+#   - "&7Line 2"
+# 
+# custom-model-data: 123            # Simple integer for CustomModelData
+# # OR (for 1.21.5+ advanced custom model data):
+# # custom-model-data:
+# #   floats: [1.0, 2.0]
+# #   strings: ["example"]
+# #   flags: [true, false]
+# #   colors: ["#FFFFFF", "#000000"]
+#
+# item-model: "minecraft:paper"     # 1.21+ item model override
+# tooltip-style: "minecraft:paper"  # 1.21+ tooltip style override
+# max-stack-size: 99                # 1.21+ stack size limit (1-99)
+# rarity: "EPIC"                    # Vanilla rarity (COMMON, UNCOMMON, RARE, EPIC)
+# hide-tooltip: true                # Hides the entire item tooltip
+# glint-override: true              # Forces the item to glow without enchants
+# glider: true                      # Makes the item act like an elytra
+# unbreakable: true                 # Makes the item unbreakable
+# enchantable: 10                   # Vanilla enchantability weight
+# damage: 50                        # Pre-applied durability damage
+#
+# flags:                            # Vanilla item flags to hide specific tooltip sections
+#   - HIDE_ENCHANTS
+#   - HIDE_ATTRIBUTES
+#   - HIDE_UNBREAKABLE
+#   - HIDE_DESTROYS
+#   - HIDE_PLACED_ON
+#   - HIDE_ADDITIONAL_TOOLTIP
+#   - HIDE_DYE
+#
+# enchants:                         # Vanilla enchantments to apply
+#   sharpness: 5
+#   unbreaking: 3
+#
+# attributes:                       # Vanilla attribute modifiers
+#   generic.attack_damage:
+#     amount: 5.0
+#     operation: ADD_NUMBER         # ADD_NUMBER, MULTIPLY_BASE, ADD_SCALAR
+#     slot: MAINHAND                # ANY, MAINHAND, OFFHAND, FEET, LEGS, CHEST, HEAD
+#
+# =========================================================================
 gui:
   extractor:
     # The title of the chest inventory. %page% shows the current page number.
@@ -61,3 +109,130 @@ gui:
       lore:
         - "&7Click to safely extract"
         - "&7this enchantment into a book!"
+
+  preview:
+    title: "&8Enchantments Preview"
+    size: 36
+    item-slot: 10
+
+    enchantment-slots:
+      - 12
+      - 13
+      - 14
+      - 15
+      - 16
+      - 21
+      - 22
+      - 23
+      - 24
+      - 25
+
+    fill-items:
+      border:
+        slots: [0, 2, 3, 4, 5, 6, 7, 8, 17, 18, 20, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
+        material: "BLACK_STAINED_GLASS_PANE"
+        name: "&r"
+      indicator:
+        slots: [1, 9, 11, 19]
+        material: "LIME_STAINED_GLASS_PANE"
+        name: "&r"
+
+    next-page:
+      slot: 26
+      material: "ARROW"
+      name: "&aNext Page"
+      lore:
+        - "&7Click to view more enchantments."
+
+    prev-page:
+      slot: 17
+      material: "ARROW"
+      name: "&cPrevious Page"
+      lore:
+        - "&7Click to go back."
+        
+    back-button:
+      slot: 31
+      material: "BARRIER"
+      name: "&cClose Menu"
+      lore:
+        - "&7Click to close this interface."
+      
+    # Items shown when no weapon is placed. Clicking these will preview their enchants.
+    default-items:
+      sword:
+        material: "DIAMOND_SWORD"
+        name: "&bSwords"
+        lore:
+          - "&7Click to preview enchantments"
+          - "&7available for Swords."
+      pickaxe:
+        material: "DIAMOND_PICKAXE"
+        name: "&bPickaxes"
+        lore:
+          - "&7Click to preview enchantments"
+          - "&7available for Pickaxes."
+      bow:
+        material: "BOW"
+        name: "&bBows"
+        lore:
+          - "&7Click to preview enchantments"
+          - "&7available for Bows."
+      chestplate:
+        material: "DIAMOND_CHESTPLATE"
+        name: "&bArmor"
+        lore:
+          - "&7Click to preview enchantments"
+          - "&7available for Armor."
+          
+      # EXAMPLE OF A CUSTOM ITEM (MMOItems, MythicMobs, etc.)
+      # If you defined a whitelist for "SWORD:SILVER_SWORD" in limits.yml,
+      # you can preview it here by adding 'custom-key'.
+      # mmo_sword:
+      #   material: "IRON_SWORD"
+      #   name: "&bSilver Sword &7(MMOItem)"
+      #   lore:
+      #     - "&7Click to preview enchantments"
+      #   custom-key: "SWORD:SILVER_SWORD"
+
+    display-item:
+      material: "ENCHANTED_BOOK"
+      name: "%rarity_color%%enchant_name% &7(&e%current_level%&7/&e%max_level%&7)"
+      lore:
+        - ""
+        - "&8▪ &7Rarity: %rarity_color%%rarity_name%"
+        - "&8▪ &7Type: &f%type%"
+        - "&8▪ &7Target: &f%target%"
+        - ""
+        - "&8▪ &7Description:"
+        - "%description%"
+        - ""
+        - "&eYou can still upgrade this enchantment."
+
+    maxed-display-item:
+      material: "WRITTEN_BOOK"
+      name: "%rarity_color%%enchant_name% &7(&cMAXED&7)"
+      lore:
+        - ""
+        - "&8▪ &7Rarity: %rarity_color%%rarity_name%"
+        - "&8▪ &7Type: &f%type%"
+        - "&8▪ &7Target: &f%target%"
+        - ""
+        - "&8▪ &7Description:"
+        - "%description%"
+        - ""
+        - "&cThis enchantment has reached its max level."
+        
+    not-applied-display-item:
+      material: "BOOK"
+      name: "%rarity_color%%enchant_name% &7(&c0&7/&e%max_level%&7)"
+      lore:
+        - ""
+        - "&8▪ &7Rarity: %rarity_color%%rarity_name%"
+        - "&8▪ &7Type: &f%type%"
+        - "&8▪ &7Target: &f%target%"
+        - ""
+        - "&8▪ &7Description:"
+        - "%description%"
+        - ""
+        - "&7You don't have this enchant yet."

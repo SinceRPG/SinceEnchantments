@@ -257,6 +257,11 @@ public class EnchantManager {
         if (item == null || !item.hasItemMeta()) return null;
         PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
 
+        NamespacedKey dummyCustomKey = new NamespacedKey(plugin, "gui_dummy_custom_key");
+        if (pdc.has(dummyCustomKey, PersistentDataType.STRING)) {
+            return pdc.get(dummyCustomKey, PersistentDataType.STRING);
+        }
+
         ConfigurationSection hooksSec = plugin.getCustomItemsFile().getConfig().getConfigurationSection("hooks");
         if (hooksSec != null) {
             for (String hookKey : hooksSec.getKeys(false)) {

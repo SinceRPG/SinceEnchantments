@@ -16,6 +16,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import net.danh.sinceenchantments.SinceEnchantments;
+import net.danh.sinceenchantments.gui.PreviewGUI;
 import net.danh.sinceenchantments.utils.ColorUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -88,6 +89,7 @@ public class SinceCommand {
                         .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64)).executes(context -> executeGiveProtector(context, IntegerArgumentType.getInteger(context, "amount"))))))
                 .then(Commands.literal("givetracker").then(Commands.argument("target", ArgumentTypes.player()).executes(context -> executeGiveTracker(context, 1))
                         .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64)).executes(context -> executeGiveTracker(context, IntegerArgumentType.getInteger(context, "amount"))))))
+                .then(Commands.literal("gui").executes(this::executeGui))
                 .build();
     }
 
@@ -163,6 +165,14 @@ public class SinceCommand {
         sendMessage(context.getSource(), "help-header");
         for (String line : plugin.getMessagesFile().getStringList("help-commands")) {
             context.getSource().getSender().sendMessage(ColorUtils.parse(line));
+        }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int executeGui(CommandContext<CommandSourceStack> context) {
+        if (context.getSource().getSender() instanceof Player p) {
+            PreviewGUI gui = new PreviewGUI(plugin, null, 0);
+            p.openInventory(gui.getInventory());
         }
         return Command.SINGLE_SUCCESS;
     }

@@ -102,6 +102,7 @@ public class SinceEnchantments extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ExtractorListener(this), this);
         getServer().getPluginManager().registerEvents(new StatTrackerListener(this), this);
         getServer().getPluginManager().registerEvents(new ProtectionListener(this), this);
+        getServer().getPluginManager().registerEvents(new PreviewGUIListener(this), this);
     }
 
     @Override
