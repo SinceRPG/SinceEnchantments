@@ -6,6 +6,9 @@ settings:
   # where you want the plugin to inject the custom enchantments list.
   placeholder: "{enchants}"
 
+  # Enable debug mode to print additional console information. Useful for tracking issues with PDC.
+  debug: false
+
   # Packet lore cache controls. Raising max-size can reduce repeated formatting work,
   # while lowering expire-ms frees entries faster on memory-constrained servers.
   packet-cache-expire-ms: 1000
@@ -83,6 +86,7 @@ settings:
   # The text format used for each individual enchantment listed under the whitelist header.
   # Available placeholders: %enchant_name%
   whitelist-preview-format: "&8 - %enchant_name%"
+  whitelist-compact-format: "&8%enchant_name%"
 
   # If the total number of enchantments applied to an item is less than or equal to this threshold,
   # the item will display them in a "Detailed Mode" (showing the Enchant Name + Level, followed by its full description).

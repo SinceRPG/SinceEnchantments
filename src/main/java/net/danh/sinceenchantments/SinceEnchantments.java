@@ -39,6 +39,7 @@ public class SinceEnchantments extends JavaPlugin {
     private AdvancedEnchantmentsHook advancedEnchantmentsHook;
     private CrazyEnchantmentsHook crazyEnchantmentsHook;
     private ExcellentEnchantsHook excellentEnchantsHook;
+    private EnchantsSquaredHook enchantsSquaredHook;
     private ItemPacketListener itemPacketListener;
 
     public static SinceEnchantments getInstance() {
@@ -76,6 +77,8 @@ public class SinceEnchantments extends JavaPlugin {
         this.crazyEnchantmentsHook.loadCrazyEnchantments();
         this.excellentEnchantsHook = new ExcellentEnchantsHook(this);
         this.excellentEnchantsHook.loadExcellentEnchantments();
+        this.enchantsSquaredHook = new EnchantsSquaredHook(this);
+        this.enchantsSquaredHook.loadEnchantsSquared();
 
         this.internalModuleLoader = new InternalModuleLoader(this);
         this.internalModuleLoader.loadInternalModules();
@@ -198,6 +201,10 @@ public class SinceEnchantments extends JavaPlugin {
 
     public ExcellentEnchantsHook getExcellentEnchantsHook() {
         return excellentEnchantsHook;
+    }
+
+    public EnchantsSquaredHook getEnchantsSquaredHook() {
+        return enchantsSquaredHook;
     }
 
     public void clearItemPacketCache() {

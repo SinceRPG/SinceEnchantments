@@ -70,7 +70,6 @@ public class CrazyEnchantmentsHook {
             List<String> defaultDescription = plugin.getSettingsFile().getStringList("settings.ce-default-description");
             if (defaultDescription == null || defaultDescription.isEmpty()) {
                 defaultDescription = new ArrayList<>();
-                defaultDescription.add("&7(CrazyEnchantments effect)");
             }
 
             for (CEnchantment enchantment : crazyEnchants) {

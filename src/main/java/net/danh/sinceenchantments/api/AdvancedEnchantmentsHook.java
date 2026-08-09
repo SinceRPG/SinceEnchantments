@@ -106,7 +106,6 @@ public class AdvancedEnchantmentsHook {
         List<String> defaultDescription = plugin.getSettingsFile().getStringList("settings.ae-default-description");
         if (defaultDescription == null || defaultDescription.isEmpty()) {
             defaultDescription = new ArrayList<>();
-            defaultDescription.add("&7(AdvancedEnchantments effect)");
         }
 
         for (String aeName : aeEnchants) {

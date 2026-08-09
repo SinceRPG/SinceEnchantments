@@ -63,6 +63,7 @@ public class SinceCommand {
                     plugin.getAdvancedEnchantmentsHook().loadAEEnchantments();
                     plugin.getCrazyEnchantmentsHook().loadCrazyEnchantments();
                     plugin.getExcellentEnchantsHook().loadExcellentEnchantments();
+                    plugin.getEnchantsSquaredHook().loadEnchantsSquared();
 
                     sendMessage(context.getSource(), "reload");
                     return Command.SINGLE_SUCCESS;

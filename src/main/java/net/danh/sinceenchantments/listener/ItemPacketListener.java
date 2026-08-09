@@ -451,9 +451,35 @@ public class ItemPacketListener extends PacketListenerAbstract implements Packet
             if (!unappliedAllowed.isEmpty()) {
                 injectComponents.add(Component.empty());
                 injectComponents.add(ColorUtils.parse(settings.getString("settings.whitelist-header", "&8Allowed:")).decoration(TextDecoration.ITALIC, false));
-                String format = settings.getString("settings.whitelist-preview-format", "&8 - %enchant_name%");
-                for (String allowedId : unappliedAllowed) {
-                    injectComponents.add(ColorUtils.parse(format.replace("%enchant_name%", manager.getEnchantName(allowedId))).decoration(TextDecoration.ITALIC, false));
+                
+                // Re-use detailedThreshold from earlier in the method
+                
+                if (unappliedAllowed.size() <= detailedThreshold) {
+                    String format = settings.getString("settings.whitelist-preview-format", "&8 - %enchant_name%");
+                    for (String allowedId : unappliedAllowed) {
+                        injectComponents.add(ColorUtils.parse(format.replace("%enchant_name%", manager.getEnchantName(allowedId))).decoration(TextDecoration.ITALIC, false));
+                    }
+                } else {
+                    // Re-use maxPerLine and separator from earlier
+                    String compactFormat = settings.getString("settings.whitelist-compact-format", "&8%enchant_name%");
+                    
+                    StringBuilder wlLine = new StringBuilder();
+                    int wlCount = 0;
+                    
+                    for (String allowedId : unappliedAllowed) {
+                        String formatted = compactFormat.replace("%enchant_name%", manager.getEnchantName(allowedId));
+                        if (wlCount > 0) wlLine.append(separator);
+                        wlLine.append(formatted);
+                        wlCount++;
+                        if (wlCount == maxPerLine) {
+                            injectComponents.add(ColorUtils.parse(wlLine.toString()).decoration(TextDecoration.ITALIC, false));
+                            wlLine = new StringBuilder();
+                            wlCount = 0;
+                        }
+                    }
+                    if (wlCount > 0) {
+                        injectComponents.add(ColorUtils.parse(wlLine.toString()).decoration(TextDecoration.ITALIC, false));
+                    }
                 }
             }
         }

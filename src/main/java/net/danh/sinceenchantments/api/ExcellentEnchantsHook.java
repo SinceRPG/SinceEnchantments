@@ -67,7 +67,6 @@ public class ExcellentEnchantsHook {
         List<String> defaultDescription = plugin.getSettingsFile().getStringList("settings.ee-default-description");
         if (defaultDescription == null || defaultDescription.isEmpty()) {
             defaultDescription = new ArrayList<>();
-            defaultDescription.add("&7(ExcellentEnchants effect)");
         }
 
         for (CustomEnchantment custom : customs) {

@@ -26,3 +26,6 @@ dependencies:
     ExcellentEnchants:
       load: BEFORE
       required: false
+    EnchantsSquared:
+      load: BEFORE
+      required: false
